@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { calculateBestSupplierMix } from "@/lib/supplierComparison";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
@@ -9,6 +8,14 @@ type SupplierIngredient = {
   name: string;
   qty: number;
   unit: string;
+};
+
+type BestMixItem = {
+  ingredient: string;
+  bestSupplierIndex: number;
+  bestSupplierName: string;
+  bestPrice: number;
+  cost: number;
 };
 
 export default function SupplierComparisonPage() {
@@ -22,7 +29,6 @@ export default function SupplierComparisonPage() {
 
   const [ingredients, setIngredients] = useState<SupplierIngredient[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(true);
-
   const [prices, setPrices] = useState<Record<string, number[]>>({});
   const [stock, setStock] = useState<Record<string, number>>({});
 
@@ -45,27 +51,27 @@ export default function SupplierComparisonPage() {
         q,
         (snap) => {
           const rawData: SupplierIngredient[] = snap.docs
-  .map((docSnap) => {
-    const d = docSnap.data() as any;
+            .map((docSnap) => {
+              const d = docSnap.data() as any;
 
-    return {
-      name: (d.nameEn || d.nameBn || "Unnamed Ingredient").trim(),
-      qty: Number(d.qty || 0),
-      unit: d.defaultUnit || "kg",
-    };
-  })
-  .filter((x) => x.name);
+              return {
+                name: (d.nameEn || d.nameBn || "Unnamed Ingredient").trim(),
+                qty: Number(d.qty || 0),
+                unit: d.defaultUnit || "kg",
+              };
+            })
+            .filter((x) => x.name);
 
-const seen = new Set<string>();
+          const seen = new Set<string>();
 
-const data: SupplierIngredient[] = rawData
-  .filter((item) => {
-    const key = `${item.name.toLowerCase()}__${item.unit.toLowerCase()}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  })
-  .sort((a, b) => a.name.localeCompare(b.name));
+          const data: SupplierIngredient[] = rawData
+            .filter((item) => {
+              const key = `${item.name.toLowerCase()}__${item.unit.toLowerCase()}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
 
           setIngredients(data);
 
@@ -141,11 +147,41 @@ const data: SupplierIngredient[] = rawData
   };
 
   const result = useMemo(() => {
-    return calculateBestSupplierMix(ingredients, {
-      supplierNames,
-      prices,
-    });
-  }, [ingredients, supplierNames, prices]);
+    const bestMix = ingredients
+      .map((ing) => {
+        const currentPrices = prices[ing.name] || [];
+
+        const validPrices = currentPrices
+          .map((price, index) => ({
+            price: Number(price || 0),
+            index,
+          }))
+          .filter((x) => x.price > 0);
+
+        if (validPrices.length === 0) return null;
+
+        const bestOption = validPrices.reduce((best, current) =>
+          current.price < best.price ? current : best
+        );
+
+        return {
+          ingredient: ing.name,
+          bestSupplierIndex: bestOption.index,
+          bestSupplierName:
+            supplierNames[bestOption.index] || "Unknown Supplier",
+          bestPrice: bestOption.price,
+          cost: Number(ing.qty || 0) * bestOption.price,
+        };
+      })
+      .filter((item): item is BestMixItem => item !== null);
+
+    const totalBestCost = bestMix.reduce((sum, item) => sum + item.cost, 0);
+
+    return {
+      bestMix,
+      totalBestCost,
+    };
+  }, [ingredients, prices, supplierNames]);
 
   const purchasePlan = useMemo(() => {
     return ingredients.map((ing) => {
@@ -170,7 +206,6 @@ const data: SupplierIngredient[] = rawData
         unit: ing.unit,
         stockQty,
         buyQty,
-        bestSupplierIndex: bestOption?.index ?? -1,
         bestSupplierName:
           bestOption && bestOption.index >= 0
             ? supplierNames[bestOption.index]
@@ -194,8 +229,9 @@ const data: SupplierIngredient[] = rawData
     });
   }, [supplierNames, ingredients, prices]);
 
+  const validSupplierTotals = supplierTotals.filter((total) => total > 0);
   const minTotal =
-    supplierTotals.length > 0 ? Math.min(...supplierTotals) : 0;
+    validSupplierTotals.length > 0 ? Math.min(...validSupplierTotals) : 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -347,10 +383,7 @@ const data: SupplierIngredient[] = rawData
 
               <tbody>
                 {purchasePlan.map((item, index) => (
-                  <tr
-                    key={item.ingredient + "_" + index}
-                    className="border-t"
-                  >
+                  <tr key={item.ingredient + "_" + index} className="border-t">
                     <td className="px-3 py-2 font-medium">{item.ingredient}</td>
                     <td className="px-3 py-2 text-right">
                       {item.requiredQty} {item.unit}
@@ -424,9 +457,8 @@ const data: SupplierIngredient[] = rawData
           <ul className="space-y-1 text-sm">
             {result.bestMix.map((item, index) => (
               <li key={item.ingredient + "_" + index}>
-                {item.ingredient} →{" "}
-                {supplierNames[item.bestSupplierIndex] ?? "Unknown Supplier"} (
-                £{Number(item.bestPrice).toFixed(2)}) → Cost: £
+                {item.ingredient} → {item.bestSupplierName} (£
+                {Number(item.bestPrice).toFixed(2)}) → Cost: £
                 {item.cost.toFixed(2)}
               </li>
             ))}

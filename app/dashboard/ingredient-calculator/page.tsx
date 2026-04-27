@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 import {
@@ -42,7 +42,7 @@ function getDishName(key: string) {
   return key;
 }
 
-export default function IngredientCalculatorPage() {
+function IngredientCalculatorPageContent() {
   const searchParams = useSearchParams();
 
   const defaultMenu = presetMenus.find((menu) => menu.key === "wedding_menu_1");
@@ -424,5 +424,17 @@ export default function IngredientCalculatorPage() {
         </div>
       </div>
     </div>
+  );
+}export default function IngredientCalculatorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-6 text-sm text-neutral-600">
+          Loading ingredient calculator...
+        </div>
+      }
+    >
+      <IngredientCalculatorPageContent />
+    </Suspense>
   );
 }

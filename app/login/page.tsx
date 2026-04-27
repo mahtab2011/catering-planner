@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   confirmPasswordReset,
   onAuthStateChanged,
@@ -269,7 +269,7 @@ function getResetCodeErrorMessage(error: any) {
   }
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -888,5 +888,22 @@ const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
         </div>
       </div>
     </main>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-neutral-50 px-4 py-10">
+          <div className="mx-auto max-w-md rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+            <div className="text-base font-semibold text-neutral-800">
+              Loading login...
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

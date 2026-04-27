@@ -1,0 +1,15 @@
+export const hubPhotosMap: Record<string, string[]> = {
+  "barking-road": Array.from({ length: 8 }, (_, i) => `/hubs/barking-road/${i + 1}.jpg`),
+  "boxpark": Array.from({ length: 8 }, (_, i) => `/hubs/boxpark/${i + 1}.jpg`),
+  "brick-lane": Array.from({ length: 8 }, (_, i) => `/hubs/brick-lane/${i + 1}.jpg`),
+  "east-ham-town-centre": Array.from({ length: 8 }, (_, i) => `/hubs/east-ham-town-centre/${i + 1}.jpg`),
+  "edgware-road": Array.from({ length: 8 }, (_, i) => `/hubs/edgware-road/${i + 1}.jpg`),
+  "high-street-north": Array.from({ length: 8 }, (_, i) => `/hubs/high-street-north/${i + 1}.jpg`),
+  "ilford-lane": Array.from({ length: 8 }, (_, i) => `/hubs/ilford-lane/${i + 1}.jpg`),
+  "london-street-food": Array.from({ length: 8 }, (_, i) => `/hubs/london-street-food/${i + 1}.jpg`),
+  "plashet-road": Array.from({ length: 8 }, (_, i) => `/hubs/plashet-road/${i + 1}.jpg`),
+  "shoreditch-boxpark": Array.from({ length: 8 }, (_, i) => `/hubs/shoreditch-boxpark/${i + 1}.jpg`),
+  "stratford-centre": Array.from({ length: 8 }, (_, i) => `/hubs/stratford-centre/${i + 1}.jpg`),
+  "upmarket-brick-lane-foodhall": Array.from({ length: 8 }, (_, i) => `/hubs/upmarket-brick-lane-foodhall/${i + 1}.jpg`),
+  "westfield": Array.from({ length: 8 }, (_, i) => `/hubs/westfield/${i + 1}.jpg`),
+};

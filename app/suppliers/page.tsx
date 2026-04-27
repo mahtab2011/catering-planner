@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { supplierIngredients } from "@/lib/supplieringredients";
+import { supplierIngredients } from "@/lib/supplierIngredients";
 import { useEffect, useRef, useState } from "react";
 import {
   collection,

@@ -1347,6 +1347,7 @@ const pageCopy: Record<
     searchPlaceholder: string;
     areaLabel: string;
     cuisineLabel: string;
+    locationLabel?: string;
     showing: string;
     restaurant: string;
     restaurants: string;
@@ -1659,11 +1660,34 @@ function getShortEmail(email?: string | null) {
   if (!email) return "Signed in";
   return email;
 }
+const LOCATION_MAP: Record<string, string[]> = {
+  e1: ["Brick Lane", "Shoreditch/Boxpark", "Commercial Road"],
+  e6: ["Barking Road", "East Ham Town Centre"],
+  e7: ["East Ham Town Centre", "High Street North", "Barking Road"],
+  e15: ["Stratford Centre", "Westfield Stratford"],
 
+  w1: ["China Town (Soho)"],
+  w2: ["Edgware Road"],
+  nw1: ["Edgware Road"],
+  nw8: ["Edgware Road"],
+  ig1: ["Ilford Lane"],
+
+  brick: ["Brick Lane"],
+  shoreditch: ["Shoreditch/Boxpark"],
+  stratford: ["Stratford Centre", "Westfield Stratford"],
+  westfield: ["Westfield Stratford"],
+  edgware: ["Edgware Road"],
+  ilford: ["Ilford Lane"],
+  china: ["China Town (Soho)"],
+  soho: ["China Town (Soho)"],
+  commercial: ["Commercial Road"],
+};
 export default function HomePage() {
   const { lang, setLang } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
   const [selectedArea, setSelectedArea] = useState("All");
   const [selectedCuisine, setSelectedCuisine] = useState("All");
   const [userEmail, setUserEmail] = useState<string>("");
@@ -1699,6 +1723,12 @@ export default function HomePage() {
   const isRTL = activeLanguage === "ar";
 
   const filteredRestaurants = useMemo(() => {
+    const locationTerm = locationSearch.trim().toLowerCase();
+    const mappedAreas =
+  LOCATION_MAP[locationTerm] ||
+  Object.entries(LOCATION_MAP)
+    .filter(([key]) => locationTerm.includes(key))
+    .flatMap(([, areas]) => areas);
     const term = search.trim().toLowerCase();
 
     return featuredRestaurants.filter((restaurant) => {
@@ -1716,7 +1746,10 @@ export default function HomePage() {
       const matchesCuisine =
         selectedCuisine === "All" || restaurant.cuisine === selectedCuisine;
 
-      return matchesSearch && matchesArea && matchesCuisine;
+      const matchesLocation =
+  !locationTerm || restaurant.area.toLowerCase().includes(locationTerm);
+
+return matchesSearch && matchesArea && matchesCuisine && matchesLocation;
     });
   }, [search, selectedArea, selectedCuisine]);
 
@@ -1838,7 +1871,14 @@ export default function HomePage() {
       <input
         type="text"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+  setSearch(e.target.value);
+
+  const section = document.getElementById("featured-restaurants");
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+}}
         placeholder="Search restaurants, food, hubs or cuisine..."
         className="flex-1 rounded-2xl border border-neutral-300 px-5 py-4 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
       />
@@ -2064,18 +2104,30 @@ export default function HomePage() {
         </div>
 
         <div className="mb-8 rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div>
               <label className="mb-2 block text-sm font-semibold text-neutral-700">
                 {copy.searchLabel}
               </label>
               <input
                 type="text"
-                value={search}
+                value={searchInput}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={copy.searchPlaceholder}
                 className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
               />
+              <div>
+  <label className="mb-2 block text-sm font-semibold text-neutral-700">
+  {copy.locationLabel ?? "Location"}
+</label>
+  <input
+    type="text"
+    value={locationSearch}
+    onChange={(e) => setLocationSearch(e.target.value)}
+    placeholder="E7, Stratford, Brick Lane..."
+    className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+  />
+</div>
             </div>
 
             <div>
@@ -2445,7 +2497,23 @@ export default function HomePage() {
     </div>
 
     <div className="mt-8 border-t border-white/10 pt-6 text-sm text-neutral-400">
-      © {new Date().getFullYear()} SmartServeUK.com — All rights reserved.
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <span>
+    © {new Date().getFullYear()} SmartServeUK.com — All rights reserved.
+  </span>
+
+  <div className="flex flex-wrap gap-4">
+    <Link href="/cookie-policy" className="hover:text-white">
+      Cookie Policy
+    </Link>
+    <Link href="/privacy-policy" className="hover:text-white">
+      Privacy Policy
+    </Link>
+    <Link href="/terms" className="hover:text-white">
+      Terms
+    </Link>
+  </div>
+</div>
     </div>
   </div>
 </section>

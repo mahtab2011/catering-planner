@@ -1832,7 +1832,33 @@ export default function HomePage() {
         lang={activeLanguage}
         image="/hubs/westfield/hero-westfield.jpg"
       />
+<section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+  <div className="rounded-3xl border border-sky-100 bg-white p-4 shadow-lg">
+    <div className="flex flex-col gap-3 md:flex-row">
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search restaurants, food, hubs or cuisine..."
+        className="flex-1 rounded-2xl border border-neutral-300 px-5 py-4 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+      />
 
+      <a
+        href="#featured-restaurants"
+        className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-6 py-4 text-sm font-bold text-white hover:bg-sky-700"
+      >
+        Search
+      </a>
+
+      <Link
+        href="/how-it-works"
+        className="inline-flex items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 px-6 py-4 text-sm font-bold text-sky-700 hover:bg-sky-100"
+      >
+        How It Works
+      </Link>
+    </div>
+  </div>
+</section>
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
           <div className="text-base font-semibold text-amber-900">
@@ -1950,11 +1976,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold tracking-tight">{copy.hubsTitle}</h2>
-          <p className="mt-2 max-w-3xl text-neutral-600">{copy.hubsSubtitle}</p>
-        </div>
+      <section
+  id="featured-restaurants"
+  className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"
+>
 
         <div className="flex flex-col gap-8">
   {hubs.map((hub, index) => {

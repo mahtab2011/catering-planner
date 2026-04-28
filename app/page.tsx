@@ -1682,6 +1682,25 @@ const LOCATION_MAP: Record<string, string[]> = {
   soho: ["China Town (Soho)"],
   commercial: ["Commercial Road"],
 };
+function getTopDishesForArea(area: string) {
+  const restaurants =
+    area === "All"
+      ? featuredRestaurants
+      : featuredRestaurants.filter((restaurant) => restaurant.area === area);
+
+  const dishCount: Record<string, number> = {};
+
+  restaurants.forEach((restaurant) => {
+    restaurant.popularItems.forEach((item) => {
+      dishCount[item] = (dishCount[item] || 0) + 1;
+    });
+  });
+
+  return Object.entries(dishCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([dish]) => dish);
+}
 export default function HomePage() {
   const { lang, setLang } = useLanguage();
   const [mounted, setMounted] = useState(false);
@@ -1747,17 +1766,40 @@ export default function HomePage() {
         selectedCuisine === "All" || restaurant.cuisine === selectedCuisine;
 
       const matchesLocation =
-  !locationTerm || restaurant.area.toLowerCase().includes(locationTerm);
+  !locationTerm ||
+  restaurant.area.toLowerCase().includes(locationTerm) ||
+  mappedAreas.includes(restaurant.area);
 
 return matchesSearch && matchesArea && matchesCuisine && matchesLocation;
     });
   }, [search, selectedArea, selectedCuisine]);
+  
 
-  const clearFilters = () => {
-    setSearch("");
-    setSelectedArea("All");
-    setSelectedCuisine("All");
-  };
+  const topDishesNearYou = useMemo(() => {
+  if (locationSearch.trim()) {
+    const locationTerm = locationSearch.trim().toLowerCase();
+
+    const mappedAreas =
+      LOCATION_MAP[locationTerm] ||
+      Object.entries(LOCATION_MAP)
+        .filter(([key]) => locationTerm.includes(key))
+        .flatMap(([, areas]) => areas);
+
+    if (mappedAreas.length > 0) {
+      return mappedAreas
+        .flatMap((area) => getTopDishesForArea(area))
+        .slice(0, 8);
+    }
+  }
+
+  return getTopDishesForArea(selectedArea);
+}, [locationSearch, selectedArea]);
+const clearFilters = () => {
+  setSearch("");
+  setLocationSearch("");
+  setSelectedArea("All");
+  setSelectedCuisine("All");
+};
 
   const heroData = HERO_DATA[activeLanguage] ?? HERO_DATA.en;
   const founderOffer = FOUNDER_OFFER[activeLanguage] ?? FOUNDER_OFFER.en;
@@ -2185,7 +2227,35 @@ return matchesSearch && matchesArea && matchesCuisine && matchesLocation;
             </button>
           </div>
         </div>
+<div className="mb-8 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
+  <div>
+    <h3 className="text-lg font-bold text-emerald-900">
+      Top Dishes Near You
+    </h3>
+    <p className="text-sm text-emerald-700">
+      Popular dishes based on your area or postcode
+    </p>
+  </div>
 
+  <div className="mt-4 flex flex-wrap gap-3">
+    {topDishesNearYou.length > 0 ? (
+      topDishesNearYou.map((dish) => (
+        <button
+          key={dish}
+          type="button"
+          onClick={() => setSearch(dish)}
+          className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition"
+        >
+          {dish}
+        </button>
+      ))
+    ) : (
+      <span className="text-sm text-emerald-700">
+        Enter a postcode or select an area to see popular dishes
+      </span>
+    )}
+  </div>
+</div>
         {filteredRestaurants.length > 0 ? (
           <div className="flex flex-col gap-8">
             {filteredRestaurants.map((restaurant) => (

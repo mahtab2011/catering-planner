@@ -2663,19 +2663,25 @@ const clearFilters = () => {
       {showCookieBanner ? (
   <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-2xl">
     <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-neutral-700">
+      <p className="text-sm leading-6 text-neutral-700">
         <span className="font-semibold text-neutral-900">We use cookies.</span>{" "}
         We use essential cookies to run this website and optional cookies to improve your experience.{" "}
-        <Link href="/cookie-policy" className="font-semibold text-sky-700 underline">
+        <Link
+          href="/cookie-policy"
+          className="font-semibold text-sky-700 underline hover:text-sky-800"
+        >
           Read our Cookie Policy
         </Link>
       </p>
 
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <button
           type="button"
           onClick={() => {
-            localStorage.setItem("smartserveuk_cookie_choice", "rejected");
+            window.localStorage.setItem(
+              "smartserveuk_cookie_choice",
+              "rejected"
+            );
             setShowCookieBanner(false);
           }}
           className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-50"
@@ -2686,7 +2692,10 @@ const clearFilters = () => {
         <button
           type="button"
           onClick={() => {
-            localStorage.setItem("smartserveuk_cookie_choice", "accepted");
+            window.localStorage.setItem(
+              "smartserveuk_cookie_choice",
+              "accepted"
+            );
             setShowCookieBanner(false);
           }}
           className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"

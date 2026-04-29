@@ -14,6 +14,10 @@ import type { AppLanguage } from "@/lib/i18n";
 import { auth, db } from "@/lib/firebase";
 import FreeAccessBlock from "@/components/home/FreeAccessBlock";
 import HowItWorksBlock from "@/components/home/HowItWorksBlock";
+import TrustDataBlock from "@/components/home/TrustDataBlock";
+import AudienceBlock from "@/components/home/AudienceBlock";
+import ImpactBlock from "@/components/home/ImpactBlock";
+import PlatformReadinessBlock from "@/components/home/PlatformReadinessBlock";
 
 const HERO_DATA: Record<
   AppLanguage,
@@ -1918,6 +1922,10 @@ const clearFilters = () => {
       />
       <FreeAccessBlock />
       <HowItWorksBlock />
+      <TrustDataBlock />
+      <AudienceBlock />
+      <ImpactBlock />
+      <PlatformReadinessBlock />
 <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
   <div className="rounded-3xl border border-sky-100 bg-white p-4 shadow-lg">
     <div className="flex flex-col gap-3 md:flex-row">

@@ -14,7 +14,7 @@ export default function ImpactBlock() {
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Reduced congestion</h3>
             <p className="mt-3 text-gray-600">
               By improving coordination and digital access, unnecessary travel
@@ -22,7 +22,7 @@ export default function ImpactBlock() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Efficient transport use</h3>
             <p className="mt-3 text-gray-600">
               Better planning and structured bookings can support more efficient
@@ -31,7 +31,7 @@ export default function ImpactBlock() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Lower environmental impact</h3>
             <p className="mt-3 text-gray-600">
               Reducing unnecessary trips and improving coordination contributes

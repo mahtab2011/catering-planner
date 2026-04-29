@@ -21,21 +21,21 @@ export default function TrustDataBlock() {
           </div>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
               <h3 className="text-lg font-bold">Private accounts</h3>
               <p className="mt-3 text-gray-600">
                 Each customer works from their own secure login area.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
               <h3 className="text-lg font-bold">Protected data</h3>
               <p className="mt-3 text-gray-600">
                 Confidential information stays linked to the correct user only.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
               <h3 className="text-lg font-bold">Clear access control</h3>
               <p className="mt-3 text-gray-600">
                 Users only see the information relevant to their own account.

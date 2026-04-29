@@ -12,21 +12,21 @@ export default function AudienceBlock() {
         </p>
 
         <div className="mt-12 grid gap-6 md:grid-cols-4">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Customers</h3>
             <p className="mt-3 text-gray-600">
               Discover, request, and manage catering services easily.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Restaurants</h3>
             <p className="mt-3 text-gray-600">
               Reach more customers and manage orders efficiently.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-lg font-bold">Caterers</h3>
             <p className="mt-3 text-gray-600">
               Showcase services and handle bookings in one place.

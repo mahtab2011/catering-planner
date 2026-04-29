@@ -1707,6 +1707,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [selectedArea, setSelectedArea] = useState("All");
   const [selectedCuisine, setSelectedCuisine] = useState("All");
   const [userEmail, setUserEmail] = useState<string>("");
@@ -1720,7 +1721,13 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+useEffect(() => {
+  const cookieChoice = localStorage.getItem("smartserveuk_cookie_choice");
 
+  if (!cookieChoice) {
+    setShowCookieBanner(true);
+  }
+}, []);
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -2653,6 +2660,43 @@ const clearFilters = () => {
           </button>
         </div>
       ) : null}
+      {showCookieBanner ? (
+  <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-2xl">
+    <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-neutral-700">
+        <span className="font-semibold text-neutral-900">We use cookies.</span>{" "}
+        We use essential cookies to run this website and optional cookies to improve your experience.{" "}
+        <Link href="/cookie-policy" className="font-semibold text-sky-700 underline">
+          Read our Cookie Policy
+        </Link>
+      </p>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            localStorage.setItem("smartserveuk_cookie_choice", "rejected");
+            setShowCookieBanner(false);
+          }}
+          className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-50"
+        >
+          Reject
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            localStorage.setItem("smartserveuk_cookie_choice", "accepted");
+            setShowCookieBanner(false);
+          }}
+          className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+        >
+          Accept
+        </button>
+      </div>
+    </div>
+  </div>
+) : null}
     </main>
   );
 }

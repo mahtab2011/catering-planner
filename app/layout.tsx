@@ -14,9 +14,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// ✅ CLEAN SEO METADATA (ONLY ONE BLOCK)
 export const metadata: Metadata = {
-  title: "SmartServeUK",
-  description: "Discover restaurants, food hubs, and catering across London",
+  title: "SmartServeUK - Discover Food Across London",
+  description:
+    "Browse restaurants, stalls, vans, and street food traders across London. Explore menus and order locally.",
+  metadataBase: new URL("https://smartserveuk.com"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "SmartServeUK - Discover Food Across London",
+    description:
+      "Discover great food across London’s food hubs.",
+    url: "https://smartserveuk.com",
+    siteName: "SmartServeUK",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SmartServeUK - Discover Food Across London",
+    description:
+      "Explore London’s best restaurants, street food, and catering services.",
+  },
 };
 
 export default function RootLayout({
@@ -25,11 +45,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F0F7FF]`}>
-  <SessionGuard />
-  <ClientLayout>{children}</ClientLayout>
-</body>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F0F7FF]`}
+      >
+        <SessionGuard />
+        <ClientLayout>{children}</ClientLayout>
+      </body>
     </html>
   );
 }

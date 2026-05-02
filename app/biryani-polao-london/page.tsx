@@ -106,6 +106,7 @@ export default function BiryaniPolaoPage() {
         </div>
       </div>
 
+
     </main>
   );
 }

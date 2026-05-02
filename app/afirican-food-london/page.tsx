@@ -39,6 +39,7 @@ export default function AfricanFoodPage() {
         offering bold flavours, spices and traditional cooking styles.
       </p>
 
+
       <ul className="list-disc pl-6 space-y-2 text-gray-700">
         {dishes.map((d) => <li key={d}>{d}</li>)}
       </ul>

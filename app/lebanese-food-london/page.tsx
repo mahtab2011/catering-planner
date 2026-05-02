@@ -124,7 +124,7 @@ export default function LebaneseFoodLondonPage() {
             Browse Suppliers
           </a>
           <a href="/turkish-food-london" className="text-blue-600 underline">
-            Turkish Food London
+            Lebanese Food London
           </a>
         </div>
       </div>

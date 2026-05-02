@@ -109,6 +109,7 @@ export default function PakistaniFoodLondonPage() {
         trusted food businesses on SmartServeUK.
       </p>
 
+
       <div className="mt-10 p-6 bg-gray-100 rounded-xl">
         <h3 className="text-xl font-semibold mb-2">Explore More</h3>
 

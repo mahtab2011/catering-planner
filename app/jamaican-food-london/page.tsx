@@ -29,6 +29,7 @@ export default function Page() {
         and rich Caribbean dishes. From street food to takeaway shops and catering,
         you can find authentic Jamaican cuisine across the city.
       </p>
+   
       
       <ul className="list-disc pl-6 space-y-2">
         {dishes.map((d) => <li key={d}>{d}</li>)}

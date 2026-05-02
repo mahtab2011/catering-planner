@@ -40,7 +40,6 @@ export default function BritishFoodPage() {
         full English breakfast, along with traditional desserts and regional specialties.
       </p>
 
-
       <ul className="list-disc pl-6 space-y-2 text-gray-700">
         {dishes.map((d) => <li key={d}>{d}</li>)}
       </ul>

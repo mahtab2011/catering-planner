@@ -145,6 +145,7 @@ export default function IndianFoodLondonPage() {
       <div className="mt-10 p-6 bg-gray-100 rounded-xl">
         <h3 className="text-xl font-semibold mb-2">Explore More</h3>
 
+
         <div className="flex gap-4 flex-wrap">
           <a href="/restaurants" className="text-blue-600 underline">
             Browse Restaurants

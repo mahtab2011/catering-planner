@@ -28,6 +28,7 @@ export default function Page() {
         growing Brazilian restaurants and catering services.
       </p>
 
+
       <ul className="list-disc pl-6 space-y-2">
         {dishes.map((d) => <li key={d}>{d}</li>)}
       </ul>

@@ -57,6 +57,7 @@ export default function TurkishFoodLondonPage() {
         Find Turkish Restaurants and Vendors
       </h2>
 
+
       <p className="mb-6 text-gray-700">
         SmartServeUK helps users discover Turkish restaurants, kebab houses,
         takeaway shops, street food vendors and catering services across London.

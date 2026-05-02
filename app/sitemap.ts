@@ -76,6 +76,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
     },
 
+    
     // HIGH VALUE PAGE 🔥
     {
       url: "https://smartserveuk.com/biryani-polao-london",

@@ -7,6 +7,7 @@ export const metadata = {
     "Discover Plashet Road Food Hub in East London. Get off at Plashet Road Bus Stop, walk 1 minute to the south side and explore authentic Bangladeshi street food, family-run cafes, pitha, biryani, fuchka and more.",
 };
 
+
 export default function PlashetRoadFoodHubPage() {
   return (
     <main className="min-h-screen bg-orange-50 text-gray-900">

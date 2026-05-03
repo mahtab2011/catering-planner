@@ -753,7 +753,6 @@ export default function RestaurantSignupPage() {
               >
                 Cancel
               </Link>
-
               <button
                 type="submit"
                 disabled={submitting}

@@ -2181,12 +2181,23 @@ const clearFilters = () => {
 </div>
       </div>
 
-      <Link
-        href="/plashet-road-food-hub"
-        className="inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
-      >
-        Open Plashet Hub
-      </Link>
+      <div className="flex flex-wrap gap-3">
+  <Link
+    href="/plashet-road-food-hub"
+    className="inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
+  >
+    Open Plashet Hub
+  </Link>
+
+  <a
+    href="https://www.google.com/maps/search/?api=1&query=Plashet%20Road%20London%20E13"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex rounded-xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700 hover:bg-orange-50"
+  >
+    Location Guide
+  </a>
+</div>
     </div>
 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
   <div className="text-sm font-semibold text-neutral-700">

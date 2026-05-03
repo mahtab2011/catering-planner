@@ -594,46 +594,6 @@ const hubs: {
 }[] = [
   {
     name: {
-      en: "Brick Lane",
-      bn: "ব্রিক লেন",
-      it: "Brick Lane",
-      fr: "Brick Lane",
-      de: "Brick Lane",
-      es: "Brick Lane",
-      ar: "بريك لين",
-      zh: "布里克巷",
-      ja: "ブリック・レーン",
-      th: "บริคเลน",
-    },
-    description: {
-      en: "A major destination for Bangladeshi, South Asian, and multicultural dining, known for iconic curry houses, food halls, and strong visitor footfall.",
-      bn: "বাংলাদেশি, দক্ষিণ এশীয় এবং বহুসাংস্কৃতিক খাবারের জন্য একটি গুরুত্বপূর্ণ গন্তব্য, যা বিখ্যাত কারি হাউস, ফুড হল এবং শক্তিশালী দর্শনার্থী উপস্থিতির জন্য পরিচিত।",
-      it: "Una delle principali destinazioni per la cucina bangladese, sudasiatica e multiculturale, nota per le sue iconiche curry house, food hall e l’elevato afflusso di visitatori.",
-      fr: "Une destination majeure pour la cuisine bangladaise, sud-asiatique et multiculturelle, connue pour ses célèbres curry houses, ses food halls et sa forte fréquentation.",
-      de: "Ein wichtiges Ziel für bangladeschische, südasiatische und multikulturelle Küche, bekannt für ikonische Curry-Häuser, Food Halls und starke Besucherfrequenz.",
-      es: "Un destino importante para la comida bangladesí, del sur de Asia y multicultural, conocido por sus icónicos curry houses, food halls y gran afluencia de visitantes.",
-      ar: "وجهة رئيسية للمأكولات البنغلاديشية والجنوب آسيوية والمتعددة الثقافات، وتشتهر بمطاعم الكاري الشهيرة وقاعات الطعام وكثرة الزوار.",
-      zh: "这里是孟加拉、南亚及多元文化餐饮的重要目的地，以知名咖喱餐厅、美食广场和大量客流而闻名。",
-      ja: "バングラデシュ料理、南アジア料理、多文化料理の主要スポットで、象徴的なカレーハウス、フードホール、多くの来訪者で知られています。",
-      th: "จุดหมายสำคัญสำหรับอาหารบังกลาเทศ เอเชียใต้ และอาหารหลากหลายวัฒนธรรม มีชื่อเสียงด้านร้านแกงกะหรี่ ฟู้ดฮอลล์ และผู้คนพลุกพล่าน",
-    },
-    href: "/hubs/brick-lane",
-    image: "/hubs/brick-lane/7.jpg",
-    gallery: gallery("brick-lane", [
-      "1.jpg",
-      "2.jpg",
-      "3.jpg",
-      "4.jpg",
-      "5.jpg",
-      "6.jpg",
-      "7.jpg",
-      "8.jpg",
-      "9.jpg",
-    ]),
-  },
-
-  {
-    name: {
       en: "Green Street / Plashet Road",
       bn: "গ্রিন স্ট্রিট / প্লাশেট রোড",
       it: "Green Street / Plashet Road",
@@ -686,6 +646,47 @@ gallery: gallery("plashet-road", [
   "20.jpg",
 ]),
   },
+  {
+    name: {
+      en: "Brick Lane",
+      bn: "ব্রিক লেন",
+      it: "Brick Lane",
+      fr: "Brick Lane",
+      de: "Brick Lane",
+      es: "Brick Lane",
+      ar: "بريك لين",
+      zh: "布里克巷",
+      ja: "ブリック・レーン",
+      th: "บริคเลน",
+    },
+    description: {
+      en: "A major destination for Bangladeshi, South Asian, and multicultural dining, known for iconic curry houses, food halls, and strong visitor footfall.",
+      bn: "বাংলাদেশি, দক্ষিণ এশীয় এবং বহুসাংস্কৃতিক খাবারের জন্য একটি গুরুত্বপূর্ণ গন্তব্য, যা বিখ্যাত কারি হাউস, ফুড হল এবং শক্তিশালী দর্শনার্থী উপস্থিতির জন্য পরিচিত।",
+      it: "Una delle principali destinazioni per la cucina bangladese, sudasiatica e multiculturale, nota per le sue iconiche curry house, food hall e l’elevato afflusso di visitatori.",
+      fr: "Une destination majeure pour la cuisine bangladaise, sud-asiatique et multiculturelle, connue pour ses célèbres curry houses, ses food halls et sa forte fréquentation.",
+      de: "Ein wichtiges Ziel für bangladeschische, südasiatische und multikulturelle Küche, bekannt für ikonische Curry-Häuser, Food Halls und starke Besucherfrequenz.",
+      es: "Un destino importante para la comida bangladesí, del sur de Asia y multicultural, conocido por sus icónicos curry houses, food halls y gran afluencia de visitantes.",
+      ar: "وجهة رئيسية للمأكولات البنغلاديشية والجنوب آسيوية والمتعددة الثقافات، وتشتهر بمطاعم الكاري الشهيرة وقاعات الطعام وكثرة الزوار.",
+      zh: "这里是孟加拉、南亚及多元文化餐饮的重要目的地，以知名咖喱餐厅、美食广场和大量客流而闻名。",
+      ja: "バングラデシュ料理、南アジア料理、多文化料理の主要スポットで、象徴的なカレーハウス、フードホール、多くの来訪者で知られています。",
+      th: "จุดหมายสำคัญสำหรับอาหารบังกลาเทศ เอเชียใต้ และอาหารหลากหลายวัฒนธรรม มีชื่อเสียงด้านร้านแกงกะหรี่ ฟู้ดฮอลล์ และผู้คนพลุกพล่าน",
+    },
+    href: "/hubs/brick-lane",
+    image: "/hubs/brick-lane/7.jpg",
+    gallery: gallery("brick-lane", [
+      "1.jpg",
+      "2.jpg",
+      "3.jpg",
+      "4.jpg",
+      "5.jpg",
+      "6.jpg",
+      "7.jpg",
+      "8.jpg",
+      "9.jpg",
+    ]),
+  },
+
+  
 
   {
     name: {
@@ -1916,11 +1917,74 @@ const clearFilters = () => {
         </div>
       </section>
 
+<section className="border-b border-orange-200 bg-linear-to-r from-orange-600 via-amber-500 to-yellow-400">
+  <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
+    <div>
+      <div className="text-sm font-black uppercase tracking-wide text-white/90">
+        🌟 Flagship Food Hub
+      </div>
+
+      <h2 className="mt-1 text-2xl font-extrabold text-white md:text-3xl">
+        Plashet Road Food Hub
+      </h2>
+
+      <p className="mt-2 max-w-3xl text-sm font-medium text-white md:text-base">
+        East London’s hidden food oasis — Bangladeshi street food, tea, pitha,
+        biryani, fuchka, family-run restaurants and friendly local service.
+      </p>
+    </div>
+
+    <Link
+      href="/plashet-road-food-hub"
+      className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-extrabold text-orange-700 shadow-md transition hover:bg-orange-50"
+    >
+      Explore Plashet Road Food Hub →
+    </Link>
+  </div>
+</section>
       <HeroSection
         {...heroData}
         lang={activeLanguage}
         image="/hubs/westfield/hero-westfield.jpg"
       />
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
+    <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+      <div>
+        <div className="text-sm font-black uppercase tracking-wide text-orange-700">
+          Plashet Road Founding Partners
+        </div>
+
+        <h2 className="mt-2 text-3xl font-extrabold text-neutral-900">
+          Free lifetime listing for selected Plashet Road restaurants
+        </h2>
+
+        <p className="mt-3 text-neutral-700">
+          Restaurant owners from Plashet Road can join the flagship hub for free,
+          showcase their food and service, and appear both on the Plashet Road
+          Food Hub page and the main restaurant listing page.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <ul className="space-y-3 text-sm font-semibold text-neutral-800">
+          <li>✅ Up to 6 approved photos</li>
+          <li>✅ Up to 3 approved videos</li>
+          <li>✅ Each video max 30 seconds</li>
+          <li>✅ Admin approval before publishing</li>
+          <li>✅ Free lifetime founding partner listing</li>
+        </ul>
+
+        <Link
+          href="/plashet-road-food-hub"
+          className="mt-5 inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
+        >
+          View Plashet Road Hub
+        </Link>
+      </div>
+    </div>
+  </div>
+</section>
       <FreeAccessBlock />
       <HowItWorksBlock />
       <TrustDataBlock />
@@ -2078,7 +2142,112 @@ const clearFilters = () => {
           </div>
         </div>
       </section>
+<section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+  <div className="rounded-3xl border border-orange-200 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div className="text-sm font-black uppercase tracking-wide text-orange-700">
+          Plashet Road Restaurants
+        </div>
 
+        <h2 className="mt-2 text-3xl font-extrabold text-neutral-900">
+          Featured restaurants from Plashet Road Food Hub
+        </h2>
+
+        <p className="mt-3 max-w-3xl text-neutral-600">
+          Founding partner restaurants from Plashet Road will appear here with
+          their food, service photos and short approved videos.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+  <span className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-800">
+    6 photos included
+  </span>
+
+  <span className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-800">
+    3 videos included
+  </span>
+
+  <span className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-800">
+    Max 30 seconds each
+  </span>
+
+  <span className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-800">
+    Admin approved
+  </span>
+
+  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800">
+    Free for Plashet founding partners
+  </span>
+</div>
+      </div>
+
+      <Link
+        href="/plashet-road-food-hub"
+        className="inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
+      >
+        Open Plashet Hub
+      </Link>
+    </div>
+<div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div className="text-sm font-semibold text-neutral-700">
+    Are you a restaurant owner on Plashet Road?
+  </div>
+
+  <div className="flex flex-wrap gap-3">
+    <Link
+      href="/signup/restaurant?hub=plashet-road"
+      className="inline-flex items-center justify-center rounded-xl bg-orange-600 px-5 py-3 text-sm font-extrabold text-white shadow-md hover:bg-orange-700"
+    >
+      Become Founding Partner (Free)
+    </Link>
+
+    <Link
+      href="/plashet-road-food-hub"
+      className="inline-flex items-center justify-center rounded-xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700 hover:bg-orange-50"
+    >
+      Learn More
+    </Link>
+  </div>
+</div>
+    <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+        <h3 className="text-xl font-bold text-neutral-900">
+          Plashet Family Grill
+        </h3>
+        <p className="mt-2 text-sm text-neutral-700">
+          Bangladeshi grill, biryani, polao and family meals.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-orange-800">
+          Photos/videos coming soon
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+        <h3 className="text-xl font-bold text-neutral-900">
+          Pitha & Tea Corner
+        </h3>
+        <p className="mt-2 text-sm text-neutral-700">
+          Tea, pitha, cakes, sweets and friendly local service.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-orange-800">
+          Photos/videos coming soon
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+        <h3 className="text-xl font-bold text-neutral-900">
+          Fuchka & Chotpoti House
+        </h3>
+        <p className="mt-2 text-sm text-neutral-700">
+          Street food favourites including fuchka, chotpoti and snacks.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-orange-800">
+          Photos/videos coming soon
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
       <section
   id="featured-restaurants"
   className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"
@@ -2090,13 +2259,21 @@ const clearFilters = () => {
 
   return (
     <div key={`${hub.href}-${index}`} className="space-y-4">
-      <HubCard
-  href={hub.href}
-  name={hubName}
-  description={hub.description[activeLanguage] ?? hub.description.en}
-  image={hub.image}
+      <div className="relative">
+  {hub.href === "/hubs/green-street" && (
+    <div className="absolute left-3 top-3 z-10 rounded-full bg-orange-600 px-3 py-1 text-xs font-bold text-white shadow-md">
+      ⭐ Featured Hub
+    </div>
+  )}
+
+  <HubCard
+    href={hub.href}
+    name={hubName}
+    description={hub.description[activeLanguage] ?? hub.description.en}
+    image={hub.image}
     lang={activeLanguage}
-/>
+  />
+</div>
 
       {hub.gallery && hub.gallery.length > 0 ? (
   <div className="grid grid-cols-2 gap-3 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

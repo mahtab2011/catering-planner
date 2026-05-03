@@ -938,7 +938,7 @@ gallery: gallery("plashet-road", [
       ja: "南アジア系レストランとテイクアウト需要が強い、東ロンドンの活気あるフードエリアです。",
       th: "ย่านอาหารที่คึกคักในอีสต์ลอนดอน มีร้านอาหารเอเชียใต้จำนวนมากและความต้องการสั่งกลับบ้านสูง",
     },
-    
+
     href: "/hubs/east-ham-town-centre",
     image: "/hubs/east-ham-town-centre/hero.jpg",
 gallery: gallery("east-ham-town-centre", [
@@ -1866,7 +1866,7 @@ const clearFilters = () => {
   return (
     <main
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-linear-to-b from-sky-50 via-white to-white text-neutral-900"
+      className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white text-neutral-900"
     >
       <section className="border-b border-sky-100 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">

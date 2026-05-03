@@ -938,6 +938,7 @@ gallery: gallery("plashet-road", [
       ja: "南アジア系レストランとテイクアウト需要が強い、東ロンドンの活気あるフードエリアです。",
       th: "ย่านอาหารที่คึกคักในอีสต์ลอนดอน มีร้านอาหารเอเชียใต้จำนวนมากและความต้องการสั่งกลับบ้านสูง",
     },
+    
     href: "/hubs/east-ham-town-centre",
     image: "/hubs/east-ham-town-centre/hero.jpg",
 gallery: gallery("east-ham-town-centre", [

@@ -1714,7 +1714,7 @@ export default function HomePage() {
   const { lang, setLang } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  
   const [locationSearch, setLocationSearch] = useState("");
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [selectedArea, setSelectedArea] = useState("All");
@@ -1788,8 +1788,7 @@ useEffect(() => {
 
 return matchesSearch && matchesArea && matchesCuisine && matchesLocation;
     });
-  }, [search, selectedArea, selectedCuisine]);
-  
+  }, [search, selectedArea, selectedCuisine, locationSearch]);
 
   const topDishesNearYou = useMemo(() => {
   if (locationSearch.trim()) {
@@ -1918,7 +1917,7 @@ const clearFilters = () => {
         </div>
       </section>
 
-<section className="border-b border-orange-200 bg-linear-to-r from-orange-600 via-amber-500 to-yellow-400">
+<section className="border-b border-orange-200 bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-400">
   <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
     <div>
       <div className="text-sm font-black uppercase tracking-wide text-white/90">
@@ -2352,7 +2351,7 @@ const clearFilters = () => {
               </label>
               <input
                 type="text"
-                value={searchInput}
+                value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={copy.searchPlaceholder}
                 className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
@@ -2665,7 +2664,7 @@ const clearFilters = () => {
         </div>
       </section>
 
-      <section className="border-t border-sky-100 bg-linear-to-r from-sky-700 to-blue-700 text-white">
+      <section className="border-t border-sky-100 bg-gradient-to-r from-sky-700 to-blue-700 text-white">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight">{copy.ctaTitle}</h2>
           <p className="mt-3 max-w-3xl text-sky-50">{copy.ctaSubtitle}</p>

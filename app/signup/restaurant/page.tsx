@@ -222,7 +222,14 @@ export default function RestaurantSignupPage() {
 
     clearMessage();
   }
-
+function getErrorCode(error: unknown) {
+  return typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+    ? error.code
+    : "";
+}
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -300,7 +307,7 @@ export default function RestaurantSignupPage() {
     setMsg("");
     setMsgType("");
 
-    let createdAuthUser = null;
+    let createdAuthUser: Awaited<ReturnType<typeof createUserWithEmailAndPassword>>["user"] | null = null;
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -432,10 +439,10 @@ export default function RestaurantSignupPage() {
 
       setForm(INITIAL_FORM);
       router.push("/signup/restaurant/pending");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit restaurant signup:", error);
 
-      if (createdAuthUser && error?.code !== "auth/email-already-in-use") {
+      if (createdAuthUser && getErrorCode(error) !== "auth/email-already-in-use") {
         try {
           await deleteUser(createdAuthUser);
         } catch (rollbackError) {
@@ -443,7 +450,7 @@ export default function RestaurantSignupPage() {
         }
       }
 
-      showError(getFirebaseErrorMessage(error?.code || ""));
+      showError(getFirebaseErrorMessage(getErrorCode(error)));
     } finally {
       setSubmitting(false);
     }

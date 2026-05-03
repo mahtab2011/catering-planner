@@ -2186,7 +2186,7 @@ const clearFilters = () => {
     href="/plashet-road-food-hub"
     className="inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
   >
-    Open Plashet Hub
+    Location Map – Plashet Hub
   </Link>
 
   <a

@@ -1865,7 +1865,7 @@ const clearFilters = () => {
   return (
     <main
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white text-neutral-900"
+      className="min-h-screen bg-linear-to-b from-sky-50 via-white to-white text-neutral-900"
     >
       <section className="border-b border-sky-100 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
@@ -1917,7 +1917,7 @@ const clearFilters = () => {
         </div>
       </section>
 
-<section className="border-b border-orange-200 bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-400">
+<section className="border-b border-orange-200 bg-linear-to-r from-orange-600 via-amber-500 to-yellow-400">
   <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
     <div>
       <div className="text-sm font-black uppercase tracking-wide text-white/90">
@@ -1940,6 +1940,17 @@ const clearFilters = () => {
     >
       Explore Plashet Road Food Hub →
     </Link>
+    <p className="mt-4 text-sm font-semibold text-white">
+  Restaurants, cafés, dessert shops and street food sellers in Plashet Road can
+  apply as founding partners.
+</p>
+
+<Link
+  href="/plashet-road-food-hub"
+  className="mt-4 inline-flex rounded-full bg-white px-6 py-3 text-sm font-bold text-orange-700 shadow-md transition hover:-translate-y-1 hover:shadow-xl"
+>
+  Apply as Plashet Road Restaurant →
+</Link>
   </div>
 </section>
       <HeroSection
@@ -2000,22 +2011,23 @@ const clearFilters = () => {
         value={search}
         onChange={(e) => {
   setSearch(e.target.value);
-
-  const section = document.getElementById("featured-restaurants");
-  if (section) {
-    section.scrollIntoView({ behavior: "smooth" });
-  }
 }}
         placeholder="Search restaurants, food, hubs or cuisine..."
         className="flex-1 rounded-2xl border border-neutral-300 px-5 py-4 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
       />
 
-      <a
-        href="#featured-restaurants"
-        className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-6 py-4 text-sm font-bold text-white hover:bg-sky-700"
-      >
-        Search
-      </a>
+      <button
+  type="button"
+  onClick={() => {
+    const section = document.getElementById("featured-restaurants");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  }}
+  className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-6 py-4 text-sm font-bold text-white"
+>
+  Search
+</button>
 
       <Link
         href="/how-it-works"
@@ -2675,7 +2687,7 @@ const clearFilters = () => {
         </div>
       </section>
 
-      <section className="border-t border-sky-100 bg-gradient-to-r from-sky-700 to-blue-700 text-white">
+      <section className="border-t border-sky-100 bg-linear-to-r from-sky-700 to-blue-700 text-white">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight">{copy.ctaTitle}</h2>
           <p className="mt-3 max-w-3xl text-sky-50">{copy.ctaSubtitle}</p>

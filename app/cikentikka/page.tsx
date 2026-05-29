@@ -10,9 +10,9 @@ export default function CikenTikkaPage() {
           </Link>
 
           <div className="flex flex-wrap gap-3 text-sm font-bold">
-            <Link href="/" className="rounded-full border px-4 py-2 hover:bg-orange-50">
-              SmartServeUK
-            </Link>
+            <Link href="https://smartserveuk.com">
+  SmartServeUK
+</Link>
             <Link href="/food-hubs" className="rounded-full border px-4 py-2 hover:bg-orange-50">
               Food Hubs
             </Link>
@@ -44,7 +44,7 @@ suppliers and food hubs across London.
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-  href="/"
+  href="https://smartserveuk.com"
   className="rounded-2xl bg-orange-600 px-6 py-3 font-bold text-white transition hover:bg-orange-700"
 >
   Enter SmartServeUK

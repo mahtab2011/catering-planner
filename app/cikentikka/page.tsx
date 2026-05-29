@@ -38,8 +38,8 @@ export default function CikenTikkaPage() {
           </h1>
 
           <p className="mt-5 max-w-4xl text-xl leading-8 text-slate-700">
-            A simple gateway to SmartServeUK for customers, restaurants,
-suppliers, riders, catering businesses and community food hubs.
+            London's Food Discovery Gateway. Find restaurants, street food, catering businesses,
+suppliers and food hubs across London.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">

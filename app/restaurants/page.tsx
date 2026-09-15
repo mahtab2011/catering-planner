@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useSearchParams } from "next/navigation";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 type LiveRestaurant = {
   id: string;
@@ -166,11 +169,20 @@ function orderCuisines(cuisines: string[], hub?: string) {
 }
 
 export default function RestaurantsPage() {
+  return (
+    <Suspense fallback={null}>
+      <RestaurantsPageContent />
+    </Suspense>
+  );
+}
+
+function RestaurantsPageContent() {
+  const searchParams = useSearchParams();
   const [restaurants, setRestaurants] = useState<LiveRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selectedHub, setSelectedHub] = useState("All");
-  const [selectedCuisine, setSelectedCuisine] = useState("All");
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [selectedHub, setSelectedHub] = useState(searchParams.get("hub") || "All");
+  const [selectedCuisine, setSelectedCuisine] = useState(searchParams.get("cuisine") || "All");
   const [selectedStatus, setSelectedStatus] = useState("active");
 
   useEffect(() => {
@@ -262,7 +274,9 @@ export default function RestaurantsPage() {
   }, [filteredRestaurants, selectedHub]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -525,6 +539,8 @@ export default function RestaurantsPage() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

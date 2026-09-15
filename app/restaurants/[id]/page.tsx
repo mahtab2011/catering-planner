@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import RestaurantReviews from "@/components/reviews/RestaurantReviews";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 type LangKey = "en" | "it" | "fr" | "de" | "es" | "ar" | "zh";
 
@@ -865,39 +867,47 @@ export default function RestaurantDetailPage() {
 
   if (loading) {
     return (
-      <main
-        dir={isRtl ? "rtl" : "ltr"}
-        className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
-      >
-        <div className="mx-auto max-w-6xl rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-neutral-900">
-            {copy.loadingTitle}
-          </h1>
-          <p className="mt-3 text-neutral-600">{copy.loadingText}</p>
-        </div>
-      </main>
+      <>
+        <SiteHeader />
+        <main
+          dir={isRtl ? "rtl" : "ltr"}
+          className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
+        >
+          <div className="mx-auto max-w-6xl rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+            <h1 className="text-2xl font-bold text-neutral-900">
+              {copy.loadingTitle}
+            </h1>
+            <p className="mt-3 text-neutral-600">{copy.loadingText}</p>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
     );
   }
 
   if (!restaurant) {
     return (
-      <main
-        dir={isRtl ? "rtl" : "ltr"}
-        className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
-      >
-        <div className="mx-auto max-w-6xl rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-neutral-900">
-            {copy.notFoundTitle}
-          </h1>
-          <p className="mt-3 text-neutral-600">{copy.notFoundText}</p>
-          <Link
-            href="/restaurants"
-            className="mt-6 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-          >
-            {copy.backToRestaurants}
-          </Link>
-        </div>
-      </main>
+      <>
+        <SiteHeader />
+        <main
+          dir={isRtl ? "rtl" : "ltr"}
+          className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
+        >
+          <div className="mx-auto max-w-6xl rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+            <h1 className="text-2xl font-bold text-neutral-900">
+              {copy.notFoundTitle}
+            </h1>
+            <p className="mt-3 text-neutral-600">{copy.notFoundText}</p>
+            <Link
+              href="/restaurants"
+              className="mt-6 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
+            >
+              {copy.backToRestaurants}
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
     );
   }
 
@@ -929,10 +939,12 @@ export default function RestaurantDetailPage() {
       : copy.draftStatusText;
 
   return (
-    <main
-      dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
-    >
+    <>
+      <SiteHeader />
+      <main
+        dir={isRtl ? "rtl" : "ltr"}
+        className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6"
+      >
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-3">
@@ -1545,6 +1557,8 @@ export default function RestaurantDetailPage() {
           </aside>
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

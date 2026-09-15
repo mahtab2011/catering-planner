@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import RestaurantReviews from "@/components/reviews/RestaurantReviews";
 
 type LangKey = "en" | "it" | "fr" | "de" | "es" | "ar" | "zh";
 
@@ -1292,6 +1293,8 @@ export default function RestaurantDetailPage() {
                 {copy.galleryEmpty}
               </div>
             </section>
+
+            <RestaurantReviews restaurantId={restaurant.id} restaurantName={restaurant.name} />
           </section>
 
           <aside className="space-y-6">

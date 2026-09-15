@@ -1,0 +1,14 @@
+{
+  "name": "london-food-hubs-firestore-rules-tests",
+  "private": true,
+  "type": "module",
+  "description": "Firebase Rules unit tests for firestore.rules. Requires the Firestore emulator (needs a local Java runtime) — see README.md. NOT run by this repository's normal build/lint/test flow.",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^12.8.0",
+    "vitest": "^2.1.4"
+  }
+}

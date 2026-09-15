@@ -13,8 +13,10 @@ Not deployed. This directory has never had `npm install` or `firebase deploy` ru
 2. `firebase login` (interactive; needs real credentials)
 3. `firebase use <project-id>` — point the CLI at the actual Firebase project (create a `.firebaserc` locally; not committed, since it's project-specific and this repo currently serves no single fixed Firebase project reference)
 4. `firebase deploy --only functions`
-5. Bootstrap the first admin (see `scripts/bootstrapFirstAdmin.js` for full instructions):
-   `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json node scripts/bootstrapFirstAdmin.js <first-admin-uid>`
+5. Bootstrap the first admin (see `scripts/bootstrapFirstAdmin.js` for full instructions). Dry run first — it prints the resolved project and target user but writes nothing:
+   `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json node scripts/bootstrapFirstAdmin.js <uid-or-email>`
+   Then, once you've confirmed the printed project and user are correct, apply for real:
+   `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json node scripts/bootstrapFirstAdmin.js <uid-or-email> --apply`
 6. Only after step 5 succeeds: deploy `firestore.rules` (`firebase deploy --only firestore:rules`). Deploying the rules before an admin custom claim exists means nobody — not even the site owner — can perform any admin action until the bootstrap step runs, since the rules trust the custom claim exclusively (see `docs/SECURITY-FOLLOWUP.md` for why).
 7. Every admin added after the first can be granted through the `setAdminClaim` callable from an authenticated admin session — no more manual scripts needed.
 

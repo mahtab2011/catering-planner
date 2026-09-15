@@ -19,11 +19,11 @@
  * Before this can be deployed: `firebase deploy --only functions`
  * requires an authenticated `firebase login` and a real project,
  * neither of which this session has. See
- * docs/SECURITY-FOLLOWUP.md and functions/scripts/README.md for the
- * exact manual steps required, including the one that must happen
- * BEFORE this deploys: bootstrapping the very first admin (see below
- * — setAdminClaim can't grant the first admin, since it requires an
- * existing admin to call it).
+ * docs/SECURITY-FOLLOWUP.md and functions/README.md for the exact
+ * manual steps required, including the one that must happen BEFORE
+ * this deploys: bootstrapping the very first admin (see
+ * scripts/bootstrapFirstAdmin.js — setAdminClaim can't grant the
+ * first admin, since it requires an existing admin to call it).
  */
 
 const { initializeApp } = require("firebase-admin/app");
@@ -54,13 +54,46 @@ exports.setAdminClaim = functions.https.onCall(async (data, context) => {
   }
 
   const targetUid = typeof data?.uid === "string" ? data.uid.trim() : "";
-  const grantAdmin = data?.admin === true;
 
   if (!targetUid) {
     throw new functions.https.HttpsError("invalid-argument", "uid is required.");
   }
 
-  const targetUser = await auth.getUser(targetUid);
+  // `admin` must be an explicit boolean. Defaulting a missing/malformed
+  // value to `false` would silently REVOKE instead of erroring — an
+  // easy way for a caller who forgot the `admin` field to accidentally
+  // demote someone instead of getting a clear failure.
+  if (typeof data?.admin !== "boolean") {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "admin must be explicitly true or false."
+    );
+  }
+  const grantAdmin = data.admin;
+
+  // Guard against an admin locking themselves (and everyone else) out
+  // by revoking their own claim through this function — self-revocation
+  // is a deliberate, rare action that should go through the Firebase
+  // console (or another admin), not this callable, so a mistaken or
+  // automated call can't strand the project with zero admins.
+  if (targetUid === context.auth.uid && grantAdmin === false) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Use the Firebase console to revoke your own admin access, not this function."
+    );
+  }
+
+  let targetUser;
+  try {
+    targetUser = await auth.getUser(targetUid);
+  } catch (error) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `No user found for uid ${targetUid}.`,
+      error?.message
+    );
+  }
+
   const existingClaims = targetUser.customClaims || {};
 
   await auth.setCustomUserClaims(targetUid, {
@@ -87,35 +120,53 @@ exports.setAdminClaim = functions.https.onCall(async (data, context) => {
  * and `.reviewCount` are ever set. The rules in firestore.rules
  * explicitly forbid any client (including the restaurant's own
  * owner) from writing those two fields directly.
+ *
+ * Runs inside a transaction so two review writes landing for the same
+ * restaurant in quick succession (e.g. two customers reviewing around
+ * the same time, each triggering their own onReviewWrite invocation)
+ * can't race a read-then-write and have the slower one overwrite the
+ * faster one with a stale count. Firestore retries a transaction
+ * automatically if its reads are invalidated by a concurrent write,
+ * so this converges correctly rather than merely self-healing on the
+ * next unrelated write.
  */
 async function recomputeRestaurantRating(restaurantId) {
   if (!restaurantId) return;
 
-  const approvedReviews = await db
-    .collection("reviews")
-    .where("restaurantId", "==", restaurantId)
-    .where("status", "==", "approved")
-    .get();
-
-  const ratings = approvedReviews.docs
-    .map((d) => d.data().rating)
-    .filter((r) => typeof r === "number");
-
-  const reviewCount = ratings.length;
-  const rating =
-    reviewCount === 0
-      ? 0
-      : Math.round((ratings.reduce((sum, r) => sum + r, 0) / reviewCount) * 10) / 10;
-
   const restaurantRef = db.collection("restaurants").doc(restaurantId);
-  const restaurantSnap = await restaurantRef.get();
 
-  // Don't create a restaurant document as a side effect of a review
-  // write racing a restaurant delete/typo — only update one that
-  // actually exists.
-  if (!restaurantSnap.exists) return;
+  await db.runTransaction(async (transaction) => {
+    const restaurantSnap = await transaction.get(restaurantRef);
 
-  await restaurantRef.update({ rating, reviewCount });
+    // Don't create a restaurant document as a side effect of a review
+    // write racing a restaurant delete/typo — only update one that
+    // actually exists.
+    if (!restaurantSnap.exists) return;
+
+    const approvedReviews = await transaction.get(
+      db
+        .collection("reviews")
+        .where("restaurantId", "==", restaurantId)
+        .where("status", "==", "approved")
+    );
+
+    // Defensive range check: normal app writes are already constrained
+    // to 1-5 by firestore.rules, but this aggregate is computed with
+    // Admin SDK privileges (which bypass those rules), so a malformed
+    // or out-of-range value written by any other trusted process
+    // should never be allowed to skew the public-facing average.
+    const ratings = approvedReviews.docs
+      .map((d) => d.data().rating)
+      .filter((r) => typeof r === "number" && r >= 1 && r <= 5);
+
+    const reviewCount = ratings.length;
+    const rating =
+      reviewCount === 0
+        ? 0
+        : Math.round((ratings.reduce((sum, r) => sum + r, 0) / reviewCount) * 10) / 10;
+
+    transaction.update(restaurantRef, { rating, reviewCount });
+  });
 }
 
 /**
@@ -124,6 +175,14 @@ async function recomputeRestaurantRating(restaurantId) {
  * (simplest correct approach at this data volume) rather than trying
  * to increment/decrement, which would drift on retries or partial
  * failures.
+ *
+ * This is a 1st-gen Firestore trigger with no failurePolicy set, so a
+ * transient failure is NOT automatically retried by the platform. In
+ * practice this is low-risk: because the function always recomputes
+ * from the full set of approved reviews rather than incrementing, the
+ * very next review write for the same restaurant (approve, edit, or
+ * delete) recomputes correctly from scratch regardless of whether an
+ * earlier invocation was dropped.
  */
 exports.onReviewWrite = functions.firestore
   .document("reviews/{reviewId}")

@@ -1,38 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { getHubBySlug } from "@/lib/hubs";
 
-export default function HubPage() {
+const hub = getHubBySlug("china-town-soho-food-hub");
+
+export default function ChinaTownSohoFoodHubPage() {
   return (
     <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
-        
-        {/* Header */}
         <div className="mb-6">
-          <Link
-            href="/"
-            className="text-sm text-emerald-700 hover:underline"
-          >
+          <Link href="/" className="text-sm text-emerald-700 hover:underline">
             ← Back to Home
           </Link>
         </div>
 
-        {/* Title */}
         <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
-          Edgware Road Arabian Food Hub
+          {hub?.name || "China Town (Soho) Food Hub"}
         </h1>
 
-        {/* Description */}
         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
-          A strong Middle Eastern and Arabian dining corridor with high tourist visibility,
-          late-night demand, grills, desserts, and a vibrant food culture.
+          {hub?.description.en ||
+            "A globally recognised central London food destination known for East Asian restaurants and dessert shops."}
         </p>
 
-        {/* Section placeholder */}
-        <div className="mt-8 rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-neutral-500">
-          Restaurants coming soon...
-        </div>
+        {hub?.cuisineTags && hub.cuisineTags.length > 0 ? (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {hub.cuisineTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
+        <div className="mt-8 rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-neutral-500">
+          Restaurant listings for this hub are coming soon.{" "}
+          <Link href="/signup/restaurant" className="font-semibold text-emerald-700 underline">
+            Own a business here? List it free
+          </Link>
+          .
+        </div>
       </div>
     </main>
   );

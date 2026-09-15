@@ -11,26 +11,15 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { canAccess, getCurrentAccount } from "@/lib/authGuard";
+import { db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 import type { ReviewDoc } from "@/lib/types";
 
 export default function AdminReviewsPage() {
-  const [checking, setChecking] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const { checking, allowed } = useAdminGate();
   const [reviews, setReviews] = useState<ReviewDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async () => {
-      const account = await getCurrentAccount();
-      setAllowed(canAccess(account, ["admin"]));
-      setChecking(false);
-    });
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     if (!allowed) return;

@@ -6,6 +6,7 @@ Not deployed. This directory has never had `npm install` or `firebase deploy` ru
 
 - `index.js` — `setAdminClaim` (callable, admin-only, grants/revokes the `admin` custom claim on another user) and `onReviewWrite` (Firestore trigger that recomputes a restaurant's `rating`/`reviewCount` from its approved reviews).
 - `scripts/bootstrapFirstAdmin.js` — one-time manual script to grant the very first admin, since `setAdminClaim` requires an existing admin to call it.
+- `scripts/backfillRestaurantOwners.js` — dry-run-first script that proposes `ownerUid` for restaurants left unclaimed by older code paths (see the script's own header for the full investigation — there were three different restaurant-creation paths in this codebase, only two of which reliably set an owner). Never overwrites an existing owner; refuses ambiguous matches. See `docs/LONDON-FOOD-HUBS-LAUNCH-CHECKLIST.md` step G for when to run it.
 
 ## Deploy sequence (run locally by whoever has Firebase project access — not this session)
 

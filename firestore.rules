@@ -34,22 +34,37 @@ rules_version = '2';
 //
 // SCOPE — read this before deploying anything
 // --------------------------------------------
-// This file only covers the collections explicitly audited this
-// session: reviews, articles, recommendations, restaurants,
-// restaurant_signups, users. Firestore rules default-deny any path
-// with no matching `match` block, so deploying this file as a full
-// replacement for whatever rules currently govern the live project
-// would immediately break every other collection the app uses —
-// orders, staff, suppliers, customers, riders, rider_signups,
-// catering_houses, blackcab_*, sales_signups, promotions, and more —
-// none of which were re-audited here. Guessing a permissive rule for
-// those just to avoid that breakage would be exactly the kind of
-// insecure shortcut this work was asked not to take.
+// A full collection inventory now exists —
+// docs/FIRESTORE-COLLECTION-INVENTORY.md — covering all 28 Firestore
+// collections this app uses. This file reflects that inventory:
 //
-// Before this can be deployed: either (a) merge these match blocks
-// into whatever rules currently exist live, on top of a proper audit
-// of the collections this file doesn't cover, or (b) commission that
-// audit and extend this file first. See docs/SECURITY-FOLLOWUP.md.
+//   - reviews, articles, recommendations, restaurants,
+//     restaurant_signups, users: fully covered (original scope).
+//   - staff, customers, events, sales_signups, blackcab_early_access,
+//     blackcab_bookings, blackcab_journey_ratings, blackcab_concerns,
+//     blackcab_signups, catering_house_signups, customer_signups,
+//     supplier_signups, blackcabs, blackcab_drivers,
+//     riderCorrectionLogs (create only): covered, based on a clear,
+//     consistent pattern found in application code — see the
+//     "CONFIDENTLY COVERABLE" section below.
+//   - orders, counters, riders, rider_signups (read scope),
+//     suppliers, supplier_items, supplier_orders, catering_houses,
+//     ingredients, activity_logs (read): deliberately NOT covered —
+//     see the "REQUIRES MANUAL POLICY DECISION" section below and the
+//     inventory doc for exactly why each one can't be inferred safely.
+//   - Everything else (promotions, and anything not found by this
+//     session's audit): not covered, falls through to default deny.
+//
+// Firestore rules default-deny any path with no matching `match`
+// block. That means deploying this file does NOT silently open
+// anything uncovered — but it DOES mean every REQUIRES-MANUAL-POLICY-
+// DECISION collection becomes fully inaccessible (including to admins)
+// the moment these rules go live, until that collection gets its own
+// `match` block. For collections where the app currently has NO
+// authorization check at all (see the inventory), that's a behavior
+// change from "open" to "closed" — likely the right direction
+// security-wise, but confirm it won't break an operational workflow
+// (e.g. an unauthenticated kitchen-display screen) before deploying.
 // =============================================================
 
 service cloud.firestore {
@@ -255,10 +270,167 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Deliberately no catch-all rule here. Every other collection
-    // (orders, staff, suppliers, customers, riders, rider_signups,
-    // catering_houses, blackcab_*, sales_signups, promotions, etc.) is
-    // untouched by this file and falls through to Firestore's default
-    // deny — see the SCOPE note at the top of this file.
+    // =========================================================
+    // CONFIDENTLY COVERABLE — existing SmartServeUK collections
+    // where a clear, consistent authorization pattern was found in
+    // application code (see docs/FIRESTORE-COLLECTION-INVENTORY.md
+    // for the full file-by-file trace behind each one). Still NOT
+    // deployed — see the file-level note at the top.
+    // =========================================================
+
+    // ---------- staff ----------
+    // Every access point in app/staff/* scopes by ownerUid; no page
+    // reads/writes the full collection unfiltered.
+    match /staff/{staffId} {
+      allow read, update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.ownerUid == request.auth.uid);
+    }
+
+    // ---------- customers ----------
+    // Every access point in app/customers/* and EventForm scopes by
+    // bossUid, consistently.
+    match /customers/{customerId} {
+      allow read, update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.bossUid == request.auth.uid);
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.bossUid == request.auth.uid);
+    }
+
+    // ---------- events ----------
+    // Every access point scopes by bossUid (app/dashboard and
+    // app/dashboard.old skip the canAccess(["catering_house"]) role
+    // check but still filter by bossUid in their query, so data
+    // isolation holds regardless of that separate, lower-severity
+    // feature-appropriateness gap).
+    match /events/{eventId} {
+      allow read, update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.bossUid == request.auth.uid);
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.bossUid == request.auth.uid);
+    }
+
+    // ---------- sales_signups ----------
+    // Public lead form (app/sales-signup) by design; admin-only read,
+    // matching app/admin/page.tsx's existing useAdminGate() UI.
+    match /sales_signups/{signupId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------- blackcab_early_access / bookings / journey_ratings / concerns ----------
+    // Public create by design (app/blackcab/BlackCabContent.tsx has no
+    // gate anywhere, intentionally — these are public lead/booking/
+    // feedback forms). Read restricted to admin: app/admin/
+    // blackcab-leads/page.tsx has NO authorization check in its own
+    // code (a real gap, matching every sibling admin page except this
+    // one) but was not modified here per this session's standing
+    // instruction not to alter BlackCab application code — this rule
+    // still closes the PII exposure at the data layer regardless of
+    // whether that app-code gate is ever added.
+    match /blackcab_early_access/{leadId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+    match /blackcab_bookings/{bookingId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+    match /blackcab_journey_ratings/{ratingId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+    match /blackcab_concerns/{concernId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------- *_signups staging collections ----------
+    // Same shape as restaurant_signups above: create-as-self only,
+    // status forced to a non-approved starting value is NOT enforced
+    // here (unlike restaurant_signups) because no consumer of these
+    // four collections was found anywhere in the app — there is no
+    // admin review UI reading blackcab_signups, catering_house_signups,
+    // customer_signups, or supplier_signups, so there is no
+    // self-approval path to close yet. If a review UI is built later,
+    // add the same status == 'new' (or equivalent) constraint used on
+    // restaurant_signups' create rule at that time.
+    match /blackcab_signups/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+      allow create: if isOwnUid(uid);
+      allow update, delete: if isAdmin();
+    }
+    match /catering_house_signups/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+      allow create: if isOwnUid(uid);
+      allow update, delete: if isAdmin();
+    }
+    match /customer_signups/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+      allow create: if isOwnUid(uid);
+      allow update, delete: if isAdmin();
+    }
+    match /supplier_signups/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+      allow create: if isOwnUid(uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------- blackcabs / blackcab_drivers ----------
+    // Only ever touched via lib/auth.ts (registerUser/changePassword,
+    // both scoped to the caller's own uid) and a legacy own-uid lookup
+    // in app/login — no page anywhere manages another user's document
+    // in either collection.
+    match /blackcabs/{uid} {
+      allow read, write: if isAdmin() || isOwnUid(uid);
+    }
+    match /blackcab_drivers/{uid} {
+      allow read, write: if isAdmin() || isOwnUid(uid);
+    }
+
+    // ---------- riderCorrectionLogs (write side only) ----------
+    // app/orders/riders/page.tsx always writes an ownerUid field under
+    // a canAccess(["restaurant","staff"]) gate — that much is
+    // consistent and safe to formalize. Read access is NOT covered
+    // here: app/orders/rider-corrections/page.tsx reads the entire
+    // collection with no filter and no authorization check at all —
+    // see docs/FIRESTORE-COLLECTION-INVENTORY.md's REQUIRES MANUAL
+    // POLICY DECISION section. Leaving read ungranted here means it
+    // stays default-denied (safe) until that's decided; it does NOT
+    // mean the existing app page will keep working unauthenticated.
+    match /riderCorrectionLogs/{logId} {
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.ownerUid == request.auth.uid);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // =========================================================
+    // REQUIRES MANUAL POLICY DECISION — deliberately NOT covered
+    //
+    // orders, counters, riders, rider_signups (read scope only),
+    // suppliers, supplier_items, supplier_orders, catering_houses,
+    // ingredients, activity_logs (read only).
+    //
+    // Every one of these has at least one access point in the
+    // application with NO authorization check at all (full collection
+    // read/write, no login required), which is either a real bug or an
+    // intentional design this repository's code doesn't explain either
+    // way. Writing a permissive rule to match that behavior would be
+    // exactly the kind of guess this work was asked not to make;
+    // writing a restrictive rule to match a *different* page's
+    // ownerUid-scoped pattern would silently break the unscoped page
+    // the moment these rules deploy. Both are unsafe without a human
+    // decision first. See docs/FIRESTORE-COLLECTION-INVENTORY.md for
+    // the exact question that needs answering for each one, and the
+    // application-code changes some of them need BEFORE a rule can be
+    // added at all (supplier_orders has no owner field to scope by;
+    // kitchen/ready/search/delivery order pages have no query filter
+    // to match a scoped rule against).
+    //
+    // Everything else not listed anywhere in this file (promotions,
+    // and any collection not found by this session's audit) is also
+    // untouched and falls through to Firestore's default deny.
+    // =========================================================
   }
 }

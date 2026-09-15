@@ -539,6 +539,80 @@ describe("users", () => {
   });
 });
 
+describe("staff (ownerUid-scoped SmartServeUK collection)", () => {
+  it("lets the owner read/write their own staff record; denies a different user", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "staff", "s1"), { ownerUid: "owner-1", name: "Alex" });
+    });
+    await assertSucceeds(getDoc(doc(asUser("owner-1"), "staff", "s1")));
+    await assertFails(getDoc(doc(asUser("owner-2"), "staff", "s1")));
+    await assertSucceeds(
+      updateDoc(doc(asUser("owner-1"), "staff", "s1"), { name: "Alex Updated" })
+    );
+    await assertFails(
+      updateDoc(doc(asUser("owner-2"), "staff", "s1"), { name: "Hijacked" })
+    );
+  });
+
+  it("denies an anonymous read", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "staff", "s1"), { ownerUid: "owner-1", name: "Alex" });
+    });
+    await assertFails(getDoc(doc(asAnon(), "staff", "s1")));
+  });
+});
+
+describe("customers and events (bossUid-scoped SmartServeUK collections)", () => {
+  it("customers: owner-only read/write, no public access", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "customers", "c1"), { bossUid: "boss-1", firstName: "Sam" });
+    });
+    await assertSucceeds(getDoc(doc(asUser("boss-1"), "customers", "c1")));
+    await assertFails(getDoc(doc(asUser("boss-2"), "customers", "c1")));
+    await assertFails(getDoc(doc(asAnon(), "customers", "c1")));
+  });
+
+  it("events: owner-only read/write, no public access", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "events", "e1"), { bossUid: "boss-1", clientName: "Party" });
+    });
+    await assertSucceeds(getDoc(doc(asUser("boss-1"), "events", "e1")));
+    await assertFails(getDoc(doc(asUser("boss-2"), "events", "e1")));
+    await assertFails(getDoc(doc(asAnon(), "events", "e1")));
+  });
+});
+
+describe("sales_signups (public lead form)", () => {
+  it("allows anonymous create, denies anonymous/non-admin read", async () => {
+    const anon = asAnon();
+    await assertSucceeds(
+      addDoc(collection(anon, "sales_signups"), { fullName: "Lead", phone: "+44...", status: "new" })
+    );
+
+    await seed(async (db) => {
+      await setDoc(doc(db, "sales_signups", "lead-1"), { fullName: "Lead", status: "new" });
+    });
+    await assertFails(getDoc(doc(asAnon(), "sales_signups", "lead-1")));
+    await assertFails(getDoc(doc(asUser("random-user"), "sales_signups", "lead-1")));
+    await assertSucceeds(getDoc(doc(asAdmin(), "sales_signups", "lead-1")));
+  });
+});
+
+describe("blackcab_early_access (public create, admin-only read)", () => {
+  it("allows anonymous create, denies anonymous/non-admin read", async () => {
+    const anon = asAnon();
+    await assertSucceeds(
+      addDoc(collection(anon, "blackcab_early_access"), { fullName: "Lead", email: "a@b.com", status: "new" })
+    );
+
+    await seed(async (db) => {
+      await setDoc(doc(db, "blackcab_early_access", "lead-1"), { fullName: "Lead", status: "new" });
+    });
+    await assertFails(getDoc(doc(asAnon(), "blackcab_early_access", "lead-1")));
+    await assertSucceeds(getDoc(doc(asAdmin(), "blackcab_early_access", "lead-1")));
+  });
+});
+
 describe("collections outside this rules file's scope", () => {
   it("default-denies a collection not covered by firestore.rules (documented, intentional)", async () => {
     // Sanity check for the SCOPE note at the top of firestore.rules:

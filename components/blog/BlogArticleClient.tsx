@@ -6,6 +6,8 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
 import { getCuisineBySlug } from "@/lib/cuisines";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 export default function BlogArticleClient({ slug }: { slug: string }) {
   const [article, setArticle] = useState<ArticleDoc | null>(null);
@@ -47,25 +49,33 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-neutral-50 px-4 py-8">
-        <div className="mx-auto max-w-3xl text-sm text-neutral-500">Loading article...</div>
-      </main>
+      <>
+        <SiteHeader />
+        <main className="min-h-screen bg-neutral-50 px-4 py-8">
+          <div className="mx-auto max-w-3xl text-sm text-neutral-500">Loading article...</div>
+        </main>
+        <SiteFooter />
+      </>
     );
   }
 
   if (notFound || !article) {
     return (
-      <main className="min-h-screen bg-neutral-50 px-4 py-8">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-2xl font-bold text-neutral-900">Article not found</h1>
-          <p className="mt-3 text-neutral-600">
-            This article may have been unpublished or the link is incorrect.
-          </p>
-          <Link href="/blog" className="mt-6 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">
-            ← Back to Blog
-          </Link>
-        </div>
-      </main>
+      <>
+        <SiteHeader />
+        <main className="min-h-screen bg-neutral-50 px-4 py-8">
+          <div className="mx-auto max-w-3xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+            <h1 className="text-2xl font-bold text-neutral-900">Article not found</h1>
+            <p className="mt-3 text-neutral-600">
+              This article may have been unpublished or the link is incorrect.
+            </p>
+            <Link href="/blog" className="mt-6 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">
+              ← Back to Blog
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
     );
   }
 
@@ -74,7 +84,9 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
     .filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6">
       <div className="mx-auto max-w-3xl">
         <Link href="/blog" className="text-sm text-amber-700 hover:underline">
           ← Back to Blog
@@ -130,6 +142,8 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

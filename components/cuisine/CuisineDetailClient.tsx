@@ -8,6 +8,8 @@ import type { Cuisine, ArticleDoc, RecommendationDoc } from "@/lib/types";
 import { getAllCuisines, restaurantMatchesCuisine } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 type LiveRestaurant = {
   id: string;
@@ -120,7 +122,9 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
   }, [cuisine]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
@@ -343,6 +347,8 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
           </section>
         ) : null}
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

@@ -9,6 +9,8 @@ import { isRTL } from "@/lib/i18n";
 import { getHubBySlug } from "@/lib/hubs";
 import { getAllCuisines, restaurantMatchesCuisine } from "@/lib/cuisines";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 type LiveRestaurant = {
   id: string;
@@ -99,7 +101,9 @@ export default function HubPage({ params }: { params: Promise<{ slug: string }> 
   const travelInfo = hub?.travelInfo?.[lang] || hub?.travelInfo?.en;
 
   return (
-    <main dir={rtl ? "rtl" : "ltr"} className="min-h-screen bg-neutral-50">
+    <>
+      <SiteHeader />
+      <main dir={rtl ? "rtl" : "ltr"} className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-900">
@@ -195,6 +199,8 @@ export default function HubPage({ params }: { params: Promise<{ slug: string }> 
           )}
         </section>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

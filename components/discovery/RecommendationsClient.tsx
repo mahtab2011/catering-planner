@@ -6,6 +6,8 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { RecommendationDoc } from "@/lib/types";
 import { RECOMMENDATION_TYPE_LABELS } from "@/lib/recommendations";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 export default function RecommendationsClient() {
   const [recommendations, setRecommendations] = useState<RecommendationDoc[]>([]);
@@ -38,7 +40,9 @@ export default function RecommendationsClient() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-purple-200 bg-purple-50 p-8">
           <div className="inline-flex rounded-full bg-purple-600 px-4 py-1 text-sm font-semibold text-white">
@@ -89,6 +93,8 @@ export default function RecommendationsClient() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

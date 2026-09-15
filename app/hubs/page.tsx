@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllHubs } from "@/lib/hubs";
+import SiteHeader from "@/components/discovery/SiteHeader";
+import SiteFooter from "@/components/discovery/SiteFooter";
 
 export const metadata: Metadata = {
   title: "London Food Hubs Directory | Explore Every Area",
@@ -13,7 +15,9 @@ export default function HubsIndexPage() {
   const hubs = getAllHubs();
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-900">
@@ -58,6 +62,8 @@ export default function HubsIndexPage() {
           ))}
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

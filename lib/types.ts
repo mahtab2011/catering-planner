@@ -8,6 +8,73 @@ export type UserRole =
 
 export type CountryCode = "UK" | "BD";
 
+/* =========================================================
+   CITY — multi-city discovery architecture
+
+   London Food Hubs is the first implementation. This type exists so
+   the discovery domain (hubs, restaurants, cuisines, reviews,
+   articles, recommendations, language/dietary defaults) is modelled
+   as belonging to a city rather than being implicitly "London" —
+   without building any other city's routes, pages or data yet.
+   Adding a second city later means adding one more entry to
+   lib/cities.ts; it should not require changing these types again.
+========================================================= */
+
+/** A city food-discovery edition. Only "london" is active today —
+ *  see lib/cities.ts. Everything else in the discovery domain
+ *  (FoodHub, restaurants, reviews, articles, recommendations) refers
+ *  to a city by its `slug`, never by name, so a city can be renamed
+ *  without touching every record that belongs to it. */
+export type City = {
+  id: string;
+  slug: string;
+  name: string;
+  /** ISO 3166-1 alpha-2 or a short display code — deliberately not
+   *  constrained to the existing narrow CountryCode union above,
+   *  which only covers the two countries SmartServeUK's operational
+   *  side currently serves (UK/BD) and is out of scope to widen here. */
+  countryCode: string;
+  currencyCode: CurrencyCode;
+  /** Languages this city edition should prioritise in its language
+   *  switcher / default detection, most-important first. Distinct
+   *  cities can prioritise differently (e.g. Paris would lead with
+   *  fr, Makkah/Madinah with ar) without changing the shared
+   *  AppLanguage type in lib/i18n.ts that lists what's translatable
+   *  at all. */
+  priorityLanguages: AppLanguage[];
+  /** Which structured dietary filters this city edition should
+   *  surface prominently in discovery UI (e.g. filter chips). Every
+   *  attribute in DietaryAttribute is always supported everywhere —
+   *  this only controls what's *featured* for this city, the same
+   *  way isFeatured works for hubs/cuisines. */
+  prominentDietaryFilters: DietaryAttribute[];
+  /** Optional: cuisine slugs (from lib/cuisines.ts) this city edition
+   *  wants to feature first. Cuisines themselves are not city-scoped
+   *  — a cuisine like "Turkish" is the same concept in every city —
+   *  this is purely an editorial ordering hint for that city's UI. */
+  prominentCuisineSlugs?: string[];
+  isActive: boolean;
+  seoTitle: string;
+  seoDescription: string;
+};
+
+/**
+ * Structured dietary attributes. These are explicit, self-declared
+ * facts about a business or a dish — NEVER inferred from a cuisine
+ * (e.g. "Indian" does not imply vegetarian) or from customer reviews
+ * (a reviewer saying "great vegan options" is not the same as the
+ * business declaring vegan availability). Every place this type is
+ * used should be a plain stored value the business/admin entered,
+ * not a computed one.
+ */
+export type DietaryAttribute =
+  | "vegetarian"
+  | "vegan"
+  | "non_vegetarian"
+  | "halal"
+  | "kosher"
+  | "jain";
+
 export type ServiceType =
   | "dine-in"
   | "takeaway"
@@ -92,6 +159,12 @@ export type HubDoc = {
   slug: string;
   countryCode: CountryCode;
   city: string;
+  /** References a City.slug from lib/cities.ts. Optional alongside
+   *  the existing free-text `city` display field rather than
+   *  replacing it, since this type isn't currently backed by a live
+   *  Firestore collection (hubs are served from lib/hubs.ts) — see
+   *  docs/MULTI-CITY-ARCHITECTURE.md. */
+  citySlug?: string;
   areaLabel: string;
   description?: string;
   isActive: boolean;
@@ -114,11 +187,21 @@ export type RestaurantDoc = {
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
+  /** References a City.slug from lib/cities.ts — the structured
+   *  companion to the free-text `city` field above. Defaults to
+   *  "london" for every restaurant today, since London is the only
+   *  active city edition. */
+  citySlug?: string;
   postcode?: string;
   countryCode: CountryCode;
   hubIds: string[];
   serviceTypes: ServiceType[];
   halal?: boolean;
+  /** Structured, self-declared dietary certifications for the whole
+   *  business (as opposed to a single dish) — see DietaryAttribute.
+   *  Additive alongside the legacy `halal` boolean above, which
+   *  stays for backward compatibility rather than being removed. */
+  dietaryCertifications?: DietaryAttribute[];
   openingHours?: Record<string, string>;
   imageUrl?: string;
   logoUrl?: string;
@@ -154,6 +237,10 @@ export type RestaurantMenuItemDoc = {
   isPopular?: boolean;
   isAvailable?: boolean;
   imageUrl?: string;
+  /** Structured, self-declared per-dish dietary attributes — a
+   *  restaurant that isn't wholly vegetarian can still tag individual
+   *  dishes. Never inferred from the dish name/cuisine. */
+  dietaryAttributes?: DietaryAttribute[];
   translatedNames?: MenuLanguages;
   translatedDescriptions?: MenuLanguages;
   spiceLevel?: "mild" | "medium" | "hot";
@@ -383,7 +470,12 @@ export type FoodHub = {
   name: string;
   /** e.g. "East Ham, East London" */
   areaLabel: string;
-  city: "London";
+  /** References a City.slug from lib/cities.ts. Every hub belongs to
+   *  exactly one city — today that's always "london", the only
+   *  active city edition, but the field is a slug (not a literal
+   *  "London" type) so a second city edition doesn't require
+   *  changing this type. */
+  citySlug: string;
   /** Rich marketing-style description, multilingual where we have real
    *  translated copy (do not invent missing languages). */
   description: LocalizedText;
@@ -407,11 +499,16 @@ export type BusinessSummary = {
   id: string;
   name: string;
   cuisine?: string;
+  /** References a City.slug from lib/cities.ts. */
+  citySlug?: string;
   hubName?: string;
   area?: string;
   shortDescription?: string;
   coverImage?: string;
   isHalal?: boolean;
+  /** Structured, self-declared certifications — see DietaryAttribute.
+   *  Additive alongside `isHalal`, not a replacement for it. */
+  dietaryCertifications?: DietaryAttribute[];
   tags?: string[];
   href: string;
 };
@@ -452,6 +549,12 @@ export type ArticleDoc = {
   relatedCuisineSlugs?: string[];
   relatedRestaurantIds?: string[];
   relatedHubSlugs?: string[];
+  /** References a City.slug from lib/cities.ts. Optional — many
+   *  articles (a cuisine guide, a general "what to eat" piece) are
+   *  reusable across cities and shouldn't be forced to pick one;
+   *  set this only for genuinely city-specific pieces (a hub
+   *  spotlight, "New in [City]"). */
+  citySlug?: string;
   status: ArticleStatus;
   isFeatured?: boolean;
   publishedAt?: unknown;
@@ -494,6 +597,12 @@ export type RecommendationDoc = {
   blurb: string;
   linkHref: string;
   image?: string;
+  /** References a City.slug from lib/cities.ts. Optional — a
+   *  restaurant/hub target already implies a city through its own
+   *  record, so this is mainly useful for cuisine/dish-type
+   *  recommendations that want to be scoped to one city edition's
+   *  homepage rather than shown everywhere. */
+  citySlug?: string;
   isActive: boolean;
   sortOrder?: number;
   createdAt?: unknown;

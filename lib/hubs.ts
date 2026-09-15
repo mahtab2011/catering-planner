@@ -21,7 +21,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "plashet-road",
     name: "Plashet Road",
     areaLabel: "Green Street, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A strong South Asian food corridor with family dining, takeaway favourites, practical local demand, and growing food-business clusters.",
       bn: "পারিবারিক ডাইনিং, টেকঅ্যাওয়ে পছন্দ, স্থানীয় চাহিদা এবং ক্রমবর্ধমান খাদ্য ব্যবসার জন্য একটি শক্তিশালী দক্ষিণ এশীয় ফুড করিডোর।",
@@ -60,7 +60,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "brick-lane",
     name: "Brick Lane",
     areaLabel: "East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A major destination for Bangladeshi, South Asian, and multicultural dining, known for iconic curry houses, food halls, and strong visitor footfall.",
       bn: "বাংলাদেশি, দক্ষিণ এশীয় এবং বহুসাংস্কৃতিক খাবারের জন্য একটি গুরুত্বপূর্ণ গন্তব্য, যা বিখ্যাত কারি হাউস, ফুড হল এবং শক্তিশালী দর্শনার্থী উপস্থিতির জন্য পরিচিত।",
@@ -99,7 +99,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "upmarket-brick-lane-foodhall",
     name: "Upmarket Brick Lane Foodhall",
     areaLabel: "Brick Lane, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A vibrant market-style food hall with global stalls where visitors can explore varied cuisines in one place.",
       bn: "একটি প্রাণবন্ত মার্কেট-স্টাইল ফুড হল, যেখানে নানা দেশের স্টলে এক জায়গায় বিভিন্ন খাবার পাওয়া যায়।",
@@ -139,7 +139,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "westfield",
     name: "Westfield Stratford City",
     areaLabel: "Stratford, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A major high-footfall dining zone inside one of London's busiest shopping destinations, serving shoppers, tourists, and local residents.",
       bn: "লন্ডনের অন্যতম ব্যস্ত শপিং গন্তব্যের ভেতরে অবস্থিত একটি উচ্চ-ফুটফল ডাইনিং জোন, যা ক্রেতা, পর্যটক ও স্থানীয়দের সেবা দেয়।",
@@ -177,7 +177,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "stratford-centre",
     name: "Stratford Centre",
     areaLabel: "Stratford, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A diverse everyday food destination in central Stratford with strong multicultural appeal, commuter traffic, and practical grab-and-go demand.",
       bn: "স্ট্র্যাটফোর্ডের কেন্দ্রে অবস্থিত একটি বৈচিত্র্যময় দৈনন্দিন খাবারের গন্তব্য, যেখানে বহুসাংস্কৃতিক আকর্ষণ ও যাত্রী চলাচল শক্তিশালী।",
@@ -214,7 +214,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "boxpark",
     name: "Shoreditch / BOXPARK",
     areaLabel: "Shoreditch, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A younger, modern food crowd with high visual appeal, container-food energy, and strong discovery potential.",
       bn: "তরুণ ও আধুনিক ফুড ক্রাউড, ভিজ্যুয়াল আকর্ষণ এবং নতুন কিছু খুঁজে পাওয়ার সম্ভাবনা সমৃদ্ধ একটি এলাকা।",
@@ -251,7 +251,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "edgware-road",
     name: "Edgware Road Arabian Food Hub",
     areaLabel: "Edgware Road, Central London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A strong Middle Eastern and Arabian dining corridor with high tourist visibility, late-night demand, shisha culture, grills, sweets, and broad cross-community appeal.",
       bn: "মধ্যপ্রাচ্য ও আরবীয় খাবারের শক্তিশালী করিডোর, যেখানে পর্যটক উপস্থিতি, রাতের চাহিদা, শীশা সংস্কৃতি, গ্রিল ও মিষ্টির আকর্ষণ রয়েছে।",
@@ -290,7 +290,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "china-town-soho-food-hub",
     name: "China Town (Soho) Food Hub",
     areaLabel: "Soho, Central London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A globally recognised central London food destination known for East Asian restaurants, dessert shops, fast-moving visitor traffic, and strong tourist discovery appeal.",
       bn: "পূর্ব এশীয় রেস্টুরেন্ট, ডেজার্ট শপ এবং পর্যটকদের আকর্ষণের জন্য পরিচিত একটি বিশ্বখ্যাত সেন্ট্রাল লন্ডন ফুড ডেস্টিনেশন।",
@@ -315,7 +315,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "east-ham-town-centre",
     name: "East Ham Town Centre",
     areaLabel: "East Ham, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A busy East London food zone with strong South Asian restaurants, takeaway demand, and everyday local footfall.",
       bn: "ইস্ট লন্ডনের একটি ব্যস্ত খাবার এলাকা, যেখানে দক্ষিণ এশীয় রেস্টুরেন্ট, টেকঅ্যাওয়ে চাহিদা এবং স্থানীয় মানুষের উপস্থিতি শক্তিশালী।",
@@ -352,7 +352,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "barking-road",
     name: "Barking Road (East Ham)",
     areaLabel: "East Ham, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A practical food stretch near East Ham Town Hall with visible local trading activity and strong discovery potential.",
       bn: "ইস্ট হ্যাম টাউন হলের কাছে একটি কার্যকরী ফুড স্ট্রেচ, যেখানে স্থানীয় বাণিজ্যিক কার্যক্রম দৃশ্যমান এবং নতুন আবিষ্কারের সম্ভাবনা রয়েছে।",
@@ -389,7 +389,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "high-street-north",
     name: "High Street North",
     areaLabel: "East Ham, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A high-density food corridor with restaurants, takeaways, and practical local demand across East Ham.",
       bn: "ইস্ট হ্যাম জুড়ে রেস্টুরেন্ট, টেকঅ্যাওয়ে এবং স্থানীয় চাহিদা সমৃদ্ধ একটি উচ্চ-ঘনত্বের ফুড করিডোর।",
@@ -427,7 +427,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "ilford-lane",
     name: "Ilford Lane",
     areaLabel: "Ilford, East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A very active food hub known for grills, sweets, South Asian cuisine, and strong family dining appeal.",
       bn: "গ্রিল, মিষ্টি, দক্ষিণ এশীয় রান্না এবং পারিবারিক ডাইনিং আকর্ষণের জন্য পরিচিত একটি অত্যন্ত সক্রিয় ফুড হাব।",
@@ -464,7 +464,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "commercial-road",
     name: "Commercial Road",
     areaLabel: "East London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A diverse East London food corridor connecting multiple communities with strong multicultural dining potential.",
       bn: "বহু সম্প্রদায়কে সংযুক্ত করা একটি বৈচিত্র্যময় ইস্ট লন্ডন ফুড করিডোর, যেখানে বহুসাংস্কৃতিক ডাইনিং সম্ভাবনা শক্তিশালী।",
@@ -488,7 +488,7 @@ export const HUBS: Record<string, FoodHub> = {
     slug: "london-street-food",
     name: "London Street Food",
     areaLabel: "Citywide, London",
-    city: "London",
+    citySlug: "london",
     description: {
       en: "A flexible hub for street food sellers, vans, stalls, market traders, and pop-up food businesses from any part of London.",
       bn: "লন্ডনের যেকোনো এলাকার স্ট্রিট ফুড বিক্রেতা, ভ্যান, স্টল, মার্কেট ট্রেডার এবং পপ-আপ ফুড ব্যবসার জন্য একটি নমনীয় হাব।",

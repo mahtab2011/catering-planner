@@ -1,48 +1,31 @@
-# Security Follow-Up: London Food Hubs Discovery Features
+# Security Follow-Up: London Food Hubs Launch Readiness
 
 Written for: whoever manages the Firebase project for catering-planner (site owner / a developer with Firebase console access).
 
-## Why this document exists
+**Status as of this update:** `firestore.rules`, `firestore.indexes.json`, `firebase.json`, and `functions/` (Cloud Functions) now exist in this repository, matching the model this document originally called for. **None of it has been deployed** — no `firebase login`/`firebase deploy` was run, since this session had no Firebase credentials or project access. This document now covers what's left to do manually before that changes.
 
-This repository does not contain `firestore.rules` or `firebase.json` — Firestore security rules are managed outside this repo (Firebase console, or a separate infra repo not checked into this one). That means **nothing in this codebase can be used to verify what is actually enforced in production**, and nothing added in this pass changes that.
+## What's already been done (in code, not yet live)
 
-The new features added in this session — reviews, blog articles, editorial recommendations, and the admin pages that manage them — all rely on role/status checks that run **entirely in the browser** (`lib/authGuard.ts`, the new `hooks/useAdminGate.ts`, and client-side Firestore `where()` queries). That was already true of the rest of the app (restaurant/rider/staff signups, order management) before this session; it is not a regression, but it is now covering more sensitive write paths and needs to be closed before this becomes a public marketplace with real user-generated content.
+- **`firestore.rules`** covers `reviews`, `articles`, `recommendations`, `restaurants`, `restaurant_signups`, `users` — see the file itself for the full rationale in comments. Admin authorization is a Firebase Auth custom claim (`request.auth.token.admin`) only, never the `users/{uid}.role` field.
+- **`functions/index.js`** implements `setAdminClaim` (admin-only callable to grant the custom claim) and `onReviewWrite` (Cloud Function that maintains `restaurants/{id}.rating`/`.reviewCount` from approved reviews — the only trusted writer of those two fields).
+- **Restaurant ownership bug fixed at the application level**: both admin flows that convert an approved `restaurant_signups` application into a live restaurant document now correctly set `ownerUid` to the applicant's real uid (previously one set it to `""`, the other omitted it entirely — see the commit that fixed this for the full trace). The edit page no longer lets any signed-in user claim an unowned listing by simply being the first to open its edit page.
+- **Admin gating added** to four `/admin/*`-adjacent pages that previously had none at all (`/admin`, `/admin/restaurant-signups`, `/restaurants/admin/signups`, `/restaurants/admin/signups/[id]`) — still client-side/advisory, but a real improvement over rendering for anyone who navigated there.
 
-**A client-side check can always be bypassed by someone calling the Firestore SDK directly with their own code.** The only real security boundary is Firestore rules (or a server/Cloud Function that mediates writes with the Admin SDK). Until rules matching the model below are deployed and verified, treat every "admin-only" page and every "pending until approved" status in this app as advisory, not secure.
+**None of this is enforced yet.** Everything above except the ownership/admin-gating application code is inert until deployed. Client-side checks remain bypassable by anyone calling the Firestore SDK directly, exactly as before.
 
-## What needs rules, and what those rules should require
+## Manual steps required before this is safe as a public marketplace
 
-### `reviews` collection
-- **Create**: only when `request.auth != null`, `request.resource.data.userId == request.auth.uid`, and `request.resource.data.status == "pending"` (a client must never be allowed to create a review with any other status).
-- **Update**: the review's author may update `title`/`reviewText`/`rating` only while `status == "pending"` (no editing after moderation). Only an admin account may change `status`.
-- **Delete**: author or admin only.
-- **Read**: anyone may read documents where `status == "approved"`. A document with `status in ["pending", "rejected"]` should only be readable by its `userId` or an admin — otherwise anyone can read the moderation queue by guessing IDs.
+In order:
 
-### `articles` collection
-- **Read**: anyone may read documents where `status == "published"`. Draft articles must not be readable by non-admins — right now `app/blog` and `app/blog/[slug]` only *query* for `status == "published"`, but a rule is what actually stops someone reading a draft directly by ID.
-- **Create/Update/Delete**: admin only.
+1. **Merge scope, don't just deploy.** `firestore.rules` as written only covers the six collections above. It has no catch-all, so deploying it as-is would default-deny every other collection the app uses (orders, staff, suppliers, customers, riders, catering_houses, blackcab_*, etc.) — see the SCOPE comment at the top of the file. Either audit those collections and extend the file, or merge these six `match` blocks into whatever rules currently govern the live project.
+2. **`cd functions && npm install`**, then `firebase login` and `firebase deploy --only functions` — see `functions/README.md` for the full sequence.
+3. **Bootstrap the first admin** via `functions/scripts/bootstrapFirstAdmin.js` (needs a downloaded service-account key, used once, then discarded/secured — never committed). This has to happen before step 4, because `setAdminClaim` requires an existing admin to call it and there won't be one yet.
+4. **Backfill ownerUid on already-existing unclaimed restaurants.** Any restaurant created before this session's fix (or via the admin conversion flow before it was fixed) may have `ownerUid: ""`. Once `firestore.rules` is live, those listings become **admin-only to edit** — their real owners will be locked out until backfilled. For each restaurant with empty `ownerUid`: read its `sourceSignupId` field (set by both conversion flows), look up `restaurant_signups/{sourceSignupId}`, and set the restaurant's `ownerUid` to that signup document's `uid` field (which equals its own document id). This needs to run with the Admin SDK (bypasses rules) as a one-off script, not attempted from this session (no database access to know how many restaurants are affected or run it against real data).
+5. **Deploy `firestore.rules` and `firestore.indexes.json`** (`firebase deploy --only firestore:rules,firestore:indexes`) — only after steps 2-4, so admin actions and existing owners aren't locked out the moment rules go live.
+6. **Verify**, ideally with the Firestore Rules Playground in the console or a local emulator run (this session couldn't run either — `firebase-tools` installs fine here but the Firestore emulator needs a Java runtime that wasn't available in this sandbox): confirm a non-admin cannot approve their own review, cannot read another user's pending review, cannot write `restaurants/{id}.rating` directly, and that a real admin *can* still moderate reviews/articles/recommendations after their custom claim is set.
 
-### `recommendations` collection
-- **Read**: anyone may read documents where `isActive == true` (or all documents, for admins).
-- **Create/Update/Delete**: admin only.
+## Known gaps not addressed this session
 
-### `restaurants` collection (pre-existing, now more exposed)
-- **Read**: public for documents with `status in ["active", "pending"]` (matches current app behaviour).
-- **Update**: only the document's `ownerUid`, or an admin. This wasn't explicitly re-verified in this session, but the new review/recommendation features add more surfaces that assume a restaurant document can be trusted (name, cuisine, halal flag) — if restaurant ownership isn't locked down, none of the new "editorial trust" features (reviews, recommendations) mean anything.
-
-### Admin role model
-- `lib/authGuard.ts`'s `canAccess()` reads `role` from `users/{uid}` — a plain Firestore field. If that field itself isn't locked down (only writable by an existing admin, or a Cloud Function), any authenticated user could set their own `role: "admin"` and pass every client-side gate added in this session (`useAdminGate`, `/admin/blog`, `/admin/reviews`, `/admin/recommendations`).
-  - Short-term fix (rules only): restrict writes to `users/{uid}.role` to admin accounts.
-  - Better fix (recommended before this becomes a real production concern): move the admin flag to a [Firebase Auth custom claim](https://firebase.google.com/docs/auth/admin/custom-claims), set only via the Admin SDK (a Cloud Function or a trusted backend), and check `request.auth.token.admin == true` in rules. Custom claims can't be forged by the client the way a Firestore field can.
-
-## What was intentionally *not* done in this pass
-
-- No `firestore.rules` file was created or deployed. The task that produced this document explicitly said not to deploy rules that can't be verified from this repository, and there's no way to confirm what rules already exist in the live Firebase project without console access.
-- No Cloud Functions were added to move moderation (`approve`/`reject`, `publish`) server-side. That's the more robust fix once rules exist — a callable function that checks the caller's custom claim and performs the status transition, rather than trusting a client-side `updateDoc` gated only by `canAccess()`.
-
-## Recommended next step
-
-1. Pull the actual `firestore.rules` from the Firebase console into this repo (or a dedicated infra repo) so they're version-controlled and reviewable — right now they're a black box even to this codebase's maintainers.
-2. Compare them against the model above.
-3. Add the missing rules for `reviews`, `articles`, and `recommendations` (new in this session).
-4. Migrate the admin check to a custom claim before treating `/admin/*` as trustworthy.
+- Collections outside the audited scope (orders, staff, suppliers, customers, riders, rider_signups, catering_houses, blackcab_*, sales_signups, promotions, etc.) were not re-audited — see the SCOPE note in `firestore.rules`.
+- `restaurant_signups` create-time field validation is intentionally light (only `uid` and `status == "new"` are checked) — the full signup payload has many fields and wasn't exhaustively schema-validated in rules; a malformed-but-harmless signup document is possible, a privilege-escalating one is not.
+- No automated rules tests exist (`@firebase/rules-unit-testing` needs the same Java-dependent emulator this sandbox didn't have). Recommend adding a rules test suite when someone has an environment that can run the emulator, covering at minimum: review create/approve/read-visibility, restaurant ownership immutability, and the admin-claim bootstrap path.

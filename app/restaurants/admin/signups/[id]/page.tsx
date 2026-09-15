@@ -11,6 +11,7 @@ import {
   collection,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 
 type SignupStatus =
   | "new"
@@ -43,6 +44,7 @@ export default function SignupDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
 
   const [data, setData] = useState<SignupData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,10 +85,10 @@ export default function SignupDetailPage() {
   }
 
   useEffect(() => {
-    if (id) {
+    if (id && isAdmin) {
       loadData();
     }
-  }, [id]);
+  }, [id, isAdmin]);
 
   async function updateStatus(status: SignupStatus) {
     try {
@@ -130,6 +132,12 @@ export default function SignupDetailPage() {
 
       const restaurant = {
         name: data.restaurantName || data.name || "",
+        // restaurant_signups documents are created with their id set
+        // to the applicant's own Firebase Auth uid (see
+        // app/signup/restaurant/page.tsx) — using it here properly
+        // links the new restaurant to its real owner instead of
+        // leaving it unclaimed. See docs/SECURITY-FOLLOWUP.md.
+        ownerUid: id,
         ownerName: data.ownerName || data.owner || "",
         phone: data.phone || "",
         email: data.email || "",
@@ -140,6 +148,8 @@ export default function SignupDetailPage() {
         shortDescription: "",
         tags: [],
         popularItems: [],
+        rating: 0,
+        reviewCount: 0,
         status: "active",
         subscriptionPlan: "free",
         sourceSignupId: id,
@@ -170,6 +180,20 @@ export default function SignupDetailPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (checkingAdmin) {
+    return <div className="p-6 text-sm text-neutral-500">Checking access...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="p-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          This page is restricted to admin accounts.
+        </div>
+      </div>
+    );
   }
 
   if (loading) {

@@ -14,6 +14,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 
 type RestaurantSignup = {
   id: string;
@@ -154,12 +155,15 @@ function statusBadgeClass(status?: string) {
 
 export default function RestaurantSignupsAdminPage() {
   const router = useRouter();
+  const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
 
   const [items, setItems] = useState<RestaurantSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAdmin) return;
+
     const q = query(
       collection(db, "restaurant_signups"),
       orderBy("createdAt", "desc")
@@ -186,7 +190,7 @@ export default function RestaurantSignupsAdminPage() {
     );
 
     return () => unsub();
-  }, []);
+  }, [isAdmin]);
 
   async function updateStatus(item: RestaurantSignup, status: string) {
     if (updatingId) return;
@@ -254,7 +258,12 @@ export default function RestaurantSignupsAdminPage() {
       const docRef = await addDoc(collection(db, "restaurants"), {
         name: signupName,
         slug: slugify(signupName),
-        ownerUid: "",
+        // restaurant_signups documents are created with their id set to
+        // the applicant's own Firebase Auth uid (see
+        // app/signup/restaurant/page.tsx) — using it here properly
+        // links the new restaurant to its real owner instead of
+        // leaving it unclaimed. See docs/SECURITY-FOLLOWUP.md.
+        ownerUid: item.id,
         ownerName: signupOwner,
         phone: safeText(item.phone),
         email: safeText(item.email),
@@ -369,6 +378,28 @@ export default function RestaurantSignupsAdminPage() {
     () => items.filter((item) => item.profileCreated || item.restaurantId).length,
     [items]
   );
+
+  if (checkingAdmin) {
+    return (
+      <div className="mx-auto max-w-4xl p-6 text-sm text-neutral-500">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          This page is restricted to admin accounts.{" "}
+          <Link href="/login" className="font-semibold underline">
+            Sign in
+          </Link>{" "}
+          with an admin account to continue.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6">

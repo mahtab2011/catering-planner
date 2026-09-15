@@ -12,6 +12,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 
 type SignupStatus =
   | "new"
@@ -82,6 +83,7 @@ function getStatusBadgeClass(status: SignupStatus | string | undefined) {
 }
 
 export default function RestaurantSignupAdminPage() {
+  const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
   const [rows, setRows] = useState<RestaurantSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -117,8 +119,9 @@ export default function RestaurantSignupAdminPage() {
   }
 
   useEffect(() => {
+    if (!isAdmin) return;
     loadRows();
-  }, []);
+  }, [isAdmin]);
 
   async function handleStatusChange(id: string, nextStatus: SignupStatus) {
     try {
@@ -192,6 +195,28 @@ export default function RestaurantSignupAdminPage() {
       rejected: rows.filter((r) => r.status === "rejected").length,
     };
   }, [rows]);
+
+  if (checkingAdmin) {
+    return (
+      <div className="mx-auto max-w-4xl p-6 text-sm text-neutral-500">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          This page is restricted to admin accounts.{" "}
+          <Link href="/login" className="font-semibold underline">
+            Sign in
+          </Link>{" "}
+          with an admin account to continue.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-neutral-50">

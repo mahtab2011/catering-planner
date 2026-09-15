@@ -7,6 +7,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 
 type SubscriptionPlan = "free" | "premium";
 type RestaurantStatus = "draft" | "active" | "pending" | "blocked";
@@ -134,6 +135,7 @@ export default function EditRestaurantPage() {
 
   const [authReady, setAuthReady] = useState(false);
   const [ownerUid, setOwnerUid] = useState("");
+  const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -291,15 +293,31 @@ export default function EditRestaurantPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!authReady || loading) return;
+    if (!authReady || loading || checkingAdmin) return;
 
-    if (restaurantOwnerUid && ownerUid && restaurantOwnerUid !== ownerUid) {
-      setCanEdit(false);
-      setMsg("You do not have permission to edit this restaurant.");
-    } else {
+    // Only the restaurant's actual owner (ownerUid matches the signed-in
+    // user) or an admin may edit it. A restaurant with no ownerUid set
+    // ("unclaimed" — see docs/SECURITY-FOLLOWUP.md) is admin-only until
+    // it's properly linked to an owner; it is deliberately NOT editable
+    // by just whoever happens to open this page first anymore.
+    const isOwner = Boolean(restaurantOwnerUid) && restaurantOwnerUid === ownerUid;
+
+    if (isAdmin) {
       setCanEdit(true);
+    } else if (isOwner && status === "blocked") {
+      setCanEdit(false);
+      setMsg("This listing has been blocked by an admin. Contact support to resolve this.");
+    } else if (isOwner) {
+      setCanEdit(true);
+    } else {
+      setCanEdit(false);
+      setMsg(
+        restaurantOwnerUid
+          ? "You do not have permission to edit this restaurant."
+          : "This listing is not yet linked to an owner account. Please contact support to claim it."
+      );
     }
-  }, [authReady, loading, restaurantOwnerUid, ownerUid]);
+  }, [authReady, loading, checkingAdmin, isAdmin, restaurantOwnerUid, ownerUid, status]);
 
   useEffect(() => {
     if (isPremium) {
@@ -418,7 +436,12 @@ export default function EditRestaurantPage() {
       await updateDoc(doc(db, "restaurants", id), {
         name: name.trim(),
         slug,
-        ownerUid: restaurantOwnerUid || ownerUid,
+        // Never change ownership from this form — it's a fixed field
+        // once a restaurant exists (see firestore.rules). Preserve it
+        // exactly as loaded, whether it's a real owner uid or still
+        // unclaimed (empty), rather than silently reassigning it to
+        // whoever happens to be editing.
+        ownerUid: restaurantOwnerUid,
         ownerName: ownerName.trim(),
         phone: phone.trim(),
         email: email.trim(),
@@ -1414,11 +1437,17 @@ export default function EditRestaurantPage() {
                 <option value="draft">draft</option>
                 <option value="active">active</option>
                 <option value="pending">pending</option>
-                <option value="blocked">blocked</option>
+                {isAdmin ? <option value="blocked">blocked</option> : null}
               </select>
               {status === "active" && !publishReady ? (
                 <div className="mt-2 text-xs text-amber-700">
                   Some recommended publish-ready fields are still missing.
+                </div>
+              ) : null}
+              {!isAdmin && status === "blocked" ? (
+                <div className="mt-2 text-xs text-red-700">
+                  This listing has been blocked by an admin and can&apos;t be
+                  unblocked from here — contact support.
                 </div>
               ) : null}
             </div>

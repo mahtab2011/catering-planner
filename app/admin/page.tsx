@@ -9,6 +9,7 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAdminGate } from "@/hooks/useAdminGate";
 
 type SalesSignupStatus = "new" | "reviewing" | "approved" | "rejected";
 
@@ -78,10 +79,13 @@ function money(n: number) {
 }
 
 export default function AdminPage() {
+  const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
   const [sales, setSales] = useState<SalesSignup[]>([]);
   const [orders, setOrders] = useState<OrderDoc[]>([]);
 
   useEffect(() => {
+    if (!isAdmin) return;
+
     const salesQ = query(
       collection(db, "sales_signups"),
       orderBy("createdAt", "desc")
@@ -112,7 +116,7 @@ export default function AdminPage() {
       unsubSales();
       unsubOrders();
     };
-  }, []);
+  }, [isAdmin]);
 
   const newLeads = useMemo(
     () => sales.filter((s) => (s.status || "new") === "new"),
@@ -169,6 +173,28 @@ export default function AdminPage() {
   );
 
   const recentOrders = useMemo(() => orders.slice(0, 8), [orders]);
+
+  if (checkingAdmin) {
+    return (
+      <div className="mx-auto w-full max-w-6xl p-6 text-sm text-neutral-500">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto w-full max-w-6xl p-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          This page is restricted to admin accounts.{" "}
+          <Link href="/login" className="font-semibold underline">
+            Sign in
+          </Link>{" "}
+          with an admin account to continue.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl p-6">

@@ -1,86 +1,54 @@
 import { MetadataRoute } from "next";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { getAllCuisines } from "@/lib/cuisines";
+import { getAllHubs } from "@/lib/hubs";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    // CORE
-    {
-      url: "https://smartserveuk.com",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/restaurants",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/suppliers",
-      lastModified: new Date(),
-    },
+// The live consumer domain today. Swap this one constant when
+// londonfoodhubs.com becomes canonical — nothing else in this file
+// needs to change.
+const BASE_URL = "https://smartserveuk.com";
 
-    // DISH PAGE
-    {
-      url: "https://smartserveuk.com/chicken-tikka-london",
-      lastModified: new Date(),
-    },
+async function getPublishedArticleSlugs(): Promise<string[]> {
+  try {
+    const snap = await getDocs(query(collection(db, "articles"), where("status", "==", "published")));
+    return snap.docs.map((d) => (d.data().slug as string) || d.id).filter(Boolean);
+  } catch (error) {
+    console.error("sitemap: failed to load published articles, omitting from sitemap:", error);
+    return [];
+  }
+}
 
-    // CUISINE PAGES
-    {
-      url: "https://smartserveuk.com/bangladeshi-food-east-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/indian-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/pakistani-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/turkish-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/lebanese-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/thai-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/japanese-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/african-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/british-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/jamaican-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/american-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/mexican-food-london",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://smartserveuk.com/brazilian-food-london",
-      lastModified: new Date(),
-    },
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
 
-    
-    // HIGH VALUE PAGE 🔥
-    {
-      url: "https://smartserveuk.com/biryani-polao-london",
-      lastModified: new Date(),
-    },
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: BASE_URL, lastModified: now },
+    { url: `${BASE_URL}/restaurants`, lastModified: now },
+    { url: `${BASE_URL}/suppliers`, lastModified: now },
+    { url: `${BASE_URL}/cuisines`, lastModified: now },
+    { url: `${BASE_URL}/hubs`, lastModified: now },
+    { url: `${BASE_URL}/recommendations`, lastModified: now },
+    { url: `${BASE_URL}/reviews`, lastModified: now },
+    { url: `${BASE_URL}/blog`, lastModified: now },
+    { url: `${BASE_URL}/search`, lastModified: now },
   ];
+
+  const cuisineRoutes: MetadataRoute.Sitemap = getAllCuisines().map((cuisine) => ({
+    url: `${BASE_URL}/cuisine/${cuisine.slug}`,
+    lastModified: now,
+  }));
+
+  const hubRoutes: MetadataRoute.Sitemap = getAllHubs().map((hub) => ({
+    url: `${BASE_URL}/hubs/${hub.slug}`,
+    lastModified: now,
+  }));
+
+  const articleSlugs = await getPublishedArticleSlugs();
+  const articleRoutes: MetadataRoute.Sitemap = articleSlugs.map((slug) => ({
+    url: `${BASE_URL}/blog/${slug}`,
+    lastModified: now,
+  }));
+
+  return [...staticRoutes, ...cuisineRoutes, ...hubRoutes, ...articleRoutes];
 }

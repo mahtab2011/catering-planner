@@ -21,7 +21,7 @@ export default function HomeHero() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="max-w-3xl">
           <div className="inline-flex rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm">
-            London's Food Discovery Platform
+            London&apos;s Food Discovery Platform
           </div>
 
           <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl">

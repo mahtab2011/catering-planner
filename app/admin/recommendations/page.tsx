@@ -137,7 +137,7 @@ export default function AdminRecommendationsPage() {
     <div className="mx-auto max-w-4xl p-6">
       <h1 className="mb-2 text-2xl font-bold text-neutral-900">Editorial Recommendations</h1>
       <p className="mb-6 text-sm text-neutral-600">
-        Manage "London Food Hubs Recommends" — editorial picks shown on the homepage, cuisine
+        Manage &quot;London Food Hubs Recommends&quot; — editorial picks shown on the homepage, cuisine
         pages and the recommendations page. Distinct from customer reviews.
       </p>
 

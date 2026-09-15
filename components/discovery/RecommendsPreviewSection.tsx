@@ -53,7 +53,7 @@ export default function RecommendsPreviewSection() {
       {recommendations.length === 0 ? (
         <p className="mt-4 text-sm text-neutral-600">
           Our editorial picks — Dish of the Week, Hidden Gems, Family Favourites and more — will
-          appear here as they're published.
+          appear here as they&apos;re published.
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

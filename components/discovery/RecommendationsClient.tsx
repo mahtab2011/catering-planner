@@ -64,7 +64,7 @@ export default function RecommendationsClient() {
             </div>
           ) : recommendations.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-              We haven't published any recommendations yet — check back soon.
+              We haven&apos;t published any recommendations yet — check back soon.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

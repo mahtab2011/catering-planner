@@ -4,7 +4,7 @@ export default function CommunityCTASection() {
   return (
     <section className="rounded-3xl border border-amber-200 bg-amber-50 p-8 text-center sm:p-10">
       <h2 className="text-2xl font-bold text-neutral-900 sm:text-3xl">
-        Join London's Food Community
+        Join London&apos;s Food Community
       </h2>
       <p className="mx-auto mt-3 max-w-xl text-neutral-700">
         Create a free account to write reviews, save your favourite places, and share your own

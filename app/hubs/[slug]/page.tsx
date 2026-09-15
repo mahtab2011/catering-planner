@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { useLanguage } from "@/hooks/useLanguage";
 import { isRTL } from "@/lib/i18n";
 import { getHubBySlug } from "@/lib/hubs";
-import { getAllCuisines, restaurantMatchesCuisine } from "@/lib/cuisines";
+import { getAllCuisines } from "@/lib/cuisines";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";

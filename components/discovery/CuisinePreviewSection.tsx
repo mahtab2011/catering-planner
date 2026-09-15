@@ -15,7 +15,7 @@ export default function CuisinePreviewSection() {
         </Link>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-        London's food scene spans every continent — this list grows as more cuisines are added.
+        London&apos;s food scene spans every continent — this list grows as more cuisines are added.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">

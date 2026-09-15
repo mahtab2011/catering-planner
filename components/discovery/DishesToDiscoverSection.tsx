@@ -51,7 +51,7 @@ export default function DishesToDiscoverSection() {
     <section>
       <h2 className="text-2xl font-bold text-neutral-900">Dishes to Discover</h2>
       <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-        A taste of what's out there — explore the cuisine page for restaurants serving each dish.
+        A taste of what&apos;s out there — explore the cuisine page for restaurants serving each dish.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">

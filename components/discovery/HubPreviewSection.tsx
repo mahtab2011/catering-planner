@@ -9,7 +9,7 @@ export default function HubPreviewSection() {
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-neutral-900">Explore London's Food Hubs</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">Explore London&apos;s Food Hubs</h2>
         <Link href="/hubs" className="text-sm font-semibold text-amber-700 hover:underline">
           All Food Hubs →
         </Link>

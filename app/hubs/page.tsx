@@ -24,7 +24,7 @@ export default function HubsIndexPage() {
             Food Hubs
           </div>
           <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">
-            London's Food Hubs
+            London&apos;s Food Hubs
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
             A food hub is a London area with a strong concentration of restaurants and food

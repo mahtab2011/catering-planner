@@ -1,0 +1,255 @@
+rules_version = '2';
+
+// =============================================================
+// London Food Hubs / SmartServeUK — Firestore Security Rules
+//
+// NOT YET DEPLOYED. This file is version-controlled architecture,
+// written and reviewed locally, but has not been applied to the
+// live Firebase project (see docs/SECURITY-FOLLOWUP.md for why, and
+// the exact manual steps required before it can safely go live).
+//
+// Authorization model
+// --------------------
+// Admin authorization is granted ONLY through a Firebase Auth custom
+// claim (`request.auth.token.admin == true`), never through the
+// `users/{uid}.role` Firestore field. That field is writable by
+// end users' own signup flows and must not be trusted for privileged
+// actions — see isAdmin() below. Custom claims can only be set by
+// the Firebase Admin SDK (a Cloud Function — see functions/index.js
+// — or a trusted one-off script), never by a Firestore write, so a
+// client can never grant itself admin this way.
+//
+// Ownership model
+// ----------------
+// A restaurant document is owned by the user whose uid is stored in
+// its `ownerUid` field. Only that user (or an admin) may update it.
+// Restaurants with an empty/missing ownerUid ("unclaimed" — mostly
+// legacy documents created before this ownership model existed, or
+// created by an admin converting a signup without linking it) are
+// editable by admins only, not by "whoever edits it first" — that
+// insecure claim-on-edit behavior existed in the application code
+// before this session and has been removed (see the implementation
+// report for the exact migration/backfill this implies for any
+// already-live unclaimed restaurants).
+//
+// SCOPE — read this before deploying anything
+// --------------------------------------------
+// This file only covers the collections explicitly audited this
+// session: reviews, articles, recommendations, restaurants,
+// restaurant_signups, users. Firestore rules default-deny any path
+// with no matching `match` block, so deploying this file as a full
+// replacement for whatever rules currently govern the live project
+// would immediately break every other collection the app uses —
+// orders, staff, suppliers, customers, riders, rider_signups,
+// catering_houses, blackcab_*, sales_signups, promotions, and more —
+// none of which were re-audited here. Guessing a permissive rule for
+// those just to avoid that breakage would be exactly the kind of
+// insecure shortcut this work was asked not to take.
+//
+// Before this can be deployed: either (a) merge these match blocks
+// into whatever rules currently exist live, on top of a proper audit
+// of the collections this file doesn't cover, or (b) commission that
+// audit and extend this file first. See docs/SECURITY-FOLLOWUP.md.
+// =============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Custom claim only. Do NOT fall back to reading users/{uid}.role
+      // here — that field is user-writable and would let any signed-in
+      // user grant themselves admin by editing their own profile doc.
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwnUid(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function unchanged(field) {
+      // True if `field` is not present in the incoming document, or is
+      // present but equal to its current value — i.e. this write does
+      // not modify it. Used to protect specific fields (ratings,
+      // moderation status, ownership) from being smuggled into an
+      // otherwise-legitimate update.
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == resource.data.get(field, null);
+    }
+
+    // ---------- reviews ----------
+    // Public marketplace reviews. Written by customers as "pending";
+    // only an admin may move them to "approved"/"rejected". Public
+    // reads only ever see approved reviews.
+
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved'
+        || isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.restaurantId is string
+        && request.resource.data.restaurantId.size() > 0
+        && request.resource.data.displayName is string
+        && request.resource.data.reviewText is string
+        && request.resource.data.reviewText.size() > 0
+        && request.resource.data.reviewText.size() <= 2000
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && (!('title' in request.resource.data) || request.resource.data.title is string)
+        && !('moderatedBy' in request.resource.data)
+        && !('moderatedAt' in request.resource.data)
+        && !('moderationNote' in request.resource.data);
+
+      // Admins may moderate (status/moderation fields only). The
+      // author may edit their own review's content, but only while it
+      // is still pending, and may never touch the moderation fields or
+      // re-approve/re-reject themselves.
+      allow update: if (
+          isAdmin()
+          && unchanged('userId')
+          && unchanged('restaurantId')
+          && unchanged('rating')
+          && unchanged('reviewText')
+          && unchanged('displayName')
+        ) || (
+          isSignedIn()
+          && resource.data.userId == request.auth.uid
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'pending'
+          && unchanged('userId')
+          && unchanged('restaurantId')
+          && unchanged('moderatedBy')
+          && unchanged('moderatedAt')
+          && unchanged('moderationNote')
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.reviewText is string
+          && request.resource.data.reviewText.size() > 0
+          && request.resource.data.reviewText.size() <= 2000
+        );
+
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ---------- articles (blog) ----------
+    // Editorial content. Public may only ever query/read published
+    // articles; drafts are admin-only, enforced here (not just by the
+    // app only querying for status == "published").
+
+    match /articles/{articleId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- recommendations ----------
+    // "London Food Hubs Recommends" editorial picks — distinct from
+    // customer reviews. Public may only read active recommendations.
+
+    match /recommendations/{recommendationId} {
+      allow read: if resource.data.isActive == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- restaurants ----------
+    // Public listings + owner-managed profile/menu data. Menu items
+    // live inline on the restaurant document (`menuCategories`), so
+    // there is no separate menu-item collection to protect — the
+    // owner-update branch below covers menu edits too.
+    //
+    // `rating` / `reviewCount` are a trusted aggregate maintained only
+    // by the Cloud Function in functions/index.js (which uses the
+    // Admin SDK and is not subject to these rules at all) — client
+    // writes, including the owner's own, may never change them.
+
+    match /restaurants/{restaurantId} {
+      allow read: if resource.data.status in ['active', 'pending']
+        || isAdmin()
+        || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.get('rating', 0) == 0
+          && request.resource.data.get('reviewCount', 0) == 0
+          && request.resource.data.get('isFeatured', false) == false
+        );
+
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && resource.data.ownerUid != ''
+          && unchanged('ownerUid')
+          && unchanged('rating')
+          && unchanged('reviewCount')
+          && unchanged('isFeatured')
+          && unchanged('isApproved')
+          && resource.data.status != 'blocked'
+          && request.resource.data.status != 'blocked'
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- restaurant_signups ----------
+    // One application document per applicant, document id == the
+    // applicant's own uid (see app/signup/restaurant/page.tsx). The
+    // applicant may create their own application as status "new" only
+    // — they can never write themselves straight to "approved". Only
+    // an admin may change status afterwards (matches the app: the
+    // signup form never updates this collection post-creation, only
+    // the admin review pages do).
+
+    match /restaurant_signups/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+
+      allow create: if isOwnUid(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.status == 'new';
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------- users ----------
+    // Account/role record. A user may read and update their own
+    // document, but can never change their own `role` — that is the
+    // one field that must only ever move under admin control, since
+    // `canAccess()` in the app (advisory UI gating) and, more
+    // importantly, any rule elsewhere that still needs to consult it
+    // both depend on it being trustworthy at the data layer.
+
+    match /users/{uid} {
+      allow read: if isAdmin() || isOwnUid(uid);
+
+      allow create: if isOwnUid(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role != 'admin';
+
+      allow update: if isAdmin()
+        || (isOwnUid(uid) && unchanged('role'));
+
+      allow delete: if isAdmin();
+    }
+
+    // Deliberately no catch-all rule here. Every other collection
+    // (orders, staff, suppliers, customers, riders, rider_signups,
+    // catering_houses, blackcab_*, sales_signups, promotions, etc.) is
+    // untouched by this file and falls through to Firestore's default
+    // deny — see the SCOPE note at the top of this file.
+  }
+}

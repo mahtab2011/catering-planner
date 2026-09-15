@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { buildDietaryBadgeLabels } from "@/lib/dietary";
+import type { DietaryAttribute } from "@/lib/types";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 
 type LiveRestaurant = {
@@ -17,6 +19,7 @@ type LiveRestaurant = {
   tags?: string[];
   popularItems?: string[];
   isHalal?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
   isFeatured?: boolean;
   status?: string;
   rating?: number;
@@ -94,7 +97,7 @@ export default function FeaturedRestaurantsSection() {
                 name={safeText(r.name) || "Restaurant"}
                 cuisine={safeText(r.cuisine) || "Cuisine not added"}
                 area={safeText(r.area) || safeText(r.hubName) || "London"}
-                tags={[...(r.isHalal ? ["Halal"] : []), ...(r.tags || [])].slice(0, 5)}
+                tags={[...buildDietaryBadgeLabels(r), ...(r.tags || [])].slice(0, 5)}
                 popularItems={(r.popularItems || []).slice(0, 3)}
                 imageUrl={r.coverImage}
                 shortDescription={r.shortDescription}

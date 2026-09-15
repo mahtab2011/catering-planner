@@ -183,6 +183,11 @@ service cloud.firestore {
           && request.resource.data.ownerUid == request.auth.uid
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
+          // citySlug is required from creation — see lib/cities.ts —
+          // so every restaurant is unambiguously scoped to one city
+          // edition from day one, not backfilled later.
+          && request.resource.data.citySlug is string
+          && request.resource.data.citySlug.size() > 0
           && request.resource.data.get('rating', 0) == 0
           && request.resource.data.get('reviewCount', 0) == 0
           && request.resource.data.get('isFeatured', false) == false
@@ -194,6 +199,10 @@ service cloud.firestore {
           && resource.data.ownerUid == request.auth.uid
           && resource.data.ownerUid != ''
           && unchanged('ownerUid')
+          // A business can't move itself to a different city edition
+          // — that's a structural/administrative fact, not editable
+          // profile content, same reasoning as ownerUid above.
+          && unchanged('citySlug')
           && unchanged('rating')
           && unchanged('reviewCount')
           && unchanged('isFeatured')

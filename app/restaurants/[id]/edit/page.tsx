@@ -8,6 +8,8 @@ import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
+import { DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_HELP, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
+import type { DietaryAttribute } from "@/lib/types";
 
 type SubscriptionPlan = "free" | "premium";
 type RestaurantStatus = "draft" | "active" | "pending" | "blocked";
@@ -62,6 +64,7 @@ type RestaurantDoc = {
 
   isHalal?: boolean;
   isHmcApproved?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
 
   isPremium?: boolean;
   subscriptionPlan?: SubscriptionPlan;
@@ -182,6 +185,13 @@ export default function EditRestaurantPage() {
 
   const [isHalal, setIsHalal] = useState(false);
   const [isHmcApproved, setIsHmcApproved] = useState(false);
+  const [dietaryCertifications, setDietaryCertifications] = useState<DietaryAttribute[]>([]);
+
+  function toggleDietaryCertification(attr: DietaryAttribute) {
+    setDietaryCertifications((prev) =>
+      prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]
+    );
+  }
 
   const [isPremium, setIsPremium] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] =
@@ -268,6 +278,9 @@ export default function EditRestaurantPage() {
 
         setIsHalal(!!data.isHalal);
         setIsHmcApproved(!!data.isHmcApproved);
+        setDietaryCertifications(
+          Array.isArray(data.dietaryCertifications) ? data.dietaryCertifications : []
+        );
 
         setIsPremium(!!data.isPremium);
         setSubscriptionPlan(data.subscriptionPlan || "free");
@@ -478,6 +491,7 @@ export default function EditRestaurantPage() {
 
         isHalal,
         isHmcApproved,
+        dietaryCertifications,
 
         isPremium,
         subscriptionPlan,
@@ -1215,6 +1229,35 @@ export default function EditRestaurantPage() {
                   HMC approved
                 </span>
               </label>
+            </div>
+
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-neutral-700">
+                Dietary certifications (self-declared — only tick what genuinely applies)
+              </label>
+              <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {DIETARY_ATTRIBUTES.map((attr) => (
+                  <label
+                    key={attr}
+                    className="flex items-start gap-3 rounded-xl border border-neutral-200 px-3 py-3"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={dietaryCertifications.includes(attr)}
+                      onChange={() => toggleDietaryCertification(attr)}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-neutral-800">
+                        {DIETARY_ATTRIBUTE_LABELS[attr]}
+                      </span>
+                      <span className="block text-xs text-neutral-500">
+                        {DIETARY_ATTRIBUTE_HELP[attr]}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         </div>

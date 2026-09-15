@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
+import { DEFAULT_CITY_SLUG } from "@/lib/cities";
 
 type RestaurantSignup = {
   id: string;
@@ -264,6 +265,7 @@ export default function RestaurantSignupsAdminPage() {
         // links the new restaurant to its real owner instead of
         // leaving it unclaimed. See docs/SECURITY-FOLLOWUP.md.
         ownerUid: item.id,
+        citySlug: DEFAULT_CITY_SLUG,
         ownerName: signupOwner,
         phone: safeText(item.phone),
         email: safeText(item.email),

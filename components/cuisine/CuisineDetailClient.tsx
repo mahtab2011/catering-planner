@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Cuisine, ArticleDoc, RecommendationDoc } from "@/lib/types";
+import type { Cuisine, ArticleDoc, RecommendationDoc, DietaryAttribute } from "@/lib/types";
 import { getAllCuisines, restaurantMatchesCuisine } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
+import { buildDietaryBadgeLabels } from "@/lib/dietary";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
@@ -22,6 +23,7 @@ type LiveRestaurant = {
   tags?: string[];
   popularItems?: string[];
   isHalal?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
   status?: string;
   rating?: number;
   reviewCount?: number;
@@ -268,7 +270,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
                   name={safeText(r.name) || "Restaurant"}
                   cuisine={safeText(r.cuisine) || cuisine.name}
                   area={safeText(r.area) || safeText(r.hubName) || "London"}
-                  tags={[...(r.isHalal ? ["Halal"] : []), ...(r.tags || [])].slice(0, 5)}
+                  tags={[...buildDietaryBadgeLabels(r), ...(r.tags || [])].slice(0, 5)}
                   popularItems={(r.popularItems || []).slice(0, 3)}
                   imageUrl={r.coverImage}
                   shortDescription={r.shortDescription}

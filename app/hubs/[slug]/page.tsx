@@ -8,6 +8,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { isRTL } from "@/lib/i18n";
 import { getHubBySlug } from "@/lib/hubs";
 import { getAllCuisines } from "@/lib/cuisines";
+import { buildDietaryBadgeLabels } from "@/lib/dietary";
+import type { DietaryAttribute } from "@/lib/types";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
@@ -23,6 +25,7 @@ type LiveRestaurant = {
   tags?: string[];
   popularItems?: string[];
   isHalal?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
   status?: string;
   rating?: number;
   reviewCount?: number;
@@ -189,7 +192,7 @@ export default function HubPage({ params }: { params: Promise<{ slug: string }> 
                   name={safeText(r.name) || "Restaurant"}
                   cuisine={safeText(r.cuisine) || "Cuisine not added"}
                   area={safeText(r.area) || hubName}
-                  tags={[...(r.isHalal ? ["Halal"] : []), ...(r.tags || [])].slice(0, 5)}
+                  tags={[...buildDietaryBadgeLabels(r), ...(r.tags || [])].slice(0, 5)}
                   popularItems={(r.popularItems || []).slice(0, 3)}
                   imageUrl={r.coverImage}
                   shortDescription={r.shortDescription}

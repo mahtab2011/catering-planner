@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import RestaurantReviews from "@/components/reviews/RestaurantReviews";
+import { DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
+import type { DietaryAttribute } from "@/lib/types";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
@@ -63,6 +65,7 @@ type LiveRestaurant = {
 
   isHalal?: boolean;
   isHmcApproved?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
 
   isPremium?: boolean;
   subscriptionPlan?: "free" | "premium";
@@ -1039,6 +1042,17 @@ export default function RestaurantDetailPage() {
                   {copy.hmcApproved}
                 </span>
               ) : null}
+
+              {(restaurant.dietaryCertifications || [])
+                .filter((attr) => attr !== "halal")
+                .map((attr) => (
+                  <span
+                    key={attr}
+                    className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                  >
+                    {DIETARY_ATTRIBUTE_LABELS[attr]}
+                  </span>
+                ))}
 
               {restaurant.isPremium ? (
                 <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-800">

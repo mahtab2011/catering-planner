@@ -38,3 +38,20 @@ export const DIETARY_ATTRIBUTE_HELP: Record<DietaryAttribute, string> = {
   kosher: "The business holds Kosher certification.",
   jain: "The business offers Jain-friendly dishes (no root vegetables, strict vegetarian).",
 };
+
+/**
+ * Builds a deduplicated list of dietary badge labels for a restaurant
+ * card/page, combining the structured `dietaryCertifications` array
+ * with the legacy `isHalal` boolean so both data shapes display
+ * consistently without showing "Halal" twice. Shared by every place
+ * that renders a restaurant card so the display logic lives in one
+ * place rather than being re-implemented per page.
+ */
+export function buildDietaryBadgeLabels(business: {
+  isHalal?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
+}): string[] {
+  const attributes = new Set<DietaryAttribute>(business.dietaryCertifications || []);
+  if (business.isHalal) attributes.add("halal");
+  return [...attributes].map((attr) => DIETARY_ATTRIBUTE_LABELS[attr]);
+}

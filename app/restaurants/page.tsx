@@ -5,6 +5,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { buildDietaryBadgeLabels } from "@/lib/dietary";
+import type { DietaryAttribute } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
@@ -54,6 +56,7 @@ type LiveRestaurant = {
   collectionEnabled?: boolean;
 
   isHalal?: boolean;
+  dietaryCertifications?: DietaryAttribute[];
   isHmcApproved?: boolean;
 
   isPremium?: boolean;
@@ -488,7 +491,7 @@ function RestaurantsPageContent() {
                                   ...(safeText(restaurant.priceRange)
                                     ? [safeText(restaurant.priceRange)]
                                     : []),
-                                  ...(restaurant.isHalal ? ["Halal"] : []),
+                                  ...buildDietaryBadgeLabels(restaurant),
                                   ...(restaurant.isHmcApproved
                                     ? ["HMC Approved"]
                                     : []),

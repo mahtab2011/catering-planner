@@ -11,7 +11,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
 import type { ReviewDoc } from "@/lib/types";
 
@@ -52,6 +52,7 @@ export default function AdminReviewsPage() {
     try {
       await updateDoc(doc(db, "reviews", id), {
         status,
+        moderatedBy: auth.currentUser?.uid || "",
         moderatedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

@@ -29,6 +29,11 @@ type LiveRestaurant = {
   tags?: string[];
   priceRange?: string;
 
+  // Trusted aggregate maintained by a Cloud Function from approved
+  // reviews only (see functions/index.js) — never written by a client.
+  rating?: number;
+  reviewCount?: number;
+
   shortDescription?: string;
   longDescription?: string;
   popularItems?: string[];
@@ -514,6 +519,8 @@ function RestaurantsPageContent() {
                                       safeText(restaurant.hubName) ||
                                       "Area not added"
                                     }
+                                    rating={restaurant.rating}
+                                    reviewCount={restaurant.reviewCount}
                                     tags={tags}
                                     popularItems={
                                       popularItems.length > 0

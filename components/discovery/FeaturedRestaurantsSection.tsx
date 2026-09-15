@@ -19,6 +19,8 @@ type LiveRestaurant = {
   isHalal?: boolean;
   isFeatured?: boolean;
   status?: string;
+  rating?: number;
+  reviewCount?: number;
 };
 
 function safeText(value?: string) {
@@ -96,6 +98,8 @@ export default function FeaturedRestaurantsSection() {
                 popularItems={(r.popularItems || []).slice(0, 3)}
                 imageUrl={r.coverImage}
                 shortDescription={r.shortDescription}
+                rating={r.rating}
+                reviewCount={r.reviewCount}
                 href={`/restaurants/${r.id}`}
               />
             ))}

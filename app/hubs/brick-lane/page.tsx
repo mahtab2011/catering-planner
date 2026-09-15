@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { getHubBySlug } from "@/lib/hubs";
 
-const FEATURED_IMAGE = "/hubs/brick-lane/5.jpg";
+// Migrated to read its core data (hero image, gallery, description,
+// cuisine tags) from lib/hubs.ts, the single canonical source also
+// used by /hubs, /hubs/[slug] and the homepage — this page previously
+// hardcoded its own copy of all of it, which could silently drift out
+// of sync. Page-specific copy (the CTA, the extra "vibe" tags, the
+// second About paragraph) stays local since it isn't hub data.
+const hub = getHubBySlug("brick-lane");
 
-const GALLERY_IMAGES = [
+const FEATURED_IMAGE = hub?.heroImage || "/hubs/brick-lane/5.jpg";
+const GALLERY_IMAGES = (hub?.gallery || [
   "/hubs/brick-lane/1.jpg",
   "/hubs/brick-lane/2.jpg",
   "/hubs/brick-lane/3.jpg",
@@ -12,7 +20,9 @@ const GALLERY_IMAGES = [
   "/hubs/brick-lane/6.jpg",
   "/hubs/brick-lane/7.jpg",
   "/hubs/brick-lane/8.jpg",
-];
+]).filter((src) => src !== FEATURED_IMAGE);
+
+const EXTRA_TAGS = ["Tourists & Families", "Street Food Culture"];
 
 export default function BrickLanePage() {
   return (
@@ -25,35 +35,39 @@ export default function BrickLanePage() {
           </div>
 
           <h1 className="mt-4 text-4xl font-bold text-neutral-900 md:text-5xl">
-            Brick Lane Food Hub
+            {hub?.name || "Brick Lane"} Food Hub
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-600">
-            One of London’s most iconic and vibrant food destinations, with a
-            powerful South Asian food identity, strong street presence, tourists,
-            local families, and daily discovery across restaurants, grills,
-            curries, snacks, and food halls.
+            {hub?.description.en ||
+              "One of London's most iconic and vibrant food destinations, with a powerful South Asian food identity, strong street presence, tourists, local families, and daily discovery across restaurants, grills, curries, snacks, and food halls."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Bangladeshi
-            </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Indian
-            </span>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-              Curry & Grill
-            </span>
-            <span className="rounded-full bg-pink-100 px-3 py-1 text-sm font-medium text-pink-800">
-              Sweets & Snacks
-            </span>
-            <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-medium text-sky-800">
-              Tourists & Families
-            </span>
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800">
-              Street Food Culture
-            </span>
+            {(hub?.cuisineTags || ["Bangladeshi", "Indian", "Curry & Grill", "Sweets & Snacks"]).map(
+              (tag, i) => (
+                <span
+                  key={tag}
+                  className={`rounded-full px-3 py-1 text-sm font-medium ${
+                    ["bg-green-100 text-green-800", "bg-amber-100 text-amber-800", "bg-pink-100 text-pink-800"][
+                      i % 3
+                    ]
+                  }`}
+                >
+                  {tag}
+                </span>
+              )
+            )}
+            {EXTRA_TAGS.map((tag, i) => (
+              <span
+                key={tag}
+                className={`rounded-full px-3 py-1 text-sm font-medium ${
+                  ["bg-sky-100 text-sky-800", "bg-purple-100 text-purple-800"][i % 2]
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -72,7 +86,7 @@ export default function BrickLanePage() {
               A Real View of Brick Lane
             </h2>
             <p className="mt-3 max-w-4xl text-neutral-600">
-              Brick Lane is one of East London’s most recognised food areas,
+              Brick Lane is one of East London&apos;s most recognised food areas,
               combining strong restaurant identity, daily footfall, cultural
               visibility, and destination value for both local customers and
               visitors.
@@ -118,14 +132,12 @@ export default function BrickLanePage() {
           </h2>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
-            Brick Lane is one of London’s most established food hubs, famous for
-            its Bangladeshi and South Asian restaurant presence, strong visual
-            identity, and long-standing appeal for locals and destination
-            visitors.
+            {hub?.editorialIntro ||
+              "Brick Lane is one of London's most established food hubs, famous for its Bangladeshi and South Asian restaurant presence, strong visual identity, and long-standing appeal for locals and destination visitors."}
           </p>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
-            SmartServeUK helps bring restaurants in areas like Brick Lane into a
+            London Food Hubs brings restaurants in areas like Brick Lane into a
             clearer digital structure, making it easier for customers to discover
             authentic food and for restaurant owners to present menus, photos,
             offers, and identity more professionally.
@@ -141,8 +153,8 @@ export default function BrickLanePage() {
           </h2>
 
           <p className="mt-3 text-neutral-600">
-            Join SmartServeUK and showcase your menu, photos, and offers to reach
-            more customers.
+            Join London Food Hubs and showcase your menu, photos, and offers to
+            reach more customers.
           </p>
 
           <div className="mt-6 flex flex-wrap justify-center gap-4">

@@ -24,6 +24,8 @@ type LiveRestaurant = {
   popularItems?: string[];
   isHalal?: boolean;
   status?: string;
+  rating?: number;
+  reviewCount?: number;
 };
 
 function safeText(value?: string) {
@@ -191,6 +193,8 @@ export default function HubPage({ params }: { params: Promise<{ slug: string }> 
                   popularItems={(r.popularItems || []).slice(0, 3)}
                   imageUrl={r.coverImage}
                   shortDescription={r.shortDescription}
+                  rating={r.rating}
+                  reviewCount={r.reviewCount}
                   href={`/restaurants/${r.id}`}
                   lang={lang}
                 />

@@ -11,6 +11,12 @@ type RestaurantCardProps = {
   shortDescription?: string;
   imageUrl?: string;
   lang?: AppLanguage;
+  /** Trusted aggregate only — maintained server-side by a Cloud
+   *  Function from approved reviews (see functions/index.js), never
+   *  written by a client. Omit/zero reviewCount hides the badge
+   *  rather than showing a fake "0.0 (0)". */
+  rating?: number;
+  reviewCount?: number;
 };
 
 const cardCopy: Partial<
@@ -238,8 +244,11 @@ export default function RestaurantCard({
   shortDescription = "",
   imageUrl = "",
   lang = "en",
+  rating = 0,
+  reviewCount = 0,
 }: RestaurantCardProps) {
   const safeName = safeText(name) || "Restaurant";
+  const hasRating = reviewCount > 0 && rating > 0;
   const safeCuisine = safeText(cuisine) || "Cuisine";
   const safeArea = safeText(area) || "Area";
   const safeDescription = safeText(shortDescription);
@@ -293,7 +302,16 @@ export default function RestaurantCard({
               {safeName}
             </h3>
 
-            <p className="mt-1 text-sm text-neutral-600">{safeArea}</p>
+            <div className="mt-1 flex items-center gap-2 text-sm text-neutral-600">
+              <span>{safeArea}</span>
+              {hasRating ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-amber-700">
+                  <span aria-hidden="true">★</span>
+                  {rating.toFixed(1)}
+                  <span className="font-normal text-neutral-500">({reviewCount})</span>
+                </span>
+              ) : null}
+            </div>
 
             <p className="mt-3 min-h-18 line-clamp-3 text-sm leading-6 text-neutral-700">
               {safeDescription || copy.fallbackDescription}

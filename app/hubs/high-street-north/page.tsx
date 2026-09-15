@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { getHubBySlug } from "@/lib/hubs";
 
-const FEATURED_IMAGE = "/hubs/high-street-north/IMG-20260420-WA0049.jpg";
+// Migrated to read from lib/hubs.ts, the single canonical hub data
+// source. This also fixes a real bug: the previous hardcoded
+// FEATURED_IMAGE/GALLERY_IMAGES pointed at files
+// (IMG-20260420-WA0049.jpg etc.) that do not exist in public/hubs/
+// high-street-north/ — only 1.jpg-8.jpg and hero.jpg exist there —
+// so every image on this page was broken in production.
+const hub = getHubBySlug("high-street-north");
 
-const GALLERY_IMAGES = [
-  "/hubs/high-street-north/IMG-20260420-WA0050.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0051.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0052.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0053.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0054.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0055.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0056.jpg",
-  "/hubs/high-street-north/IMG-20260420-WA0057.jpg",
-];
+const FEATURED_IMAGE = hub?.heroImage || "/hubs/high-street-north/hero.jpg";
+const GALLERY_IMAGES = (
+  hub?.gallery || Array.from({ length: 8 }, (_, i) => `/hubs/high-street-north/${i + 1}.jpg`)
+).filter((src) => src !== FEATURED_IMAGE);
 
 export default function HighStreetNorthPage() {
   return (
@@ -26,28 +27,25 @@ export default function HighStreetNorthPage() {
           </div>
 
           <h1 className="mt-4 text-4xl font-bold text-neutral-900 md:text-5xl">
-            High Street North Food Hub
+            {hub?.name || "High Street North"} Food Hub
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-600">
-            A lively and developing East London food hub with strong South Asian
-            restaurant presence, takeaway demand, family-friendly local energy,
-            and growing appeal for shoppers, food lovers, and visitors.
+            {hub?.description.en ||
+              "A lively and developing East London food hub with strong South Asian restaurant presence, takeaway demand, family-friendly local energy, and growing appeal for shoppers, food lovers, and visitors."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Bangladeshi
-            </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Pakistani
-            </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Indian
-            </span>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-              Grill & Curry
-            </span>
+            {(hub?.cuisineTags || ["Bangladeshi", "Pakistani", "Indian"]).map((tag, i) => (
+              <span
+                key={tag}
+                className={`rounded-full px-3 py-1 text-sm font-medium ${
+                  ["bg-green-100 text-green-800", "bg-amber-100 text-amber-800"][i % 2]
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
             <span className="rounded-full bg-pink-100 px-3 py-1 text-sm font-medium text-pink-800">
               Sweets & Snacks
             </span>
@@ -64,7 +62,7 @@ export default function HighStreetNorthPage() {
           <div className="flex h-65 w-full items-center justify-center bg-white md:h-105">
             <img
               src={FEATURED_IMAGE}
-              alt="High Street North featured archway"
+              alt="High Street North featured view"
               className="max-h-full max-w-full object-contain"
             />
           </div>
@@ -73,10 +71,9 @@ export default function HighStreetNorthPage() {
               A Real View of High Street North
             </h2>
             <p className="mt-3 max-w-4xl text-neutral-600">
-              The East Ham archway gives this hub a strong local identity and
-              marks High Street North as a practical, busy, and recognisable food
-              area with strong everyday restaurant activity and community
-              movement.
+              High Street North gives this hub a strong local identity — a
+              practical, busy, and recognisable food area with strong everyday
+              restaurant activity and community movement.
             </p>
           </div>
         </div>
@@ -112,11 +109,6 @@ export default function HighStreetNorthPage() {
             </div>
           ))}
         </div>
-
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Additional photos and short video content can be added later to expand
-          this hub into a richer preview section.
-        </div>
       </section>
 
       {/* ABOUT HUB */}
@@ -127,20 +119,16 @@ export default function HighStreetNorthPage() {
           </h2>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
-            High Street North in East Ham Town Centre is a practical and
-            high-potential food hub with strong community presence and visible
-            restaurant activity. The area reflects the kind of local dining
-            environment where independent restaurants, takeaway businesses,
-            grills, curry houses, sweet shops, and family-focused operators can
-            benefit from stronger online discovery and organised digital
-            presentation.
+            {hub?.editorialIntro ||
+              "High Street North in East Ham Town Centre is a practical and high-potential food hub with strong community presence and visible restaurant activity. The area reflects the kind of local dining environment where independent restaurants, takeaway businesses, grills, curry houses, sweet shops, and family-focused operators can benefit from stronger online discovery and organised digital presentation."}
           </p>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
-            SmartServeUK can help restaurants here present menus, photos, videos,
-            offers, and local identity in one place, making it easier for
-            customers to discover trusted food options while helping restaurant
-            owners improve visibility without needing a full standalone website.
+            London Food Hubs can help restaurants here present menus, photos,
+            videos, offers, and local identity in one place, making it easier
+            for customers to discover trusted food options while helping
+            restaurant owners improve visibility without needing a full
+            standalone website.
           </p>
         </div>
       </section>
@@ -188,8 +176,8 @@ export default function HighStreetNorthPage() {
           </h2>
 
           <p className="mt-3 text-neutral-600">
-            Join SmartServeUK and showcase your menu, photos, videos, and offers
-            to reach more customers in East Ham Town Centre and beyond.
+            Join London Food Hubs and showcase your menu, photos, videos, and
+            offers to reach more customers in East Ham Town Centre and beyond.
           </p>
 
           <div className="mt-6 flex flex-wrap justify-center gap-4">

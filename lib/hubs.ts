@@ -375,7 +375,7 @@ export const HUBS: Record<string, FoodHub> = {
       zh: "前往 Barking Road 可到 Upton Park Station 或附近的 Barking Road 巴士站。到达后沿主街步行，即可探索当地餐厅、咖啡馆、外卖店和东伦敦日常美食地点。",
     },
     heroImage: "/hubs/barking-road/hero.jpg",
-    gallery: ["hero.jpg", ...Array.from({ length: 9 }, (_, i) => `${i + 1}.jpg`)].map(
+    gallery: ["hero.jpg", ...Array.from({ length: 8 }, (_, i) => `${i + 1}.jpg`)].map(
       (f) => `/hubs/barking-road/${f}`
     ),
     isActive: true,
@@ -414,8 +414,8 @@ export const HUBS: Record<string, FoodHub> = {
     editorialIntro:
       "High Street North in East Ham Town Centre is a practical and high-potential food hub with strong community presence and visible restaurant activity — independent restaurants, takeaway businesses, grills, curry houses, sweet shops, and family-focused operators.",
     cuisineTags: ["Bangladeshi", "Pakistani", "Indian"],
-    heroImage: "/hubs/high-street-north/8.jpg",
-    gallery: Array.from({ length: 9 }, (_, i) => `/hubs/high-street-north/${i + 1}.jpg`),
+    heroImage: "/hubs/high-street-north/hero.jpg",
+    gallery: Array.from({ length: 8 }, (_, i) => `/hubs/high-street-north/${i + 1}.jpg`),
     isActive: true,
     seoTitle: "High Street North Food Hub | East Ham, London Food Hubs",
     seoDescription:

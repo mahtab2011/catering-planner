@@ -1,21 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { getHubBySlug } from "@/lib/hubs";
 
-const FEATURED_IMAGE = "/hubs/plashet-road/IMG-20260420-WA0037.jpg";
+// Migrated to read from lib/hubs.ts, the single canonical hub data
+// source. This also fixes a real bug: the previous hardcoded
+// FEATURED_IMAGE/GALLERY_IMAGES pointed at files
+// (IMG-20260420-WA0037.jpg etc.) that do not exist in
+// public/hubs/plashet-road/ — only 1.jpg-20.jpg exist there — so
+// every image on this page was broken in production.
+const hub = getHubBySlug("plashet-road");
 
-const GALLERY_IMAGES = [
-  "/hubs/plashet-road/IMG-20260420-WA0038.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0039.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0040.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0041.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0042.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0043.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0044.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0045.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0046.jpg",
-  "/hubs/plashet-road/IMG-20260420-WA0047.jpg",
-];
+const FEATURED_IMAGE = hub?.heroImage || "/hubs/plashet-road/13.jpg";
+const GALLERY_IMAGES = (
+  hub?.gallery || Array.from({ length: 20 }, (_, i) => `/hubs/plashet-road/${i + 1}.jpg`)
+).filter((src) => src !== FEATURED_IMAGE);
 
 export default function PlashetRoadPage() {
   return (
@@ -28,25 +27,25 @@ export default function PlashetRoadPage() {
           </div>
 
           <h1 className="mt-4 text-4xl font-bold text-neutral-900 md:text-5xl">
-            Plashet Road Food Hub
+            {hub?.name || "Plashet Road"} Food Hub
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-600">
-            A newly developing bustling food hub for food lovers, tourists, and
-            families — offering authentic South Asian flavours in a cozy and
-            homely environment.
+            {hub?.description.en ||
+              "A newly developing bustling food hub for food lovers, tourists, and families — offering authentic South Asian flavours in a cozy and homely environment."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Bangladeshi
-            </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Pakistani
-            </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              Indian
-            </span>
+            {(hub?.cuisineTags || ["Bangladeshi", "Pakistani", "Indian"]).map((tag, i) => (
+              <span
+                key={tag}
+                className={`rounded-full px-3 py-1 text-sm font-medium ${
+                  ["bg-green-100 text-green-800", "bg-amber-100 text-amber-800"][i % 2]
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
             <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
               Biryani & Grill
             </span>
@@ -123,18 +122,15 @@ export default function PlashetRoadPage() {
           </h2>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
-            Plashet Road is one of East London’s growing neighbourhood food
-            areas, home to a dense cluster of Bangladeshi, Pakistani, and Indian
-            restaurants. From traditional biryani houses to grills, curries,
-            snacks, and sweets, this hub reflects authentic community-driven
-            dining.
+            {hub?.editorialIntro ||
+              "Plashet Road is one of East London's growing neighbourhood food areas, home to a dense cluster of Bangladeshi, Pakistani, and Indian restaurants. From traditional biryani houses to grills, curries, snacks, and sweets, this hub reflects authentic community-driven dining."}
           </p>
 
           <p className="mt-4 text-lg leading-8 text-neutral-600">
             Many restaurants here are well-loved locally but have limited online
-            presence. SmartServeUK brings them together in one place — helping
-            customers discover real food, and helping restaurant owners showcase
-            their menus, photos, and offers professionally.
+            presence. London Food Hubs brings them together in one place —
+            helping customers discover real food, and helping restaurant owners
+            showcase their menus, photos, and offers professionally.
           </p>
         </div>
       </section>
@@ -183,8 +179,8 @@ export default function PlashetRoadPage() {
           </h2>
 
           <p className="mt-3 text-neutral-600">
-            Join SmartServeUK and showcase your menu, photos, videos, and offers
-            to reach more customers.
+            Join London Food Hubs and showcase your menu, photos, videos, and
+            offers to reach more customers.
           </p>
 
           <div className="mt-6 flex flex-wrap justify-center gap-4">

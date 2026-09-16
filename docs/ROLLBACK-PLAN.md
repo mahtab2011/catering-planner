@@ -59,19 +59,38 @@ firebase functions:delete onReviewWrite
 
 **Effect of deleting `setAdminClaim`:** no new admins can be granted via the callable until it's redeployed; existing custom claims already granted are untouched (they live on the Firebase Auth user record, not in the function). Use the Firebase console (Authentication → user → manage custom claims) or `functions/scripts/bootstrapFirstAdmin.js` as a fallback in the meantime.
 
-## 4. Roll back the application deployment (Vercel)
+## 4. Roll back the application deployment (Hostinger)
 
-This repository deploys to Vercel, independently of Firebase. Nothing in this launch package touches Vercel configuration, and rolling back the app is entirely Vercel's existing mechanism:
+**Updated:** London Food Hubs deploys to a Hostinger-hosted persistent
+Node.js process, not Vercel — see `docs/HOSTINGER-DEPLOYMENT.md` for the
+full deployment procedure this rollback step pairs with. (An earlier
+version of this document assumed Vercel; that was never actually
+configured for this project and the decision was reversed before any
+Vercel deployment existed.)
+
+Rolling back on a persistent Node host is a manual, deliberate action —
+there's no "promote previous deployment" button like a serverless platform
+provides. The general shape:
 
 ```
-# Via the Vercel dashboard: Deployments → find the previous production
-# deployment → "..." menu → "Promote to Production". No CLI needed.
-
-# Or via CLI, if you have it configured:
-vercel rollback [deployment-url-or-id]
+# On the Hostinger host, in the application directory:
+git fetch
+git checkout <previous-known-good-commit-or-tag>
+npm install
+npm run build
+# restart the Node process (via Hostinger's process manager / whatever
+# supervises `npm run start` — see docs/HOSTINGER-DEPLOYMENT.md's
+# "rollback procedure" section for the exact steps once that's set up)
 ```
 
-This instantly points the production domain back at the previous build — it does not touch Firestore data or rules, so pair it with step 1 above if the application code and the rules need to go back together (e.g. if new code assumes fields/rules that no longer exist after a rules rollback).
+Keeping a tagged/known-good commit noted at each real deployment (not just
+relying on `git log`) makes this fast under pressure — add that tag as part
+of the actual deploy procedure once Hostinger is configured, which is
+outside this document's and this task's scope.
+
+This does not touch Firestore data or rules, so pair it with step 1 above
+if the application code and the rules need to go back together (e.g. if new
+code assumes fields/rules that no longer exist after a rules rollback).
 
 ## 5. What rolling back does NOT do
 

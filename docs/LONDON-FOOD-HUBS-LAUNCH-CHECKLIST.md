@@ -151,8 +151,8 @@ With rules live, exercise the real application (not just the rules in isolation)
 
 ## L. London Food Hubs domain — later, not now
 
-Domain/DNS work (pointing `londonfoodhubs.com` or any other domain at this deployment) is explicitly out of scope for this checklist and for every task that produced this code. When that's actually being planned, it's a Vercel/DNS change, independent of everything above — none of the Firebase work here assumes or requires a particular domain.
+`londonfoodhubs.com` has now been purchased (see `docs/HOSTINGER-DEPLOYMENT.md`), but actually pointing DNS at a live deployment is still explicitly out of scope for this checklist. The confirmed production host is Hostinger (a persistent Node.js deployment), not Vercel — see `docs/HOSTINGER-DEPLOYMENT.md` for the DNS sequence, SSL/HTTPS verification, and www-redirect policy this step will eventually follow. None of the Firebase work in this checklist assumes or requires a particular domain or host.
 
 ## M. Rollback procedure
 
-See `docs/ROLLBACK-PLAN.md` for the full detail. Summary: Firestore rules can be restored from the step-A backup or the console's own rules history; Cloud Functions can be redeleted or redeployed from a previous commit; the Vercel application deployment has its own independent rollback via the Vercel dashboard. Nothing here auto-reverts — every rollback action is a deliberate, manual command run by a human who has confirmed something is actually wrong.
+See `docs/ROLLBACK-PLAN.md` for the full detail. Summary: Firestore rules can be restored from the step-A backup or the console's own rules history; Cloud Functions can be redeleted or redeployed from a previous commit; the Hostinger application deployment is rolled back manually (checkout a previous commit, rebuild, restart the Node process — see `docs/ROLLBACK-PLAN.md` section 4 and `docs/HOSTINGER-DEPLOYMENT.md`'s rollback procedure). Nothing here auto-reverts — every rollback action is a deliberate, manual command run by a human who has confirmed something is actually wrong.

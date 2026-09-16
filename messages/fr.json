@@ -1,0 +1,214 @@
+{
+  "Common": {
+    "loading": "Chargement...",
+    "seeAll": "Voir tout",
+    "viewAll": "Tout afficher",
+    "backTo": "Retour à {page}",
+    "noResultsTitle": "Aucun résultat trouvé",
+    "readMore": "Lire la suite",
+    "exploreMore": "Explorer davantage",
+    "comingSoon": "Bientôt disponible",
+    "notAddedYet": "Pas encore ajouté"
+  },
+
+  "Nav": {
+    "home": "Accueil",
+    "exploreFood": "Explorer",
+    "restaurants": "Restaurants",
+    "cuisines": "Cuisines",
+    "foodHubs": "Pôles culinaires",
+    "reviews": "Avis",
+    "blog": "Blog",
+    "recommends": "Recommandations",
+    "search": "Rechercher",
+    "logIn": "Connexion",
+    "signUp": "S'inscrire",
+    "myAccount": "Mon compte",
+    "menu": "Menu"
+  },
+
+  "LanguageSelector": {
+    "label": "Langue",
+    "current": "Langue actuelle : {language}"
+  },
+
+  "Home": {
+    "heroBadge": "La plateforme de découverte culinaire de Londres",
+    "heroTitle": "Découvrez la cuisine du monde entier à Londres",
+    "heroSubtitle": "Restaurants, cuisiniers à domicile, traiteurs et boulangeries de toutes les communautés — bangladaise, indienne, pakistanaise, turque, thaïlandaise, moyen-orientale, africaine, caribéenne et bien plus encore.",
+    "searchPlaceholder": "Rechercher des restaurants, plats ou cuisines",
+    "postcodePlaceholder": "Code postal ou quartier",
+    "searchButton": "Rechercher",
+    "postcodeNote": "La recherche par rayon de code postal arrive bientôt — pour l'instant, la recherche se fait par quartier, pôle culinaire et type de cuisine.",
+    "exploreByCuisine": "Explorer par cuisine",
+    "exploreByCuisineSubtitle": "La scène culinaire londonienne couvre tous les continents — cette liste s'agrandit à mesure que de nouvelles cuisines sont ajoutées.",
+    "allCuisines": "Toutes les cuisines",
+    "exploreFoodHubs": "Explorer les pôles culinaires de Londres",
+    "exploreFoodHubsSubtitle": "Un pôle culinaire est un quartier de Londres avec une forte concentration de restaurants et de commerces alimentaires — de Brick Lane à Edgware Road en passant par Plashet Road.",
+    "allFoodHubs": "Tous les pôles culinaires",
+    "featuredRestaurants": "Restaurants à la une",
+    "browseAllRestaurants": "Voir tous les restaurants",
+    "noRestaurantsYet": "Aucun restaurant répertorié pour le moment.",
+    "beFirstToJoin": "Soyez le premier à rejoindre London Food Hubs",
+    "dishesToDiscover": "Plats à découvrir",
+    "dishesToDiscoverSubtitle": "Un aperçu de ce qui existe — consultez la page de la cuisine pour trouver les restaurants qui proposent chaque plat.",
+    "recommends": "London Food Hubs recommande",
+    "recommendsEmpty": "Nos sélections éditoriales — plat de la semaine, perles rares, coups de cœur en famille et plus encore — apparaîtront ici dès leur publication.",
+    "latestReviews": "Derniers avis",
+    "fromTheBlog": "Sur le blog de London Food Hubs",
+    "blogEmpty": "Notre équipe éditoriale prépare les premiers articles — revenez bientôt.",
+    "visitBlog": "Visiter le blog",
+    "businessCtaBadge": "Pour les professionnels",
+    "businessCtaTitle": "Vous possédez ou gérez un commerce alimentaire ?",
+    "businessCtaBody": "Répertoriez gratuitement votre restaurant, vente à emporter, cuisine à domicile, boulangerie ou service de traiteur sur London Food Hubs. Ajoutez votre menu, vos photos et vos horaires — les clients vous trouveront par cuisine, quartier et plat.",
+    "businessCtaListFree": "Référencer mon commerce gratuitement",
+    "businessCtaHowItWorks": "Comment ça marche",
+    "communityCtaTitle": "Rejoignez la communauté gourmande de Londres",
+    "communityCtaBody": "Créez un compte gratuit pour rédiger des avis, enregistrer vos adresses préférées et partager vos découvertes culinaires avec London Food Hubs.",
+    "communityCtaCreateAccount": "Créer un compte gratuit",
+    "communityCtaStartExploring": "Commencer à explorer"
+  },
+
+  "Restaurants": {
+    "title": "Restaurants",
+    "searchLabel": "Rechercher",
+    "searchPlaceholder": "Rechercher un restaurant, un propriétaire, un pôle, un quartier...",
+    "hubLabel": "Pôle culinaire",
+    "cuisineLabel": "Cuisine",
+    "statusLabel": "Statut",
+    "all": "Tous",
+    "clearFilters": "Réinitialiser les filtres",
+    "placesFound": "{count} établissements trouvés",
+    "loadingRestaurants": "Chargement des restaurants...",
+    "noRestaurantsFound": "Aucun restaurant trouvé",
+    "tryAnotherSearch": "Essayez un autre terme de recherche ou réinitialisez les filtres.",
+    "viewProfileMenu": "Voir le profil et le menu",
+    "highlights": "Points forts"
+  },
+
+  "Dietary": {
+    "vegetarian": "Végétarien",
+    "vegan": "Végan",
+    "nonVegetarian": "Non végétarien",
+    "halal": "Halal",
+    "kosher": "Casher",
+    "jain": "Jaïn"
+  },
+
+  "Reviews": {
+    "title": "Avis sur les restaurants",
+    "subtitle": "De véritables avis clients sur les restaurants de Londres, modérés avant publication.",
+    "recentReviews": "Avis récents",
+    "customerReviews": "Avis clients",
+    "writeAReview": "Rédiger un avis",
+    "cancel": "Annuler",
+    "signInToReview": "Connectez-vous pour rédiger un avis",
+    "yourRating": "Votre note pour {restaurant}",
+    "titleOptional": "Titre (facultatif)",
+    "yourReview": "Votre avis",
+    "submitReview": "Envoyer l'avis",
+    "submitting": "Envoi en cours...",
+    "moderationNote": "Les avis sont vérifiés par notre équipe avant d'apparaître publiquement.",
+    "thankYouSubmitted": "Merci — votre avis a été envoyé et apparaîtra ici une fois approuvé par notre équipe de modération.",
+    "noApprovedReviews": "Aucun avis approuvé pour le moment.",
+    "beFirstToReview": "Soyez le premier à donner votre avis sur {restaurant}.",
+    "outOf5": "sur 5",
+    "reviewCount": "{count, plural, one {avis approuvé} other {avis approuvés}}"
+  },
+
+  "Blog": {
+    "title": "Le blog de London Food Hubs",
+    "subtitle": "Guides de cuisines, histoires de restaurants et idées de plats à travers Londres.",
+    "all": "Tous",
+    "loadingArticles": "Chargement des articles...",
+    "noArticlesYet": "Aucun article publié pour le moment. Revenez bientôt.",
+    "articleNotFound": "Article introuvable",
+    "articleNotFoundBody": "Cet article a peut-être été dépublié ou le lien est incorrect.",
+    "backToBlog": "Retour au blog",
+    "by": "Par {author}",
+    "relatedCuisines": "Cuisines associées"
+  },
+
+  "Recommendations": {
+    "badge": "Éditorial",
+    "title": "London Food Hubs recommande",
+    "subtitle": "Sélectionné avec soin par notre équipe éditoriale — des plats à essayer, des perles rares et des adresses qui valent le détour. Ce sont des sélections éditoriales, pas des notes clients.",
+    "loading": "Chargement des recommandations...",
+    "empty": "Nous n'avons pas encore publié de recommandations — revenez bientôt."
+  },
+
+  "Cuisines": {
+    "title": "Explorez les cuisines de toutes les communautés de Londres",
+    "subtitle": "London Food Hubs célèbre les cuisines et les communautés de toute la ville — cette liste s'agrandit à mesure que de nouvelles cuisines sont ajoutées, elle n'est jamais limitée à une seule région."
+  },
+
+  "CuisineDetail": {
+    "foodInLondon": "Cuisine {cuisine} à Londres",
+    "aboutDishes": "À propos de ces plats",
+    "popularDishes": "Plats {cuisine} populaires",
+    "restaurantsHeading": "Restaurants {cuisine} sur London Food Hubs",
+    "noRestaurantsYet": "Aucun restaurant {cuisine} n'est encore répertorié. Revenez bientôt, ou",
+    "beFirstToJoin": "soyez le premier à rejoindre",
+    "whereToFind": "Où trouver de la cuisine {cuisine}",
+    "browseCuisineRestaurants": "Voir les restaurants {cuisine}",
+    "ownBusinessCta": "Vous avez un commerce de cuisine {cuisine} ? Référencez-le gratuitement",
+    "exploreMoreRegion": "Découvrir plus de cuisine {region}",
+    "allCuisines": "Toutes les cuisines"
+  },
+
+  "Hubs": {
+    "title": "Les pôles culinaires de Londres",
+    "subtitle": "Un pôle culinaire est un quartier de Londres avec une forte concentration de restaurants et de commerces alimentaires. Explorez restaurants, cuisines et plats quartier par quartier."
+  },
+
+  "HubDetail": {
+    "badge": "Pôle culinaire",
+    "gettingThere": "Comment s'y rendre :",
+    "photos": "Photos",
+    "restaurantsInHub": "Restaurants à {hub}",
+    "loadingRestaurants": "Chargement des restaurants...",
+    "noRestaurantsYet": "Aucun restaurant n'est encore répertorié à {hub}.",
+    "ownBusinessCta": "Vous avez un commerce ici ? Référencez-le gratuitement"
+  },
+
+  "Search": {
+    "title": "Rechercher sur London Food Hubs",
+    "subtitle": "Recherchez parmi les restaurants, plats, cuisines, pôles culinaires et articles de blog.",
+    "searchPlaceholder": "Rechercher des restaurants, plats ou cuisines",
+    "postcodePlaceholder": "Code postal ou quartier",
+    "searchButton": "Rechercher",
+    "postcodeNote": "La recherche par code postal correspond actuellement aux adresses des restaurants et aux noms des pôles culinaires sous forme de texte — une véritable recherche par rayon est prévue pour une prochaine version.",
+    "loading": "Chargement...",
+    "enterSearchTerm": "Saisissez un terme de recherche ou un code postal/quartier pour commencer.",
+    "noResultsFor": "Aucun résultat pour « {query} ». Essayez une autre cuisine, un autre plat ou un autre quartier.",
+    "restaurants": "Restaurants",
+    "dishes": "Plats",
+    "cuisines": "Cuisines",
+    "foodHubs": "Pôles culinaires",
+    "blogArticles": "Articles de blog",
+    "at": "chez {restaurant}"
+  },
+
+  "Footer": {
+    "discover": "Découvrir",
+    "editorial": "Éditorial",
+    "forBusinesses": "Pour les professionnels",
+    "account": "Compte",
+    "restaurants": "Restaurants",
+    "cuisines": "Cuisines",
+    "foodHubs": "Pôles culinaires",
+    "search": "Rechercher",
+    "blog": "Blog",
+    "recommendations": "Recommandations",
+    "reviews": "Avis",
+    "listYourBusiness": "Référencer mon commerce",
+    "restaurantOnboardingGuide": "Guide d'inscription pour restaurants",
+    "businessLogin": "Connexion professionnelle",
+    "createAccount": "Créer un compte",
+    "logIn": "Connexion",
+    "privacyPolicy": "Politique de confidentialité",
+    "terms": "Conditions générales",
+    "cookiePolicy": "Politique de cookies",
+    "copyright": "© {year} London Food Hubs, propulsé par SmartServeUK."
+  }
+}

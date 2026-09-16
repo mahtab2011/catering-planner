@@ -1,5 +1,16 @@
 "use client";
 
+// RETIRED — no longer imported anywhere (removed from app/layout.tsx).
+// This client-side localStorage("lang") + document.documentElement
+// patch was the only thing ever driving <html lang>/dir before this
+// task, and it was only ever reachable via components/LanguageSwitcher.tsx,
+// which was itself dead code (never rendered on any live page — see
+// docs/MULTILINGUAL-ARCHITECTURE.md's inspection notes). Superseded by
+// app/layout.tsx's server-side getLocale()-based <html lang>/dir,
+// which is correct for both the new app/[locale] subtree and every
+// other route. Left in place, unused, rather than deleted — see the
+// same doc for why nothing here was removed outright.
+
 import { useEffect, useState } from "react";
 
 type LangKey =

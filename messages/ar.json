@@ -1,0 +1,214 @@
+{
+  "Common": {
+    "loading": "جارٍ التحميل...",
+    "seeAll": "عرض الكل",
+    "viewAll": "عرض الكل",
+    "backTo": "العودة إلى {page}",
+    "noResultsTitle": "لم يتم العثور على نتائج",
+    "readMore": "اقرأ المزيد",
+    "exploreMore": "استكشف المزيد",
+    "comingSoon": "قريبًا",
+    "notAddedYet": "لم تتم إضافته بعد"
+  },
+
+  "Nav": {
+    "home": "الرئيسية",
+    "exploreFood": "استكشف الطعام",
+    "restaurants": "المطاعم",
+    "cuisines": "المأكولات",
+    "foodHubs": "مراكز الطعام",
+    "reviews": "التقييمات",
+    "blog": "المدونة",
+    "recommends": "التوصيات",
+    "search": "بحث",
+    "logIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "myAccount": "حسابي",
+    "menu": "القائمة"
+  },
+
+  "LanguageSelector": {
+    "label": "اللغة",
+    "current": "اللغة الحالية: {language}"
+  },
+
+  "Home": {
+    "heroBadge": "منصة لندن لاكتشاف الطعام",
+    "heroTitle": "اكتشف عالم الطعام في جميع أنحاء لندن",
+    "heroSubtitle": "مطاعم وطهاة منزليون وشركات تموين ومخابز من كل المجتمعات — بنغلاديشية وهندية وباكستانية وتركية وتايلاندية وشرق أوسطية وأفريقية وكاريبية وأكثر.",
+    "searchPlaceholder": "ابحث عن مطاعم أو أطباق أو مأكولات",
+    "postcodePlaceholder": "الرمز البريدي أو المنطقة",
+    "searchButton": "بحث",
+    "postcodeNote": "البحث حسب الرمز البريدي والمسافة سيتوفر قريبًا — حاليًا يتم البحث حسب اسم المنطقة والمركز ونوع المأكولات.",
+    "exploreByCuisine": "استكشف حسب نوع المأكولات",
+    "exploreByCuisineSubtitle": "يمتد المشهد الغذائي في لندن عبر كل قارة — وتنمو هذه القائمة مع إضافة المزيد من المأكولات.",
+    "allCuisines": "جميع المأكولات",
+    "exploreFoodHubs": "استكشف مراكز الطعام في لندن",
+    "exploreFoodHubsSubtitle": "مركز الطعام هو منطقة في لندن تضم تركيزًا كبيرًا من المطاعم والأعمال الغذائية — من بريك لين إلى إدجوير رود إلى بلاشيت رود.",
+    "allFoodHubs": "جميع مراكز الطعام",
+    "featuredRestaurants": "مطاعم مميزة",
+    "browseAllRestaurants": "تصفح جميع المطاعم",
+    "noRestaurantsYet": "لا توجد مطاعم مدرجة بعد.",
+    "beFirstToJoin": "كن أول من ينضم إلى London Food Hubs",
+    "dishesToDiscover": "أطباق تستحق الاكتشاف",
+    "dishesToDiscoverSubtitle": "لمحة عما هو متاح — استكشف صفحة نوع المأكولات لمعرفة المطاعم التي تقدم كل طبق.",
+    "recommends": "توصيات London Food Hubs",
+    "recommendsEmpty": "اختياراتنا التحريرية — طبق الأسبوع، الكنوز الخفية، المفضلات العائلية وأكثر — ستظهر هنا بمجرد نشرها.",
+    "latestReviews": "أحدث التقييمات",
+    "fromTheBlog": "من مدونة London Food Hubs",
+    "blogEmpty": "فريقنا التحريري يعمل على إعداد أولى القصص — تابعونا قريبًا.",
+    "visitBlog": "زيارة المدونة",
+    "businessCtaBadge": "لأصحاب الأعمال",
+    "businessCtaTitle": "هل تمتلك أو تدير عملًا غذائيًا؟",
+    "businessCtaBody": "أدرج مطعمك أو محل الوجبات الجاهزة أو مطبخك المنزلي أو المخبز أو خدمة التموين على London Food Hubs مجانًا. أضف قائمتك وصورك وساعات العمل — سيكتشفك العملاء حسب نوع المأكولات والمنطقة والطبق.",
+    "businessCtaListFree": "أدرج عملك مجانًا",
+    "businessCtaHowItWorks": "كيف يعمل",
+    "communityCtaTitle": "انضم إلى مجتمع لندن للطعام",
+    "communityCtaBody": "أنشئ حسابًا مجانيًا لكتابة التقييمات، وحفظ أماكنك المفضلة، ومشاركة اكتشافاتك الغذائية مع London Food Hubs.",
+    "communityCtaCreateAccount": "إنشاء حساب مجاني",
+    "communityCtaStartExploring": "ابدأ الاستكشاف"
+  },
+
+  "Restaurants": {
+    "title": "المطاعم",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "ابحث عن مطعم أو مالك أو مركز أو منطقة...",
+    "hubLabel": "المركز",
+    "cuisineLabel": "نوع المأكولات",
+    "statusLabel": "الحالة",
+    "all": "الكل",
+    "clearFilters": "مسح الفلاتر",
+    "placesFound": "تم العثور على {count} مكان",
+    "loadingRestaurants": "جارٍ تحميل المطاعم...",
+    "noRestaurantsFound": "لم يتم العثور على مطاعم",
+    "tryAnotherSearch": "جرّب كلمة بحث أخرى أو أعد ضبط الفلاتر.",
+    "viewProfileMenu": "عرض الملف والقائمة",
+    "highlights": "أبرز العناصر"
+  },
+
+  "Dietary": {
+    "vegetarian": "نباتي",
+    "vegan": "نباتي صرف",
+    "nonVegetarian": "غير نباتي",
+    "halal": "حلال",
+    "kosher": "كوشر",
+    "jain": "جاين"
+  },
+
+  "Reviews": {
+    "title": "تقييمات المطاعم",
+    "subtitle": "تقييمات حقيقية من العملاء لمطاعم في جميع أنحاء لندن، تتم مراجعتها قبل النشر.",
+    "recentReviews": "أحدث التقييمات",
+    "customerReviews": "تقييمات العملاء",
+    "writeAReview": "اكتب تقييمًا",
+    "cancel": "إلغاء",
+    "signInToReview": "سجّل الدخول لكتابة تقييم",
+    "yourRating": "تقييمك لـ {restaurant}",
+    "titleOptional": "العنوان (اختياري)",
+    "yourReview": "تقييمك",
+    "submitReview": "إرسال التقييم",
+    "submitting": "جارٍ الإرسال...",
+    "moderationNote": "يتم مراجعة التقييمات من قبل فريقنا قبل ظهورها للعامة.",
+    "thankYouSubmitted": "شكرًا لك — تم إرسال تقييمك وسيظهر هنا بعد موافقة فريق المراجعة لدينا.",
+    "noApprovedReviews": "لا توجد تقييمات معتمدة بعد.",
+    "beFirstToReview": "كن أول من يقيّم {restaurant}.",
+    "outOf5": "من 5",
+    "reviewCount": "{count, plural, one {تقييم معتمد} two {تقييمان معتمدان} few {تقييمات معتمدة} many {تقييمًا معتمدًا} other {تقييم معتمد}}"
+  },
+
+  "Blog": {
+    "title": "مدونة London Food Hubs",
+    "subtitle": "أدلة المأكولات وقصص المطاعم وماذا تأكل في جميع أنحاء لندن.",
+    "all": "الكل",
+    "loadingArticles": "جارٍ تحميل المقالات...",
+    "noArticlesYet": "لم يتم نشر أي مقالات بعد. تابعونا قريبًا.",
+    "articleNotFound": "المقال غير موجود",
+    "articleNotFoundBody": "قد يكون هذا المقال قد أُلغي نشره أو أن الرابط غير صحيح.",
+    "backToBlog": "العودة إلى المدونة",
+    "by": "بقلم {author}",
+    "relatedCuisines": "مأكولات ذات صلة"
+  },
+
+  "Recommendations": {
+    "badge": "تحريري",
+    "title": "توصيات London Food Hubs",
+    "subtitle": "اختيارات فريقنا التحريري بعناية — أطباق تستحق التجربة، وكنوز خفية، وأماكن تستحق الرحلة إليها. هذه اختيارات محررة وليست تقييمات عملاء.",
+    "loading": "جارٍ تحميل التوصيات...",
+    "empty": "لم ننشر أي توصيات بعد — تابعونا قريبًا."
+  },
+
+  "Cuisines": {
+    "title": "استكشف طعام كل مجتمع في لندن",
+    "subtitle": "يحتفي London Food Hubs بالمأكولات والمجتمعات في جميع أنحاء المدينة — تنمو هذه القائمة مع إضافة المزيد من المأكولات، ولا تقتصر أبدًا على منطقة واحدة."
+  },
+
+  "CuisineDetail": {
+    "foodInLondon": "طعام {cuisine} في لندن",
+    "aboutDishes": "عن هذه الأطباق",
+    "popularDishes": "أشهر أطباق {cuisine}",
+    "restaurantsHeading": "مطاعم {cuisine} على London Food Hubs",
+    "noRestaurantsYet": "لا توجد مطاعم {cuisine} مدرجة بعد. تابعونا قريبًا، أو",
+    "beFirstToJoin": "كن أول من ينضم",
+    "whereToFind": "أين تجد طعام {cuisine}",
+    "browseCuisineRestaurants": "تصفح مطاعم {cuisine}",
+    "ownBusinessCta": "هل تمتلك عملًا في مطبخ {cuisine}؟ أدرجه مجانًا",
+    "exploreMoreRegion": "استكشف المزيد من مأكولات {region}",
+    "allCuisines": "جميع المأكولات"
+  },
+
+  "Hubs": {
+    "title": "مراكز الطعام في لندن",
+    "subtitle": "مركز الطعام هو منطقة في لندن تضم تركيزًا كبيرًا من المطاعم والأعمال الغذائية. استكشف المطاعم والمأكولات والأطباق منطقة تلو الأخرى."
+  },
+
+  "HubDetail": {
+    "badge": "مركز طعام",
+    "gettingThere": "كيفية الوصول:",
+    "photos": "الصور",
+    "restaurantsInHub": "المطاعم في {hub}",
+    "loadingRestaurants": "جارٍ تحميل المطاعم...",
+    "noRestaurantsYet": "لا توجد مطاعم مدرجة في {hub} بعد.",
+    "ownBusinessCta": "هل تمتلك عملًا هنا؟ أدرجه مجانًا"
+  },
+
+  "Search": {
+    "title": "البحث في London Food Hubs",
+    "subtitle": "ابحث في المطاعم والأطباق والمأكولات ومراكز الطعام ومقالات المدونة.",
+    "searchPlaceholder": "ابحث عن مطاعم أو أطباق أو مأكولات",
+    "postcodePlaceholder": "الرمز البريدي أو المنطقة",
+    "searchButton": "بحث",
+    "postcodeNote": "يطابق البحث بالرمز البريدي حاليًا عناوين المطاعم وأسماء المراكز كنص — البحث الفعلي بنطاق الرمز البريدي مخطط له في إصدار مستقبلي.",
+    "loading": "جارٍ التحميل...",
+    "enterSearchTerm": "أدخل كلمة بحث أو رمزًا بريديًا/منطقة للبدء.",
+    "noResultsFor": "لا توجد نتائج لـ \"{query}\". جرّب اسم مأكولات أو طبق أو منطقة مختلفة.",
+    "restaurants": "المطاعم",
+    "dishes": "الأطباق",
+    "cuisines": "المأكولات",
+    "foodHubs": "مراكز الطعام",
+    "blogArticles": "مقالات المدونة",
+    "at": "في {restaurant}"
+  },
+
+  "Footer": {
+    "discover": "استكشف",
+    "editorial": "تحريري",
+    "forBusinesses": "لأصحاب الأعمال",
+    "account": "الحساب",
+    "restaurants": "المطاعم",
+    "cuisines": "المأكولات",
+    "foodHubs": "مراكز الطعام",
+    "search": "بحث",
+    "blog": "المدونة",
+    "recommendations": "التوصيات",
+    "reviews": "التقييمات",
+    "listYourBusiness": "أدرج عملك",
+    "restaurantOnboardingGuide": "دليل انضمام المطاعم",
+    "businessLogin": "تسجيل دخول الأعمال",
+    "createAccount": "إنشاء حساب",
+    "logIn": "تسجيل الدخول",
+    "privacyPolicy": "سياسة الخصوصية",
+    "terms": "الشروط",
+    "cookiePolicy": "سياسة ملفات تعريف الارتباط",
+    "copyright": "© {year} London Food Hubs، بدعم من SmartServeUK."
+  }
+}

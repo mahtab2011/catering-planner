@@ -1,0 +1,214 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "seeAll": "See All",
+    "viewAll": "View All",
+    "backTo": "Back to {page}",
+    "noResultsTitle": "No results found",
+    "readMore": "Read More",
+    "exploreMore": "Explore More",
+    "comingSoon": "Coming soon",
+    "notAddedYet": "Not added yet"
+  },
+
+  "Nav": {
+    "home": "Home",
+    "exploreFood": "Explore Food",
+    "restaurants": "Restaurants",
+    "cuisines": "Cuisines",
+    "foodHubs": "Food Hubs",
+    "reviews": "Reviews",
+    "blog": "Blog",
+    "recommends": "Recommends",
+    "search": "Search",
+    "logIn": "Log In",
+    "signUp": "Sign Up",
+    "myAccount": "My Account",
+    "menu": "Menu"
+  },
+
+  "LanguageSelector": {
+    "label": "Language",
+    "current": "Current language: {language}"
+  },
+
+  "Home": {
+    "heroBadge": "London's Food Discovery Platform",
+    "heroTitle": "Discover the World of Food Across London",
+    "heroSubtitle": "Restaurants, home cooks, caterers and bakeries from every community — Bangladeshi, Indian, Pakistani, Turkish, Thai, Middle Eastern, African, Caribbean and beyond.",
+    "searchPlaceholder": "Search restaurants, dishes or cuisines",
+    "postcodePlaceholder": "Postcode or area",
+    "searchButton": "Search",
+    "postcodeNote": "Postcode-based radius search is coming soon — for now this searches by area, hub and cuisine name.",
+    "exploreByCuisine": "Explore by Cuisine",
+    "exploreByCuisineSubtitle": "London's food scene spans every continent — this list grows as more cuisines are added.",
+    "allCuisines": "All Cuisines",
+    "exploreFoodHubs": "Explore London's Food Hubs",
+    "exploreFoodHubsSubtitle": "A food hub is a London area with a strong concentration of restaurants and food businesses — from Brick Lane to Edgware Road to Plashet Road.",
+    "allFoodHubs": "All Food Hubs",
+    "featuredRestaurants": "Featured Restaurants",
+    "browseAllRestaurants": "Browse All Restaurants",
+    "noRestaurantsYet": "No restaurants listed yet.",
+    "beFirstToJoin": "Be the first to join London Food Hubs",
+    "dishesToDiscover": "Dishes to Discover",
+    "dishesToDiscoverSubtitle": "A taste of what's out there — explore the cuisine page for restaurants serving each dish.",
+    "recommends": "London Food Hubs Recommends",
+    "recommendsEmpty": "Our editorial picks — Dish of the Week, Hidden Gems, Family Favourites and more — will appear here as they're published.",
+    "latestReviews": "Latest Reviews",
+    "fromTheBlog": "From the London Food Hubs Blog",
+    "blogEmpty": "Our editorial team is preparing the first stories — check back soon.",
+    "visitBlog": "Visit the Blog",
+    "businessCtaBadge": "For Businesses",
+    "businessCtaTitle": "Own or manage a food business?",
+    "businessCtaBody": "List your restaurant, takeaway, home kitchen, bakery or catering business on London Food Hubs for free. Add your menu, photos and opening hours — customers can discover you by cuisine, area and dish.",
+    "businessCtaListFree": "List Your Business Free",
+    "businessCtaHowItWorks": "How It Works",
+    "communityCtaTitle": "Join London's Food Community",
+    "communityCtaBody": "Create a free account to write reviews, save your favourite places, and share your own food discoveries with London Food Hubs.",
+    "communityCtaCreateAccount": "Create Free Account",
+    "communityCtaStartExploring": "Start Exploring"
+  },
+
+  "Restaurants": {
+    "title": "Restaurants",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search restaurant, owner, hub, area...",
+    "hubLabel": "Hub",
+    "cuisineLabel": "Cuisine",
+    "statusLabel": "Status",
+    "all": "All",
+    "clearFilters": "Clear filters",
+    "placesFound": "{count} places found",
+    "loadingRestaurants": "Loading restaurants...",
+    "noRestaurantsFound": "No restaurants found",
+    "tryAnotherSearch": "Try another search term or reset the filters.",
+    "viewProfileMenu": "View Profile & Menu",
+    "highlights": "Highlights"
+  },
+
+  "Dietary": {
+    "vegetarian": "Vegetarian",
+    "vegan": "Vegan",
+    "nonVegetarian": "Non-Vegetarian",
+    "halal": "Halal",
+    "kosher": "Kosher",
+    "jain": "Jain"
+  },
+
+  "Reviews": {
+    "title": "Restaurant Reviews",
+    "subtitle": "Real customer reviews of restaurants across London, moderated before publishing.",
+    "recentReviews": "Recent Reviews",
+    "customerReviews": "Customer Reviews",
+    "writeAReview": "Write a Review",
+    "cancel": "Cancel",
+    "signInToReview": "Sign in to write a review",
+    "yourRating": "Your rating of {restaurant}",
+    "titleOptional": "Title (optional)",
+    "yourReview": "Your review",
+    "submitReview": "Submit Review",
+    "submitting": "Submitting...",
+    "moderationNote": "Reviews are checked by our team before they appear publicly.",
+    "thankYouSubmitted": "Thank you — your review has been submitted and will appear here once it has been approved by our moderation team.",
+    "noApprovedReviews": "No approved reviews yet.",
+    "beFirstToReview": "Be the first to review {restaurant}.",
+    "outOf5": "out of 5",
+    "reviewCount": "{count, plural, =1 {approved review} other {approved reviews}}"
+  },
+
+  "Blog": {
+    "title": "The London Food Hubs Blog",
+    "subtitle": "Cuisine guides, restaurant stories, and what to eat across London.",
+    "all": "All",
+    "loadingArticles": "Loading articles...",
+    "noArticlesYet": "No articles published yet. Check back soon.",
+    "articleNotFound": "Article not found",
+    "articleNotFoundBody": "This article may have been unpublished or the link is incorrect.",
+    "backToBlog": "Back to Blog",
+    "by": "By {author}",
+    "relatedCuisines": "Related cuisines"
+  },
+
+  "Recommendations": {
+    "badge": "Editorial",
+    "title": "London Food Hubs Recommends",
+    "subtitle": "Hand-picked by our editorial team — dishes worth trying, hidden gems, and places worth the journey. These are curated selections, not customer ratings.",
+    "loading": "Loading recommendations...",
+    "empty": "We haven't published any recommendations yet — check back soon."
+  },
+
+  "Cuisines": {
+    "title": "Explore Food From Every Community in London",
+    "subtitle": "London Food Hubs celebrates cuisines and communities from across the city — this list grows as more cuisines are added, it is never limited to one region."
+  },
+
+  "CuisineDetail": {
+    "foodInLondon": "{cuisine} Food in London",
+    "aboutDishes": "About These Dishes",
+    "popularDishes": "Popular {cuisine} Dishes",
+    "restaurantsHeading": "{cuisine} Restaurants on London Food Hubs",
+    "noRestaurantsYet": "No {cuisine} restaurants are listed yet. Check back soon, or",
+    "beFirstToJoin": "be the first to join",
+    "whereToFind": "Where to Find {cuisine} Food",
+    "browseCuisineRestaurants": "Browse {cuisine} Restaurants",
+    "ownBusinessCta": "Own a {cuisine} business? List it free",
+    "exploreMoreRegion": "Explore More {region} Cuisine",
+    "allCuisines": "All Cuisines"
+  },
+
+  "Hubs": {
+    "title": "London's Food Hubs",
+    "subtitle": "A food hub is a London area with a strong concentration of restaurants and food businesses. Explore restaurants, cuisines and dishes area by area."
+  },
+
+  "HubDetail": {
+    "badge": "Food Hub",
+    "gettingThere": "Getting there:",
+    "photos": "Photos",
+    "restaurantsInHub": "Restaurants in {hub}",
+    "loadingRestaurants": "Loading restaurants...",
+    "noRestaurantsYet": "No restaurants listed for {hub} yet.",
+    "ownBusinessCta": "Own a business here? List it free"
+  },
+
+  "Search": {
+    "title": "Search London Food Hubs",
+    "subtitle": "Search across restaurants, dishes, cuisines, food hubs and blog articles.",
+    "searchPlaceholder": "Search restaurants, dishes or cuisines",
+    "postcodePlaceholder": "Postcode or area",
+    "searchButton": "Search",
+    "postcodeNote": "Postcode search currently matches against restaurant addresses and hub names as text — proper postcode-radius discovery is planned for a future release.",
+    "loading": "Loading...",
+    "enterSearchTerm": "Enter a search term or postcode/area to get started.",
+    "noResultsFor": "No results for \"{query}\". Try a different cuisine, dish or area name.",
+    "restaurants": "Restaurants",
+    "dishes": "Dishes",
+    "cuisines": "Cuisines",
+    "foodHubs": "Food Hubs",
+    "blogArticles": "Blog Articles",
+    "at": "at {restaurant}"
+  },
+
+  "Footer": {
+    "discover": "Discover",
+    "editorial": "Editorial",
+    "forBusinesses": "For Businesses",
+    "account": "Account",
+    "restaurants": "Restaurants",
+    "cuisines": "Cuisines",
+    "foodHubs": "Food Hubs",
+    "search": "Search",
+    "blog": "Blog",
+    "recommendations": "Recommendations",
+    "reviews": "Reviews",
+    "listYourBusiness": "List Your Business",
+    "restaurantOnboardingGuide": "Restaurant Onboarding Guide",
+    "businessLogin": "Business Login",
+    "createAccount": "Create Account",
+    "logIn": "Log In",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms",
+    "cookiePolicy": "Cookie Policy",
+    "copyright": "© {year} London Food Hubs, powered by SmartServeUK."
+  }
+}

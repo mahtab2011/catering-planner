@@ -166,6 +166,38 @@ submission — even from a good-faith reporter — should never directly cause
 a factual change to a listing without a human in the loop making that
 specific edit and being accountable for it.
 
+## Owner upgrade path (architecture only — no pricing invented)
+
+Once a restaurant reaches `ownerClaimStatus: "claimed"` (whether via
+self-signup or an approved claim), it already sits on the pre-existing
+`isPremium` / `subscriptionPlan` / `offersEnabled` / `loyaltyEnabled` /
+`adsEnabled` fields on `RestaurantDoc`, and the pre-existing `SubscriptionDoc`
+type (`lib/types.ts`) already models `planCode`, `planName`, `status`
+(`trial`/`active`/`expired`/`cancelled`), `trialStartAt`/`trialEndAt`,
+`billingStartAt`, `amount`, `currency`. Both predate this task.
+
+This task's contribution is only the connection, not new infrastructure: a
+claimed restaurant is exactly the point at which "upgrade to premium" makes
+sense to offer, since there's now a real, verified operator behind the
+listing to offer it to. No new plan tiers, prices, or payment integration
+were built or invented here — that would require actual product/pricing
+decisions this task wasn't asked to make. The existing free/premium
+distinction and `SubscriptionDoc` shape are sufficient scaffolding for
+whoever builds the actual upgrade flow (a pricing page, a payment
+provider integration, a Cloud Function to reconcile subscription status)
+later.
+
+## Tourism positioning (editorial prep only)
+
+The public-listing notice (`lib/listingNotice.ts`) already includes the
+guardrail this task asked for: it explicitly never claims any
+government, council, or **tourism-board** affiliation, regardless of a
+restaurant's `sourceType` or `dataConfidence`. No fake geolocation and no
+tourism-specific UI (e.g. a "near tourist attractions" filter, a
+multi-language tourist landing page) was built — those would need real
+product scoping this task wasn't asked to do, beyond making sure the
+notice copy doesn't accidentally imply an affiliation that doesn't exist.
+
 ## Why anonymous submission isn't supported
 
 Both claims and correction/removal requests currently require sign-in.

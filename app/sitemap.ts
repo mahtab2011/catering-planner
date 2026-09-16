@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAllCuisines } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
+import { ACTIVE_LOCALES, DEFAULT_LOCALE } from "@/lib/locales";
 
 // The live consumer domain today. Swap this one constant when
 // londonfoodhubs.com becomes canonical — nothing else in this file
@@ -19,36 +20,46 @@ async function getPublishedArticleSlugs(): Promise<string[]> {
   }
 }
 
+/**
+ * Builds one sitemap entry per active locale for a given path, plus
+ * an `alternates.languages` map (hreflang) linking every locale
+ * version of that same page to each other, with `x-default` pointing
+ * at the English version — the canonical fallback everywhere else in
+ * this codebase treats English as. Every consumer route in
+ * app/[locale]/... exists in all 4 active locales (there's no partial
+ * locale coverage at the route level — only content within a page,
+ * like an untranslated article, can fall back internally), so this is
+ * safe to generate unconditionally for every path passed in.
+ */
+function localizedEntries(path: string, lastModified: Date): MetadataRoute.Sitemap {
+  const languages: Record<string, string> = {};
+  for (const locale of ACTIVE_LOCALES) {
+    languages[locale] = `${BASE_URL}/${locale}${path}`;
+  }
+  languages["x-default"] = `${BASE_URL}/${DEFAULT_LOCALE}${path}`;
+
+  return ACTIVE_LOCALES.map((locale) => ({
+    url: `${BASE_URL}/${locale}${path}`,
+    lastModified,
+    alternates: { languages },
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: BASE_URL, lastModified: now },
-    { url: `${BASE_URL}/restaurants`, lastModified: now },
-    { url: `${BASE_URL}/suppliers`, lastModified: now },
-    { url: `${BASE_URL}/cuisines`, lastModified: now },
-    { url: `${BASE_URL}/hubs`, lastModified: now },
-    { url: `${BASE_URL}/recommendations`, lastModified: now },
-    { url: `${BASE_URL}/reviews`, lastModified: now },
-    { url: `${BASE_URL}/blog`, lastModified: now },
-    { url: `${BASE_URL}/search`, lastModified: now },
-  ];
+  const staticPaths = ["", "/restaurants", "/cuisines", "/hubs", "/recommendations", "/reviews", "/blog", "/search"];
+  const staticRoutes = staticPaths.flatMap((path) => localizedEntries(path, now));
 
-  const cuisineRoutes: MetadataRoute.Sitemap = getAllCuisines().map((cuisine) => ({
-    url: `${BASE_URL}/cuisine/${cuisine.slug}`,
-    lastModified: now,
-  }));
+  // /suppliers is a SmartServeUK operational route outside app/[locale]
+  // — not locale-prefixed, listed once as-is.
+  const operationalRoutes: MetadataRoute.Sitemap = [{ url: `${BASE_URL}/suppliers`, lastModified: now }];
 
-  const hubRoutes: MetadataRoute.Sitemap = getAllHubs().map((hub) => ({
-    url: `${BASE_URL}/hubs/${hub.slug}`,
-    lastModified: now,
-  }));
+  const cuisineRoutes = getAllCuisines().flatMap((cuisine) => localizedEntries(`/cuisine/${cuisine.slug}`, now));
+  const hubRoutes = getAllHubs().flatMap((hub) => localizedEntries(`/hubs/${hub.slug}`, now));
 
   const articleSlugs = await getPublishedArticleSlugs();
-  const articleRoutes: MetadataRoute.Sitemap = articleSlugs.map((slug) => ({
-    url: `${BASE_URL}/blog/${slug}`,
-    lastModified: now,
-  }));
+  const articleRoutes = articleSlugs.flatMap((slug) => localizedEntries(`/blog/${slug}`, now));
 
-  return [...staticRoutes, ...cuisineRoutes, ...hubRoutes, ...articleRoutes];
+  return [...staticRoutes, ...operationalRoutes, ...cuisineRoutes, ...hubRoutes, ...articleRoutes];
 }

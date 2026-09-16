@@ -4,6 +4,7 @@ import { getLocale } from "next-intl/server";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
 import { getLocalizedArticleContent } from "@/lib/articles";
+import { buildLocaleAlternates } from "@/lib/seo";
 import BlogArticleClient from "@/components/blog/BlogArticleClient";
 
 type Params = { params: Promise<{ slug: string; locale: string }> };
@@ -39,7 +40,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: article.seoTitle || content.title,
     description: article.seoDescription || content.excerpt,
-    alternates: { canonical: `/${locale}/blog/${article.slug}` },
+    alternates: {
+      canonical: `/${locale}/blog/${article.slug}`,
+      languages: buildLocaleAlternates(`/blog/${article.slug}`),
+    },
     openGraph: {
       title: article.seoTitle || content.title,
       description: article.seoDescription || content.excerpt,

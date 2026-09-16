@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCuisineDisplayName, getCuisinesByRegion } from "@/lib/cuisines";
+import { buildLocaleAlternates } from "@/lib/seo";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
@@ -9,7 +10,7 @@ export async function generateMetadata() {
   return {
     title: `${t("title")} | London Food Hubs`,
     description: t("subtitle"),
-    alternates: { canonical: "/cuisines" },
+    alternates: { canonical: "/cuisines", languages: buildLocaleAlternates("/cuisines") },
   };
 }
 

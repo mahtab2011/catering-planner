@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
+import { buildLocaleAlternates } from "@/lib/seo";
 import CuisineDetailClient from "@/components/cuisine/CuisineDetailClient";
 
 type Params = { params: Promise<{ slug: string; locale: string }> };
@@ -20,7 +21,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: locale === "en" ? cuisine.seoTitle : `${displayName} Food in London | London Food Hubs`,
     description: cuisine.seoDescription,
-    alternates: { canonical: `/${locale}/cuisine/${cuisine.slug}` },
+    alternates: {
+      canonical: `/${locale}/cuisine/${cuisine.slug}`,
+      languages: buildLocaleAlternates(`/cuisine/${cuisine.slug}`),
+    },
     openGraph: {
       title: cuisine.seoTitle,
       description: cuisine.seoDescription,

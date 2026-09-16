@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import LatestReviewsSection from "@/components/discovery/LatestReviewsSection";
+import { buildLocaleAlternates } from "@/lib/seo";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
@@ -8,7 +9,7 @@ export async function generateMetadata() {
   return {
     title: `${t("title")} | London Food Hubs`,
     description: t("subtitle"),
-    alternates: { canonical: "/reviews" },
+    alternates: { canonical: "/reviews", languages: buildLocaleAlternates("/reviews") },
   };
 }
 

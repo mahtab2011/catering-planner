@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { buildLocaleAlternates } from "@/lib/seo";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 import HomeHero from "@/components/discovery/HomeHero";
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `London Food Hubs | ${t("heroTitle")}`,
     description: t("heroSubtitle"),
-    alternates: { canonical: "/" },
+    alternates: { canonical: "/", languages: buildLocaleAlternates("") },
     openGraph: {
       title: "London Food Hubs",
       description: t("heroSubtitle"),

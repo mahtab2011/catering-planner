@@ -1,13 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getAllCuisines } from "@/lib/cuisines";
+import { getAllCuisines, getCuisineDisplayName } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
 import type { ArticleDoc } from "@/lib/types";
+import { getLocalizedArticleContent } from "@/lib/articles";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
@@ -31,6 +33,8 @@ function norm(value?: string) {
 }
 
 export default function SearchClient() {
+  const t = useTranslations("Search");
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
@@ -78,12 +82,20 @@ export default function SearchClient() {
   const term = norm(q);
   const postcodeTerm = norm(postcode);
 
+  // Search is over the same canonical restaurant/cuisine/hub/article
+  // data regardless of UI language — the only thing that varies by
+  // locale is which display name a matched cuisine is matched AND
+  // shown against, so a search in Arabic can find "تركي" just as a
+  // search in English finds "Turkish". See docs/CUISINE-TAXONOMY.md.
   const matchedCuisines = useMemo(() => {
     if (!term) return [];
-    return getAllCuisines().filter(
-      (c) => norm(c.name).includes(term) || c.matchTerms.some((t) => norm(t).includes(term))
-    );
-  }, [term]);
+    return getAllCuisines().filter((c) => {
+      if (norm(getCuisineDisplayName(c, locale)).includes(term)) return true;
+      if (norm(c.name).includes(term)) return true;
+      if (c.matchTerms.some((mt) => norm(mt).includes(term))) return true;
+      return Object.values(c.localizedName || {}).some((n) => norm(n).includes(term));
+    });
+  }, [term, locale]);
 
   const matchedHubs = useMemo(() => {
     if (!term && !postcodeTerm) return [];
@@ -123,10 +135,15 @@ export default function SearchClient() {
 
   const matchedArticles = useMemo(() => {
     if (!term) return [];
-    return articles.filter(
-      (a) => norm(a.title).includes(term) || norm(a.excerpt).includes(term) || norm(a.category).includes(term)
-    );
-  }, [articles, term]);
+    return articles.filter((a) => {
+      const content = getLocalizedArticleContent(a, locale);
+      return (
+        norm(content.title).includes(term) ||
+        norm(content.excerpt).includes(term) ||
+        norm(a.category).includes(term)
+      );
+    });
+  }, [articles, term, locale]);
 
   const hasQuery = Boolean(term || postcodeTerm);
   const totalResults =
@@ -146,55 +163,54 @@ export default function SearchClient() {
       <main className="min-h-screen bg-neutral-50">
         <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
           <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-            <h1 className="text-3xl font-bold text-neutral-900">Search London Food Hubs</h1>
+            <h1 className="text-3xl font-bold text-neutral-900">{t("title")}</h1>
             <p className="mt-2 text-sm text-neutral-600">
-              Search across restaurants, dishes, cuisines, food hubs and blog articles.
+              {t("subtitle")}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search restaurants, dishes or cuisines"
+                placeholder={t("searchPlaceholder")}
                 className="flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-amber-500"
               />
               <input
                 value={postcode}
                 onChange={(e) => setPostcode(e.target.value)}
-                placeholder="Postcode or area"
+                placeholder={t("postcodePlaceholder")}
                 className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-amber-500 sm:w-48"
               />
               <button
                 type="submit"
                 className="rounded-xl bg-amber-600 px-6 py-3 text-sm font-bold text-white hover:bg-amber-700"
               >
-                Search
+                {t("searchButton")}
               </button>
             </form>
             <p className="mt-2 text-xs text-neutral-500">
-              Postcode search currently matches against restaurant addresses and hub names as
-              text — proper postcode-radius discovery is planned for a future release.
+              {t("postcodeNote")}
             </p>
           </div>
 
           <div className="mt-8">
             {loading ? (
               <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-                Loading...
+                {t("loading")}
               </div>
             ) : !hasQuery ? (
               <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-                Enter a search term or postcode/area to get started.
+                {t("enterSearchTerm")}
               </div>
             ) : totalResults === 0 ? (
               <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-                No results for &quot;{q || postcode}&quot;. Try a different cuisine, dish or area name.
+                {t("noResultsFor", { query: q || postcode })}
               </div>
             ) : (
               <div className="space-y-8">
                 {matchedRestaurants.length > 0 ? (
                   <section>
-                    <h2 className="text-lg font-bold text-neutral-900">Restaurants</h2>
+                    <h2 className="text-lg font-bold text-neutral-900">{t("restaurants")}</h2>
                     <div className="mt-3 space-y-2">
                       {matchedRestaurants.map((r) => (
                         <Link
@@ -214,7 +230,7 @@ export default function SearchClient() {
 
                 {matchedDishes.length > 0 ? (
                   <section>
-                    <h2 className="text-lg font-bold text-neutral-900">Dishes</h2>
+                    <h2 className="text-lg font-bold text-neutral-900">{t("dishes")}</h2>
                     <div className="mt-3 space-y-2">
                       {matchedDishes.map((m, i) => (
                         <Link
@@ -223,7 +239,7 @@ export default function SearchClient() {
                           className="block rounded-xl border border-neutral-200 bg-white p-4 hover:shadow-sm"
                         >
                           <div className="font-semibold text-neutral-900">{m.itemName}</div>
-                          <div className="text-xs text-neutral-500">at {m.restaurantName}</div>
+                          <div className="text-xs text-neutral-500">{t("at", { restaurant: m.restaurantName })}</div>
                         </Link>
                       ))}
                     </div>
@@ -232,7 +248,7 @@ export default function SearchClient() {
 
                 {matchedCuisines.length > 0 ? (
                   <section>
-                    <h2 className="text-lg font-bold text-neutral-900">Cuisines</h2>
+                    <h2 className="text-lg font-bold text-neutral-900">{t("cuisines")}</h2>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {matchedCuisines.map((c) => (
                         <Link
@@ -240,7 +256,7 @@ export default function SearchClient() {
                           href={`/cuisine/${c.slug}`}
                           className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
                         >
-                          {c.name} →
+                          {getCuisineDisplayName(c, locale)} →
                         </Link>
                       ))}
                     </div>
@@ -249,7 +265,7 @@ export default function SearchClient() {
 
                 {matchedHubs.length > 0 ? (
                   <section>
-                    <h2 className="text-lg font-bold text-neutral-900">Food Hubs</h2>
+                    <h2 className="text-lg font-bold text-neutral-900">{t("foodHubs")}</h2>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {matchedHubs.map((hub) => (
                         <Link
@@ -266,18 +282,21 @@ export default function SearchClient() {
 
                 {matchedArticles.length > 0 ? (
                   <section>
-                    <h2 className="text-lg font-bold text-neutral-900">Blog Articles</h2>
+                    <h2 className="text-lg font-bold text-neutral-900">{t("blogArticles")}</h2>
                     <div className="mt-3 space-y-2">
-                      {matchedArticles.map((a) => (
-                        <Link
-                          key={a.id}
-                          href={`/blog/${a.slug}`}
-                          className="block rounded-xl border border-neutral-200 bg-white p-4 hover:shadow-sm"
-                        >
-                          <div className="font-semibold text-neutral-900">{a.title}</div>
-                          <div className="text-xs text-neutral-500">{a.category}</div>
-                        </Link>
-                      ))}
+                      {matchedArticles.map((a) => {
+                        const content = getLocalizedArticleContent(a, locale);
+                        return (
+                          <Link
+                            key={a.id}
+                            href={`/blog/${a.slug}`}
+                            className="block rounded-xl border border-neutral-200 bg-white p-4 hover:shadow-sm"
+                          >
+                            <div className="font-semibold text-neutral-900">{content.title}</div>
+                            <div className="text-xs text-neutral-500">{a.category}</div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   </section>
                 ) : null}

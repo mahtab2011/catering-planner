@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
-import RecommendationsClient from "@/components/discovery/RecommendationsClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "London Food Hubs Recommends",
-  description:
-    "Editorial picks from London Food Hubs — dishes of the week, hidden gems, family favourites and more, hand-selected, not customer ratings.",
-  alternates: { canonical: "/recommendations" },
-};
-
-export default function RecommendationsPage() {
-  return <RecommendationsClient />;
+/** Legacy URL compatibility — the real implementation now lives at
+ *  app/[locale]/recommendations/page.tsx. See
+ *  docs/MULTILINGUAL-ARCHITECTURE.md. */
+export default function LegacyRecommendationsRedirect() {
+  redirect("/en/recommendations");
 }

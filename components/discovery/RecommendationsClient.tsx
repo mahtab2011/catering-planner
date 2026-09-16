@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { RecommendationDoc } from "@/lib/types";
@@ -10,6 +11,7 @@ import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
 export default function RecommendationsClient() {
+  const t = useTranslations("Recommendations");
   const [recommendations, setRecommendations] = useState<RecommendationDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,25 +48,24 @@ export default function RecommendationsClient() {
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-purple-200 bg-purple-50 p-8">
           <div className="inline-flex rounded-full bg-purple-600 px-4 py-1 text-sm font-semibold text-white">
-            Editorial
+            {t("badge")}
           </div>
           <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">
-            London Food Hubs Recommends
+            {t("title")}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-700">
-            Hand-picked by our editorial team — dishes worth trying, hidden gems, and places
-            worth the journey. These are curated selections, not customer ratings.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="mt-8">
           {loading ? (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-              Loading recommendations...
+              {t("loading")}
             </div>
           ) : recommendations.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-              We haven&apos;t published any recommendations yet — check back soon.
+              {t("empty")}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

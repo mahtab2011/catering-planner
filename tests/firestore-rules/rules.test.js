@@ -27,32 +27,51 @@
  * rules file and share the same risk profile.
  *
  * Also covers the London Launch claim/correction foundation (Task F
- * adds the items marked *): claim submission on an unclaimed
- * restaurant with its required claimant contact fields (name,
- * business email)*, denial of a submission missing those required
- * fields*, denial of an anonymous claim submission*, denial of any
- * claim submission that also touches ownerUid or another profile
- * field, denial of impersonating another user's claim, denial of
- * double-claiming, admin claim approval, admin claim rejection and
- * confirmation that rejection grants no access*, denial of a pending
- * claimant self-approving via a separate ownerUid write*, denial of a
- * *different, real* restaurant owner approving someone else's claim*,
- * denial of a pending claimant editing unrelated fields in a separate
- * write*, denial of reassigning claimantUid on an already-pending
- * claim*, and the restaurant_correction_requests moderation-queue
- * collection (create/read/moderate authorization).
+ * adds the items marked *; Task K rewrote the claim-submission
+ * coverage below — see the next paragraph): denial of any claim
+ * submission that also touches ownerUid or another profile field,
+ * denial of double-claiming, admin claim approval, admin claim
+ * rejection and confirmation that rejection grants no access*, denial
+ * of a pending claimant self-approving via a separate ownerUid
+ * write*, denial of a *different, real* restaurant owner approving
+ * someone else's claim*, denial of a pending claimant editing
+ * unrelated fields in a separate write*, and the
+ * restaurant_correction_requests moderation-queue collection
+ * (create/read/moderate authorization).
  *
  * Also covers the owner workspace (Task G, items marked †): an owner
  * updating their inline menu alongside other permitted profile fields
  * in one write†, denial of a *different, real* restaurant owner
  * editing this restaurant's menu or profile†, denial of an owner
  * changing ownerClaimStatus on their own already-claimed restaurant
- * during a normal profile edit†, denial of an owner rewriting
- * claimantUid/claim-decision/provenance-trust fields on their own
- * restaurant† (closes a real gap: these were previously NOT pinned by
- * `unchanged()` on the owner-update branch, unlike the claim-submission
- * branch's field allowlist), and confirmation that `lastVerifiedAt`
- * remains intentionally owner-writable†.
+ * during a normal profile edit†, denial of an owner (re)introducing
+ * any retired claimant-PII field name or rewriting provenance-trust
+ * fields on their own restaurant† (Task K hardened this from a
+ * `Task G` fixed-field-list pin into a structural, named-field
+ * blocklist — see `restaurantDocHasNoClaimantPii()` in
+ * firestore.rules), and confirmation that `lastVerifiedAt` remains
+ * intentionally owner-writable†.
+ *
+ * Also covers the private restaurant_claims collection (Task K — see
+ * docs/RESTAURANT-CLAIM-WORKFLOW.md and
+ * docs/PRODUCTION-READINESS-AUDIT.md's "J-01"): a claim submission's
+ * two-document batched write (restaurant status + private claim
+ * record) succeeding together, confirmation that a public restaurant
+ * read reveals none of the 9 former claimant-PII field names after a
+ * claim is submitted, denial of an anonymous claim-submission batch,
+ * denial of a claim record missing required name/email, denial of a
+ * claim record with a non-pending status or a pre-set decision,
+ * denial of impersonating another uid as claimant, denial of creating
+ * a claim record for an already-owned or already-pending-claim
+ * restaurant (competing claims), a fresh claim record being allowed
+ * after a prior rejection, denial of anonymous/unrelated-user/
+ * different-claimant reads, denial of a real restaurant owner reading
+ * someone else's claim record for their own restaurant just by being
+ * the owner, denial of the claimant self-approving or self-rejecting
+ * their own record, denial of a non-admin/non-claimant updating a
+ * record at all, denial of an admin reassigning restaurantId/
+ * claimantUid on an existing record, admin approve/reject, and
+ * admin-only delete.
  *
  * Also covers the restaurant import-pipeline staging queue
  * (restaurant_import_candidates): denial of any client create
@@ -93,6 +112,7 @@ import {
   collection,
   addDoc,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -435,6 +455,18 @@ describe("restaurants", () => {
     );
   });
 
+  it("denies creating a restaurant that includes any claimant PII field name (Task K)", async () => {
+    await assertFails(
+      addDoc(collection(asUser("owner-1"), "restaurants"), {
+        name: "Sneaky",
+        ownerUid: "owner-1",
+        citySlug: "london",
+        status: "draft",
+        claimantContactEmail: "attacker@example.com",
+      })
+    );
+  });
+
   it("lets the owner update their own restaurant's editable fields", async () => {
     await seedRestaurant();
     await assertSucceeds(
@@ -497,55 +529,90 @@ describe("restaurants", () => {
     );
   });
 
-  // ---- Ownership claim submission (docs/RESTAURANT-CLAIM-WORKFLOW.md) ----
+  // ---- Ownership claim submission — restaurant-doc side (Task K:
+  // status only, see docs/RESTAURANT-CLAIM-WORKFLOW.md and
+  // docs/PRODUCTION-READINESS-AUDIT.md's "J-01"). Claimant identity/
+  // contact fields no longer exist on this document at all — see the
+  // "restaurant_claims" describe block below for that coverage. ----
 
-  it("lets a signed-in user submit a claim (with required contact fields) on an unclaimed restaurant", async () => {
+  it("lets a signed-in user submit a claim via a batched write (restaurant status + private claim record together)", async () => {
     await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
-    await assertSucceeds(
-      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+    const db = asUser("claimant-1");
+    const batch = writeBatch(db);
+    batch.update(doc(db, "restaurants", "r1"), {
+      ownerClaimStatus: "claim_pending",
+    });
+    batch.set(doc(collection(db, "restaurant_claims")), {
+      restaurantId: "r1",
+      claimantUid: "claimant-1",
+      claimantName: "Jane Doe",
+      claimantRole: "Manager",
+      claimantContactEmail: "jane@example.com",
+      claimantContactPhone: "+44 20 7946 0000",
+      claimantNote: "I run day-to-day operations here.",
+      status: "pending",
+      submittedAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it("confirms the restaurant document carries no claimant PII field after a claim is submitted", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    const db = asUser("claimant-1");
+    const batch = writeBatch(db);
+    batch.update(doc(db, "restaurants", "r1"), { ownerClaimStatus: "claim_pending" });
+    batch.set(doc(collection(db, "restaurant_claims")), {
+      restaurantId: "r1",
+      claimantUid: "claimant-1",
+      claimantName: "Jane Doe",
+      claimantContactEmail: "jane@example.com",
+      status: "pending",
+    });
+    await batch.commit();
+
+    const publicRead = await getDoc(doc(asAnon(), "restaurants", "r1"));
+    const data = publicRead.data();
+    for (const field of [
+      "claimantUid", "claimantName", "claimantRole",
+      "claimantContactEmail", "claimantContactPhone", "claimantNote",
+      "claimSubmittedAt", "claimDecidedAt", "claimDecidedBy",
+    ]) {
+      expect(field in data, `Expected public restaurant read to never include "${field}"`).toBe(false);
+    }
+  });
+
+  it("denies a claim-record write (as part of the submission) that's missing the required claimant name or business email", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    // The required-field check now lives entirely on the private
+    // claim record's own create rule — see the "restaurant_claims"
+    // describe block below for the full coverage of this and the
+    // rest of that collection's rules. This test only confirms the
+    // restaurant-doc side alone is not sufficient to complete a valid
+    // submission.
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
         claimantUid: "claimant-1",
-        ownerClaimStatus: "claim_pending",
-        claimSubmittedAt: serverTimestamp(),
         claimantName: "Jane Doe",
-        claimantRole: "Manager",
-        claimantContactEmail: "jane@example.com",
-        claimantContactPhone: "+44 20 7946 0000",
-        claimantNote: "I run day-to-day operations here.",
+        status: "pending",
+        // claimantContactEmail omitted
       })
     );
   });
 
-  it("denies a claim submission missing the required claimant name or business email", async () => {
+  it("denies an unauthenticated (anonymous) claim submission batch", async () => {
     await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
-    // Missing claimantContactEmail entirely.
-    await assertFails(
-      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "claimant-1",
-        ownerClaimStatus: "claim_pending",
-        claimantName: "Jane Doe",
-      })
-    );
-    // Empty-string claimantName.
-    await assertFails(
-      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "claimant-1",
-        ownerClaimStatus: "claim_pending",
-        claimantName: "",
-        claimantContactEmail: "jane@example.com",
-      })
-    );
-  });
-
-  it("denies an unauthenticated (anonymous) claim submission", async () => {
-    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
-    await assertFails(
-      updateDoc(doc(asAnon(), "restaurants", "r1"), {
-        claimantUid: "anon-attempt",
-        ownerClaimStatus: "claim_pending",
-        claimantName: "Anon",
-        claimantContactEmail: "anon@example.com",
-      })
-    );
+    const db = asAnon();
+    const batch = writeBatch(db);
+    batch.update(doc(db, "restaurants", "r1"), { ownerClaimStatus: "claim_pending" });
+    batch.set(doc(collection(db, "restaurant_claims")), {
+      restaurantId: "r1",
+      claimantUid: "anon-attempt",
+      claimantName: "Anon",
+      claimantContactEmail: "anon@example.com",
+      status: "pending",
+    });
+    await assertFails(batch.commit());
   });
 
   it("denies a claim submission that also sets ownerUid", async () => {
@@ -553,7 +620,6 @@ describe("restaurants", () => {
     await assertFails(
       updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
         ownerUid: "claimant-1",
-        claimantUid: "claimant-1",
         ownerClaimStatus: "claim_pending",
       })
     );
@@ -563,74 +629,45 @@ describe("restaurants", () => {
     await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
     await assertFails(
       updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "claimant-1",
         ownerClaimStatus: "claim_pending",
         shortDescription: "Smuggled edit",
       })
     );
   });
 
-  it("denies impersonating someone else's claim", async () => {
-    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
-    await assertFails(
-      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "someone-else",
-        ownerClaimStatus: "claim_pending",
-      })
-    );
-  });
-
-  it("denies claiming a restaurant that already has an owner", async () => {
+  it("denies claiming a restaurant that already has an owner (restaurant-doc side)", async () => {
     await seedRestaurant();
     await assertFails(
       updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "claimant-1",
         ownerClaimStatus: "claim_pending",
       })
     );
   });
 
-  it("denies claiming a restaurant that already has a pending claim", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "first-claimant",
-    });
+  it("denies claiming a restaurant that already has a pending claim (restaurant-doc side)", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     await assertFails(
       updateDoc(doc(asUser("second-claimant"), "restaurants", "r1"), {
-        claimantUid: "second-claimant",
         ownerClaimStatus: "claim_pending",
       })
     );
   });
 
-  it("lets an admin approve a claim by setting ownerUid", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
+  it("lets an admin approve a claim by setting ownerUid (restaurant-doc side)", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     await assertSucceeds(
       updateDoc(doc(asAdmin(), "restaurants", "r1"), {
         ownerUid: "claimant-1",
         ownerClaimStatus: "claimed",
-        claimDecidedAt: serverTimestamp(),
-        claimDecidedBy: "admin-1",
       })
     );
   });
 
-  it("lets an admin reject a claim, and rejection does not grant ownerUid access", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
+  it("lets an admin reject a claim, and rejection does not grant ownerUid access (restaurant-doc side)", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     await assertSucceeds(
       updateDoc(doc(asAdmin(), "restaurants", "r1"), {
         ownerClaimStatus: "claim_rejected",
-        claimDecidedAt: serverTimestamp(),
-        claimDecidedBy: "admin-1",
       })
     );
     // The rejected claimant still has no management access — ownerUid
@@ -643,11 +680,7 @@ describe("restaurants", () => {
   });
 
   it("denies a claimant with a pending claim from self-approving by directly setting ownerUid", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     // A second, separate write (not combined with the original claim
     // submission) attempting to jump straight to ownership.
     await assertFails(
@@ -670,11 +703,7 @@ describe("restaurants", () => {
         status: "active",
       });
     });
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     await assertFails(
       updateDoc(doc(asUser("owner-2"), "restaurants", "r1"), {
         ownerUid: "claimant-1",
@@ -684,31 +713,14 @@ describe("restaurants", () => {
   });
 
   it("denies a pending claimant from editing unrelated restaurant fields in a separate write", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "claim_pending" });
     // A pending claim never grants ownerUid, so the owner-update
     // branch can't match; the claim-submission branch also can't
     // match (starting state must be unclaimed/claim_rejected, and the
-    // written keys wouldn't be limited to the claim fields anyway).
+    // written keys wouldn't be limited to ownerClaimStatus anyway).
     await assertFails(
       updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
         shortDescription: "Editing while still only pending",
-      })
-    );
-  });
-
-  it("denies reassigning claimantUid on an already-pending claim", async () => {
-    await seedRestaurant({
-      ownerUid: "",
-      ownerClaimStatus: "claim_pending",
-      claimantUid: "claimant-1",
-    });
-    await assertFails(
-      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
-        claimantUid: "someone-else",
       })
     );
   });
@@ -757,20 +769,25 @@ describe("restaurants", () => {
     );
   });
 
-  it("denies an owner from rewriting claimantUid, claim decision fields, or provenance/trust fields on their own restaurant", async () => {
+  it("denies an owner from (re)introducing any claimant PII field name, or rewriting provenance/trust fields, on their own restaurant", async () => {
     await seedRestaurant({
       ownerClaimStatus: "claimed",
-      claimantUid: "owner-1",
-      claimDecidedBy: "admin-1",
       sourceType: "restaurant_submitted",
       dataConfidence: "unverified",
     });
-    await assertFails(
-      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { claimantUid: "someone-else" })
-    );
-    await assertFails(
-      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { claimDecidedBy: "owner-1" })
-    );
+    // Task K: claimant PII field names must never be writable back
+    // onto this document by anyone but an admin, even as "new" fields
+    // a normal profile edit tries to introduce — see
+    // restaurantDocHasNoClaimantPii() in firestore.rules and
+    // docs/PRODUCTION-READINESS-AUDIT.md's "J-01".
+    for (const field of [
+      "claimantUid", "claimantName", "claimantRole", "claimantContactEmail",
+      "claimantContactPhone", "claimantNote", "claimSubmittedAt", "claimDecidedAt", "claimDecidedBy",
+    ]) {
+      await assertFails(
+        updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { [field]: "attempted-value" })
+      );
+    }
     await assertFails(
       updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { sourceType: "editorial_research" })
     );
@@ -787,6 +804,277 @@ describe("restaurants", () => {
         lastVerifiedAt: serverTimestamp(),
       })
     );
+  });
+});
+
+describe("restaurant_claims (private claim records — Task K)", () => {
+  async function seedOwnedOrUnclaimedRestaurant(id, overrides = {}) {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurants", id), {
+        name: "Test Restaurant",
+        ownerUid: "",
+        citySlug: "london",
+        status: "active",
+        ownerClaimStatus: "unclaimed",
+        ...overrides,
+      });
+    });
+  }
+
+  async function seedClaim(claimId, overrides = {}) {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_claims", claimId), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+        ...overrides,
+      });
+    });
+  }
+
+  // ---- create ----
+
+  it("lets an authenticated user create a claim record for themselves on an unclaimed restaurant", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1");
+    await assertSucceeds(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies an unauthenticated (anonymous) user from creating a claim record", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1");
+    await assertFails(
+      addDoc(collection(asAnon(), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "anon",
+        claimantName: "Anon",
+        claimantContactEmail: "anon@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies impersonating another uid as the claimant", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1");
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "someone-else",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies creating a claim record missing the required claimant name or business email", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1");
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+        // claimantName omitted
+      })
+    );
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        status: "pending",
+        // claimantContactEmail omitted
+      })
+    );
+  });
+
+  it("denies creating a claim record with a non-pending status or a pre-set decision", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1");
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "approved",
+      })
+    );
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+        decidedBy: "claimant-1",
+      })
+    );
+  });
+
+  it("denies creating a claim record for a restaurant that already has an owner", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1", { ownerUid: "existing-owner", ownerClaimStatus: "claimed" });
+    await assertFails(
+      addDoc(collection(asUser("claimant-1"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-1",
+        claimantName: "Jane Doe",
+        claimantContactEmail: "jane@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies creating a claim record for a restaurant that already has a pending claim (competing claims)", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1", { ownerClaimStatus: "claim_pending" });
+    await assertFails(
+      addDoc(collection(asUser("second-claimant"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "second-claimant",
+        claimantName: "Second Claimant",
+        claimantContactEmail: "second@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  it("lets a fresh claim record be created for a restaurant whose previous claim was rejected", async () => {
+    await seedOwnedOrUnclaimedRestaurant("r1", { ownerClaimStatus: "claim_rejected" });
+    await assertSucceeds(
+      addDoc(collection(asUser("claimant-2"), "restaurant_claims"), {
+        restaurantId: "r1",
+        claimantUid: "claimant-2",
+        claimantName: "Claimant Two",
+        claimantContactEmail: "two@example.com",
+        status: "pending",
+      })
+    );
+  });
+
+  // ---- read ----
+
+  it("denies an unauthenticated user from reading a private claim record", async () => {
+    await seedClaim("claim1");
+    await assertFails(getDoc(doc(asAnon(), "restaurant_claims", "claim1")));
+  });
+
+  it("denies an authenticated, unrelated user from reading another user's private claim record", async () => {
+    await seedClaim("claim1");
+    await assertFails(getDoc(doc(asUser("random-user"), "restaurant_claims", "claim1")));
+  });
+
+  it("denies a different claimant from reading someone else's private claim record", async () => {
+    await seedClaim("claim1", { claimantUid: "claimant-1" });
+    await assertFails(getDoc(doc(asUser("claimant-2"), "restaurant_claims", "claim1")));
+  });
+
+  it("lets the claimant read their own private claim record", async () => {
+    await seedClaim("claim1", { claimantUid: "claimant-1" });
+    await assertSucceeds(getDoc(doc(asUser("claimant-1"), "restaurant_claims", "claim1")));
+  });
+
+  it("lets an admin read any private claim record", async () => {
+    await seedClaim("claim1");
+    await assertSucceeds(getDoc(doc(asAdmin(), "restaurant_claims", "claim1")));
+  });
+
+  it("denies a restaurant's own (later-approved) owner from reading someone else's claim record for that restaurant just by being the owner", async () => {
+    // Distinct from "unrelated user" above — owner-2 is a real,
+    // approved owner of restaurant r1, not a stranger, and still gets
+    // no special access to a claim record where they aren't the
+    // claimant.
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurants", "r1"), {
+        name: "Test Restaurant",
+        ownerUid: "owner-2",
+        citySlug: "london",
+        status: "active",
+        ownerClaimStatus: "claimed",
+      });
+    });
+    await seedClaim("claim1", { restaurantId: "r1", claimantUid: "claimant-1" });
+    await assertFails(getDoc(doc(asUser("owner-2"), "restaurant_claims", "claim1")));
+  });
+
+  // ---- update (admin-only progression) ----
+
+  it("denies the claimant from self-approving their own claim record", async () => {
+    await seedClaim("claim1", { claimantUid: "claimant-1" });
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurant_claims", "claim1"), { status: "approved" })
+    );
+  });
+
+  it("denies the claimant from changing their claim record's status at all, approved or rejected", async () => {
+    await seedClaim("claim1", { claimantUid: "claimant-1" });
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurant_claims", "claim1"), { status: "rejected" })
+    );
+  });
+
+  it("denies a non-admin, non-claimant user from updating a claim record", async () => {
+    await seedClaim("claim1");
+    await assertFails(
+      updateDoc(doc(asUser("random-user"), "restaurant_claims", "claim1"), { status: "approved" })
+    );
+  });
+
+  it("denies an admin from reassigning a claim record's restaurantId or claimantUid", async () => {
+    await seedClaim("claim1", { restaurantId: "r1", claimantUid: "claimant-1" });
+    await assertFails(
+      updateDoc(doc(asAdmin(), "restaurant_claims", "claim1"), {
+        status: "approved",
+        restaurantId: "some-other-restaurant",
+      })
+    );
+    await assertFails(
+      updateDoc(doc(asAdmin(), "restaurant_claims", "claim1"), {
+        status: "approved",
+        claimantUid: "someone-else",
+      })
+    );
+  });
+
+  it("lets an admin approve a claim record", async () => {
+    await seedClaim("claim1");
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurant_claims", "claim1"), {
+        status: "approved",
+        decidedAt: serverTimestamp(),
+        decidedBy: "admin-1",
+      })
+    );
+  });
+
+  it("lets an admin reject a claim record", async () => {
+    await seedClaim("claim1");
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurant_claims", "claim1"), {
+        status: "rejected",
+        decidedAt: serverTimestamp(),
+        decidedBy: "admin-1",
+      })
+    );
+  });
+
+  // ---- delete ----
+
+  it("denies a non-admin from deleting a claim record", async () => {
+    await seedClaim("claim1", { claimantUid: "claimant-1" });
+    await assertFails(deleteDoc(doc(asUser("claimant-1"), "restaurant_claims", "claim1")));
+  });
+
+  it("lets an admin delete a claim record", async () => {
+    await seedClaim("claim1");
+    await assertSucceeds(deleteDoc(doc(asAdmin(), "restaurant_claims", "claim1")));
   });
 });
 

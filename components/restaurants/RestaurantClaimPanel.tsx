@@ -4,7 +4,7 @@ import NextLink from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { deriveClaimViewerState, isClaimFormComplete } from "@/lib/restaurantClaim";
 import type { RestaurantOwnerClaimStatus, RestaurantRequestType } from "@/lib/types";
@@ -20,17 +20,18 @@ type Props = {
  * Claim / suggest-update / request-removal actions for a restaurant
  * detail page — see docs/RESTAURANT-CLAIM-WORKFLOW.md.
  *
- * Claiming writes ONLY `claimantUid`, `ownerClaimStatus`
- * ('claim_pending'), and a small set of optional contact/evidence
- * fields (`claimantName`, `claimantRole`, `claimantContactEmail`,
- * `claimantContactPhone`, `claimantNote`) on the restaurant document —
- * never `ownerUid`. firestore.rules enforces this independently of
- * this component (see the restaurants/{restaurantId} update rule's
- * claim-submission branch, which lists exactly these fields via
- * `diff().affectedKeys().hasOnly([...])`); this UI just gives it a
- * legitimate path to trigger, and never attempts to write ownerUid
- * itself. Submitting a claim never grants edit access — only an admin
- * approving it in app/admin/restaurant-claims/page.tsx does that.
+ * Claiming writes to TWO documents in one atomic Firestore WriteBatch
+ * (Task K — see docs/PRODUCTION-READINESS-AUDIT.md's "J-01" and
+ * docs/RESTAURANT-CLAIM-WORKFLOW.md): the restaurant document gets
+ * ONLY `ownerClaimStatus` ('claim_pending') plus `updatedAt` — never
+ * `ownerUid`, never claimant identity/contact details — while a new
+ * `restaurant_claims/{claimId}` document (never publicly readable)
+ * gets the claimant's uid and their name/role/email/phone/note.
+ * firestore.rules enforces both halves independently; this UI just
+ * gives them a legitimate, atomic path to trigger together, and never
+ * attempts to write `ownerUid` itself. Submitting a claim never
+ * grants edit access — only an admin approving it in
+ * app/admin/restaurant-claims/page.tsx does that.
  *
  * Correction/removal requests are written to a separate
  * restaurant_correction_requests collection and never touch the
@@ -87,16 +88,33 @@ export default function RestaurantClaimPanel({
     setClaiming(true);
     setClaimMessage("");
     try {
-      await updateDoc(doc(db, "restaurants", restaurantId), {
-        claimantUid: user.uid,
+      const submittedAt = serverTimestamp();
+      const batch = writeBatch(db);
+      // Restaurant document: public workflow state only, no claimant
+      // identity/contact details — see this component's own header
+      // comment and docs/PRODUCTION-READINESS-AUDIT.md's "J-01".
+      batch.update(doc(db, "restaurants", restaurantId), {
         ownerClaimStatus: "claim_pending",
-        claimSubmittedAt: serverTimestamp(),
+        updatedAt: submittedAt,
+      });
+      // Private claim record: claimant identity/contact details live
+      // here only — never publicly readable, see firestore.rules'
+      // restaurant_claims block.
+      const claimRef = doc(collection(db, "restaurant_claims"));
+      batch.set(claimRef, {
+        restaurantId,
+        claimantUid: user.uid,
         claimantName: claimantName.trim(),
         claimantRole: claimantRole.trim(),
         claimantContactEmail: claimantContactEmail.trim(),
         claimantContactPhone: claimantContactPhone.trim(),
         claimantNote: claimantNote.trim(),
+        status: "pending",
+        submittedAt,
+        createdAt: submittedAt,
+        updatedAt: submittedAt,
       });
+      await batch.commit();
       setClaimMessage(t("claimSubmittedMessage"));
     } catch (err) {
       console.error("Failed to submit claim:", err);

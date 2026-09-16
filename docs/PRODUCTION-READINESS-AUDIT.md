@@ -23,6 +23,36 @@ task). See the final report for the ending HEAD.
 
 ---
 
+## STATUS UPDATE (Task K) — read this before the rest of this document
+
+**J-01's architecture has been fixed. J-01's rules are NOT yet verified.
+These are two different claims — do not conflate them.**
+
+Task K (a follow-up task after this audit) moved claimant PII off the
+public `restaurants/{id}` document into a new, private `restaurant_claims`
+collection, with `firestore.rules` updated to enforce the new boundary and
+to structurally block the 9 retired field names from ever reappearing on
+the restaurant document via any write path. Full detail:
+`docs/RESTAURANT-CLAIM-WORKFLOW.md`. What changed concretely:
+
+- **PII architecture**: fixed. The data no longer lives where it can be
+  publicly read. Confirmed by a repository-wide search, a new static test
+  suite (`tests/restaurant-claim/run-pii-boundary-tests.ts`, executed,
+  5/5 passing), and updated Firestore rules tests (written, reviewed).
+- **Firestore rules verification**: **still not done.** Java remains
+  unavailable in this environment; the updated rules — including the new
+  `restaurant_claims` collection and the `restaurantDocHasNoClaimantPii()`
+  guard — have **never executed against a real Firestore rules engine**.
+  J-02's finding (rules unverified) is unchanged and now also covers the
+  new collection.
+- **J-01's severity in the table below is left as originally recorded**
+  (P0) rather than silently downgraded — the architecture fix is real and
+  significant, but "not yet verified against the actual rules engine" is
+  reason enough to keep this a launch blocker until that verification
+  happens, consistent with J-02's own standing concern. See
+  `docs/RESTAURANT-CLAIM-WORKFLOW.md`'s "What this task did not do" for
+  the precise, current status.
+
 ## The one finding that matters most: claimant PII is publicly retrievable
 
 **Before anything else in this document: a restaurant's claimant contact
@@ -103,7 +133,7 @@ run against the (currently unavailable) emulator before deployment.
 
 | ID | Area | Finding | Severity | Why it matters | Required action | Can fix locally? | Verification required |
 |---|---|---|---|---|---|---|---|
-| J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection | **P0** | Real personal data exposed to the public internet indefinitely; see full writeup above | Redesign claim-data storage (separate collection or field-clearing) + rules change + emulator-verified tests | Yes, but not tiny — needs its own task | Emulator rules tests + manual query verification |
+| J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection. **Architecture fixed (Task K)** — data moved to a private `restaurant_claims` collection; rules updated. **Emulator verification still outstanding.** | **P0** (kept — see "Status update" above) | Real personal data exposed to the public internet indefinitely; see full writeup above | ~~Redesign claim-data storage~~ done (Task K) — remaining: emulator-verified tests | Done (architecture); emulator run still needs Java | Emulator rules tests + manual query verification — **not yet run** |
 | J-02 | Firestore rules deployment | `firestore.rules` (622 lines, 83 test cases) has never executed against a real rules engine (Java unavailable); two rule changes (Task F, Task G) have accumulated since Task E's audit and are also unverified | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended | Install Java (or use any environment with it) and run the full suite; fix any failures; re-run after J-01's fix | No — requires Java, out of this task's scope | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` |
 | J-03 | Legal/compliance content | `/privacy-policy` and `/terms` are literal placeholders ("SmartServeUK privacy policy will be updated here.") linked from every London Food Hubs page's footer | **P0** | A live consumer marketplace collecting accounts, reviews, claims, and business contact data with no real privacy policy or terms is a genuine compliance gap, not a cosmetic one | Legal/business decision + real content — outside this task's authority to write | No — business/legal content decision | Human legal review |
 | J-04 | Firebase Auth | `londonfoodhubs.com` (and `www.londonfoodhubs.com`) are not yet on Firebase Auth's "Authorized domains" allowlist (external Firebase console setting, confirmed not repo-managed) | **P0** for auth-dependent features on the new domain | Sign-in/sign-up/claim/owner-workspace will fail on the new domain until this is added — Firebase Auth rejects unauthorized origins regardless of correct client config | Add the domain in Firebase console once DNS is live | No — external Firebase console action | Manual sign-in test on the live domain post-deploy |
@@ -127,7 +157,7 @@ run against the (currently unavailable) emulator before deployment.
 
 ## A. Launch blockers (P0)
 
-1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit.
+1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit. **Architecture fixed as of Task K** (see "Status update" above) — remains listed as a blocker only pending emulator verification of the fix, same as J-02.
 2. **J-02** — Firestore rules have never executed against a real rules engine, and two rule changes have accumulated since the last audit. Deploying them without running the suite (and without fixing J-01 first) is not safe.
 3. **J-03** — Privacy policy and terms are placeholder text, linked from every consumer page.
 4. **J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth, so sign-in-dependent features (claim, review, owner workspace, admin) will not work on the live domain until this external step is done.

@@ -92,7 +92,8 @@ see "Platform vocabulary vs. restaurant-supplied content" below.
 | **`citySlug`** | **No** | Rule-pinned | — | Administrative |
 | **`rating` / `reviewCount`** | **No** | Rule-pinned | Star rating | System — Cloud Function (Admin SDK) only |
 | **`isFeatured` / `isApproved`** | **No** | Rule-pinned | Featured placement | Administrative |
-| **`ownerClaimStatus` / `claimantUid` / `claimSubmittedAt` / `claimDecidedAt` / `claimDecidedBy` / `claimantName` / `claimantRole` / `claimantContactEmail` / `claimantContactPhone` / `claimantNote`** | **No — Task G fix, see below** | Rule-pinned | Admin claims queue only | Administrative / claim audit trail |
+| **`ownerClaimStatus`** | **No — Task G fix, see below** | Rule-pinned | Public claim-state UX (unclaimed/pending/claimed/rejected) | Administrative workflow state |
+| **(retired — Task K)** `claimantUid` / `claimSubmittedAt` / `claimDecidedAt` / `claimDecidedBy` / `claimantName` / `claimantRole` / `claimantContactEmail` / `claimantContactPhone` / `claimantNote` | N/A — no longer fields on this document at all | Structurally blocked (`restaurantDocHasNoClaimantPii()`) | N/A | Moved to the private `restaurant_claims` collection after an audit found this document's public readability exposed them — see `docs/RESTAURANT-CLAIM-WORKFLOW.md` and `docs/PRODUCTION-READINESS-AUDIT.md`'s "J-01" |
 | **`sourceType` / `sourceName` / `sourceUrl` / `sourceRetrievedAt` / `dataConfidence`** | **No — Task G fix, see below** | Rule-pinned | Provenance notice | Administrative / data provenance |
 | `contentTranslations` | No (not writable via this page at all) | — | Detail page, per-field fallback | Set only via the separate translation-request/admin-publish workflow — see `docs/MULTILINGUAL-ARCHITECTURE.md` |
 
@@ -259,7 +260,7 @@ Static review plus:
 | Unrelated authenticated user cannot update | Existing rules test (unexecuted) |
 | Owner A cannot update restaurant B (incl. menu) | Existing + new rules test with two real seeded owners (unexecuted); unit test |
 | Owner cannot modify `ownerUid` | Existing rules test (unexecuted) |
-| Owner cannot modify `claimantUid` | **New** rules test (unexecuted) — was a real gap, now fixed |
+| Owner cannot (re)introduce any claimant PII field name | **Updated (Task K)** rules test (unexecuted) — was a real gap (Task G fixed it as a pinned-field list; Task K hardened it into a structural named-field blocklist once the fields moved to the private `restaurant_claims` collection) |
 | Owner cannot self-change claim status | **New** rules test (unexecuted) — was a real gap, now fixed |
 | Owner cannot modify administrative/provenance fields | **New** rules test (unexecuted) — was a real gap, now fixed |
 | Owner content saved without translation transformation | **New** static source-inspection guard — **executed, passing** |

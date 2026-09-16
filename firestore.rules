@@ -53,6 +53,17 @@ rules_version = '2';
 //     docs/MULTILINGUAL-ARCHITECTURE.md. Owner-only create (status
 //     REQUESTED, cross-checked against the restaurant's own
 //     ownerUid), admin-only thereafter. Not one of the original 28.
+//   - restaurant_claims: added (Task K) to hold ownership-claim
+//     records — restaurantId, claimantUid, and the claimant's
+//     name/role/email/phone/note — privately, after an audit found
+//     this data previously lived inline on the public restaurants/{id}
+//     document and was therefore retrievable by any unauthenticated
+//     client. See docs/RESTAURANT-CLAIM-WORKFLOW.md and
+//     docs/PRODUCTION-READINESS-AUDIT.md's "J-01". Claimant-only
+//     create (for themselves, cross-checked against the target
+//     restaurant's current unclaimed/rejected state), readable only by
+//     the claimant themselves or an admin, admin-only thereafter. Not
+//     one of the original 28.
 //   - staff, customers, events, sales_signups, blackcab_early_access,
 //     blackcab_bookings, blackcab_journey_ratings, blackcab_concerns,
 //     blackcab_signups, catering_house_signups, customer_signups,
@@ -108,6 +119,27 @@ service cloud.firestore {
       // otherwise-legitimate update.
       return !(field in request.resource.data) ||
         request.resource.data[field] == resource.data.get(field, null);
+    }
+
+    function restaurantDocHasNoClaimantPii() {
+      // Structurally guarantees the 9 claimant-identity/contact/
+      // decision field names that used to live inline on
+      // restaurants/{id} (a real privacy defect — see the
+      // "restaurants" match block below and
+      // docs/PRODUCTION-READINESS-AUDIT.md's "J-01") can never
+      // reappear there via ANY write this document's create/update
+      // rules allow, not merely "the current UI doesn't send them."
+      // Real claimant data belongs exclusively in the private
+      // restaurant_claims collection.
+      return !('claimantUid' in request.resource.data)
+        && !('claimantName' in request.resource.data)
+        && !('claimantRole' in request.resource.data)
+        && !('claimantContactEmail' in request.resource.data)
+        && !('claimantContactPhone' in request.resource.data)
+        && !('claimantNote' in request.resource.data)
+        && !('claimSubmittedAt' in request.resource.data)
+        && !('claimDecidedAt' in request.resource.data)
+        && !('claimDecidedBy' in request.resource.data);
     }
 
     // ---------- reviews ----------
@@ -219,6 +251,7 @@ service cloud.firestore {
           && request.resource.data.get('rating', 0) == 0
           && request.resource.data.get('reviewCount', 0) == 0
           && request.resource.data.get('isFeatured', false) == false
+          && restaurantDocHasNoClaimantPii()
         );
 
       allow update: if isAdmin()
@@ -235,80 +268,111 @@ service cloud.firestore {
           && unchanged('reviewCount')
           && unchanged('isFeatured')
           && unchanged('isApproved')
-          // Claim-audit and provenance/trust fields — Task G. An
-          // approved owner's normal profile-edit write was previously
-          // able to also smuggle changes to these in the SAME write,
-          // since only the six fields above were pinned here (unlike
-          // the claim-submission branch below, which has always
-          // restricted itself to an explicit field allowlist). Nothing
-          // anywhere documents these as owner-editable — see
-          // docs/RESTAURANT-CLAIM-WORKFLOW.md and
-          // docs/RESTAURANT-DATA-PROVENANCE.md — so this closes a real
-          // gap rather than encoding a new policy.
-          // `lastVerifiedAt` is deliberately NOT pinned — the owner
-          // confirming/saving their own profile intentionally counts
-          // as re-verifying it (see docs/RESTAURANT-DATA-PROVENANCE.md).
+          // Task G: an approved owner's normal profile-edit write was
+          // previously able to also smuggle changes to
+          // ownerClaimStatus in the same write. `lastVerifiedAt` is
+          // deliberately NOT pinned — the owner confirming/saving
+          // their own profile intentionally counts as re-verifying it
+          // (see docs/RESTAURANT-DATA-PROVENANCE.md). Provenance/trust
+          // fields (sourceType/sourceName/sourceUrl/sourceRetrievedAt/
+          // dataConfidence) are protected the same way, for the same
+          // reason: nothing anywhere documents them as owner-editable.
           && unchanged('ownerClaimStatus')
-          && unchanged('claimantUid')
-          && unchanged('claimSubmittedAt')
-          && unchanged('claimDecidedAt')
-          && unchanged('claimDecidedBy')
-          && unchanged('claimantName')
-          && unchanged('claimantRole')
-          && unchanged('claimantContactEmail')
-          && unchanged('claimantContactPhone')
-          && unchanged('claimantNote')
           && unchanged('sourceType')
           && unchanged('sourceName')
           && unchanged('sourceUrl')
           && unchanged('sourceRetrievedAt')
           && unchanged('dataConfidence')
+          && restaurantDocHasNoClaimantPii()
           && resource.data.status != 'blocked'
           && request.resource.data.status != 'blocked'
         )
         || (
-          // Ownership CLAIM SUBMISSION — see
-          // docs/RESTAURANT-CLAIM-WORKFLOW.md. Any signed-in user may
-          // claim a currently-unclaimed restaurant (e.g. an
-          // admin-imported record with no owner yet) by writing ONLY
-          // `claimantUid` (to themselves) and `ownerClaimStatus` (to
-          // 'claim_pending'), plus `claimSubmittedAt`/`updatedAt`.
-          // This can NEVER set `ownerUid` — that stays unchanged here,
-          // exactly like the owner-update branch above. Only an admin
-          // (the isAdmin() branch, unrestricted) may later promote a
-          // claim to actual ownership by setting ownerUid — no
-          // client-writable path exists from claimantUid to ownerUid.
-          // This intentionally repeats the fix for the earlier
-          // claim-on-edit vulnerability: submitting a claim is NEVER
-          // itself an edit right, and can't be smuggled into one by
-          // also changing other fields — the diff below is restricted
-          // to exactly the claim fields.
+          // Ownership CLAIM SUBMISSION — status only (Task K; see
+          // docs/RESTAURANT-CLAIM-WORKFLOW.md and
+          // docs/PRODUCTION-READINESS-AUDIT.md's "J-01"). Any signed-in
+          // user may move a currently-unclaimed (or previously-
+          // rejected) restaurant to 'claim_pending' by writing ONLY
+          // `ownerClaimStatus` (plus `updatedAt`). This can NEVER set
+          // `ownerUid` — that stays unchanged here, exactly like the
+          // owner-update branch above. Only an admin (the isAdmin()
+          // branch, unrestricted) may later promote a claim to actual
+          // ownership by setting ownerUid.
+          //
+          // Claimant identity/contact details (name, business email,
+          // phone, role, note) are NEVER written here or anywhere on
+          // this document — they go to a new document in the separate
+          // restaurant_claims/{claimId} collection below, created in
+          // the SAME client-side WriteBatch as this write (see
+          // RestaurantClaimPanel.tsx), so the two succeed or fail
+          // together. Before Task K, this branch wrote claimant PII
+          // directly onto this document; since restaurants/{id} is
+          // publicly readable for any active/pending restaurant (no
+          // field-level rules exist in Firestore — the whole document
+          // or nothing), that PII was retrievable by any
+          // unauthenticated client despite never being rendered by any
+          // UI. This branch's narrow field allowlist below is what
+          // makes that impossible now — a claim submission literally
+          // cannot carry any field but the two listed.
           isSignedIn()
           && resource.data.get('ownerUid', '') == ''
           && resource.data.get('ownerClaimStatus', 'unclaimed') in ['unclaimed', 'claim_rejected']
-          && request.resource.data.claimantUid == request.auth.uid
           && request.resource.data.ownerClaimStatus == 'claim_pending'
-          // Contact/evidence fields — see docs/RESTAURANT-CLAIM-WORKFLOW.md's
-          // "Claimant contact information" section (Task F). Name and
-          // business email are the two things an admin actually needs to
-          // reach a real claimant, so they're required; the rest (role,
-          // phone, a free-text note) are optional context, not identity
-          // verification.
-          && request.resource.data.claimantName is string
-          && request.resource.data.claimantName.size() > 0
-          && request.resource.data.claimantContactEmail is string
-          && request.resource.data.claimantContactEmail.size() > 0
-          && (!('claimantRole' in request.resource.data) || request.resource.data.claimantRole is string)
-          && (!('claimantContactPhone' in request.resource.data) || request.resource.data.claimantContactPhone is string)
-          && (!('claimantNote' in request.resource.data) || request.resource.data.claimantNote is string)
           && unchanged('ownerUid')
           && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly([
-                 'claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt',
-                 'claimantName', 'claimantRole', 'claimantContactEmail',
-                 'claimantContactPhone', 'claimantNote'
-               ])
+               .hasOnly(['ownerClaimStatus', 'updatedAt'])
         );
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- restaurant_claims ----------
+    // Private ownership-claim records — see
+    // docs/RESTAURANT-CLAIM-WORKFLOW.md and
+    // docs/PRODUCTION-READINESS-AUDIT.md's "J-01" (Task K). Holds
+    // exactly the claimant identity/contact data that used to live
+    // inline on the public restaurants/{id} document. Never publicly
+    // readable — only the claimant themselves and admins may read a
+    // given record; being the restaurant's own (later-approved) owner
+    // grants no special access to someone else's claim record.
+    //
+    // A claim submission creates a document here AND sets
+    // restaurants/{restaurantId}.ownerClaimStatus = 'claim_pending' in
+    // one client-side WriteBatch — Firestore batches are atomic across
+    // collections, so the two writes succeed or fail together. Each
+    // half is still independently validated by its own rule below;
+    // nothing here trusts the client to have sent a consistent batch —
+    // the get() cross-check duplicates the sibling restaurant write's
+    // own starting-state requirement rather than assuming it happened.
+    match /restaurant_claims/{claimId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.claimantUid == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.claimantUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.restaurantId is string
+        && request.resource.data.restaurantId.size() > 0
+        && request.resource.data.claimantName is string
+        && request.resource.data.claimantName.size() > 0
+        && request.resource.data.claimantContactEmail is string
+        && request.resource.data.claimantContactEmail.size() > 0
+        && (!('claimantRole' in request.resource.data) || request.resource.data.claimantRole is string)
+        && (!('claimantContactPhone' in request.resource.data) || request.resource.data.claimantContactPhone is string)
+        && (!('claimantNote' in request.resource.data) || request.resource.data.claimantNote is string)
+        && !('decidedAt' in request.resource.data)
+        && !('decidedBy' in request.resource.data)
+        && get(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)).data.get('ownerUid', '') == ''
+        && get(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)).data.get('ownerClaimStatus', 'unclaimed') in ['unclaimed', 'claim_rejected'];
+
+      // Only an admin may progress a claim's status (approve/reject)
+      // or record a decision — never the claimant themselves, and
+      // never anyone else. restaurantId/claimantUid are pinned so a
+      // claim record can't be silently reassigned to a different
+      // restaurant or person after submission.
+      allow update: if isAdmin()
+        && unchanged('restaurantId')
+        && unchanged('claimantUid');
 
       allow delete: if isAdmin();
     }

@@ -91,7 +91,6 @@ type LiveRestaurant = {
   sourceName?: string;
   dataConfidence?: RestaurantDataConfidence;
   ownerClaimStatus?: RestaurantOwnerClaimStatus;
-  claimantUid?: string;
 
   isPremium?: boolean;
   subscriptionPlan?: "free" | "premium";

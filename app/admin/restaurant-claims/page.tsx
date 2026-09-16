@@ -5,43 +5,42 @@ import { useEffect, useState } from "react";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
-import type { RestaurantCorrectionRequestDoc, RestaurantDoc } from "@/lib/types";
+import type { RestaurantClaimDoc, RestaurantCorrectionRequestDoc } from "@/lib/types";
 
-type ClaimRow = Pick<
-  RestaurantDoc,
-  | "id"
-  | "name"
-  | "ownerClaimStatus"
-  | "claimantUid"
-  | "claimSubmittedAt"
-  | "claimantName"
-  | "claimantRole"
-  | "claimantContactEmail"
-  | "claimantContactPhone"
-  | "claimantNote"
->;
+/** A claim record joined with the restaurant's own (public) name for
+ *  display — the claim record itself never stores a copy of the
+ *  restaurant's name, so this is looked up once per pending claim
+ *  when the queue loads. See docs/RESTAURANT-CLAIM-WORKFLOW.md. */
+type ClaimRow = RestaurantClaimDoc & { restaurantName: string };
 
 /**
  * Admin review queue for restaurant ownership claims and
  * correction/removal requests — see
  * docs/RESTAURANT-CLAIM-WORKFLOW.md.
  *
- * Approving a claim is the ONLY place in the app that sets
- * `ownerUid` from a `claimantUid` — it does so via a direct,
- * admin-authenticated Firestore write, which firestore.rules allows
- * only because this page is gated by isAdmin() (a Firebase Auth
- * custom claim, not the client-writable users/{uid}.role field — see
- * useAdminGate). No Cloud Function is required for this because the
- * existing isAdmin() rules branch is already unrestricted; see the
- * doc for the reasoning.
+ * Claimant identity/contact details are read from the private
+ * `restaurant_claims` collection (Task K) — never from the public
+ * `restaurants` document, which no longer carries this data at all
+ * (see docs/PRODUCTION-READINESS-AUDIT.md's "J-01"). Approving a
+ * claim is the ONLY place in the app that sets `ownerUid` from a
+ * claim's `claimantUid` — it does so via a batched, admin-
+ * authenticated Firestore write (both the claim record and the
+ * restaurant document update together, atomically), which
+ * firestore.rules allows only because this page is gated by
+ * isAdmin() (a Firebase Auth custom claim, not the client-writable
+ * users/{uid}.role field — see useAdminGate). No Cloud Function is
+ * required for this because the existing isAdmin() rules branches are
+ * already unrestricted for admins.
  *
  * Accepting a correction/removal request does NOT automatically edit
  * or delete the restaurant — an admin makes that change by hand on
@@ -65,12 +64,35 @@ export default function AdminRestaurantClaimsPage() {
     setLoading(true);
     try {
       const [claimsSnap, requestsSnap] = await Promise.all([
-        getDocs(query(collection(db, "restaurants"), where("ownerClaimStatus", "==", "claim_pending"))),
+        getDocs(query(collection(db, "restaurant_claims"), where("status", "==", "pending"))),
         getDocs(query(collection(db, "restaurant_correction_requests"), where("status", "==", "pending"))),
       ]);
-      setClaims(
-        claimsSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ClaimRow, "id">) }))
+
+      const rawClaims = claimsSnap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<RestaurantClaimDoc, "id">),
+      }));
+
+      // The claim record only stores restaurantId — look up each
+      // restaurant's (public) name for display, once per pending
+      // claim. Admin can already read any restaurant regardless of
+      // status via the isAdmin() branch on that collection's own rule.
+      const claimRows = await Promise.all(
+        rawClaims.map(async (claim) => {
+          let restaurantName = claim.restaurantId;
+          try {
+            const restaurantSnap = await getDoc(doc(db, "restaurants", claim.restaurantId));
+            if (restaurantSnap.exists()) {
+              restaurantName = (restaurantSnap.data().name as string) || claim.restaurantId;
+            }
+          } catch (err) {
+            console.error(`Failed to load restaurant ${claim.restaurantId} for claim ${claim.id}:`, err);
+          }
+          return { ...claim, restaurantName };
+        })
       );
+
+      setClaims(claimRows);
       setRequests(
         requestsSnap.docs.map((d) => ({
           id: d.id,
@@ -86,15 +108,26 @@ export default function AdminRestaurantClaimsPage() {
   }
 
   async function approveClaim(claim: ClaimRow) {
-    if (!claim.claimantUid) return;
     setActioningId(claim.id);
     try {
-      await updateDoc(doc(db, "restaurants", claim.id), {
+      const adminUid = auth.currentUser?.uid || "";
+      const decidedAt = serverTimestamp();
+      const batch = writeBatch(db);
+      // Both writes commit together or not at all — see
+      // docs/RESTAURANT-CLAIM-WORKFLOW.md's "Multi-document
+      // consistency" section.
+      batch.update(doc(db, "restaurants", claim.restaurantId), {
         ownerUid: claim.claimantUid,
         ownerClaimStatus: "claimed",
-        claimDecidedAt: serverTimestamp(),
-        claimDecidedBy: auth.currentUser?.uid || "",
+        updatedAt: decidedAt,
       });
+      batch.update(doc(db, "restaurant_claims", claim.id), {
+        status: "approved",
+        decidedAt,
+        decidedBy: adminUid,
+        updatedAt: decidedAt,
+      });
+      await batch.commit();
       await load();
     } catch (err) {
       console.error("Failed to approve claim:", err);
@@ -107,11 +140,20 @@ export default function AdminRestaurantClaimsPage() {
   async function rejectClaim(claim: ClaimRow) {
     setActioningId(claim.id);
     try {
-      await updateDoc(doc(db, "restaurants", claim.id), {
+      const adminUid = auth.currentUser?.uid || "";
+      const decidedAt = serverTimestamp();
+      const batch = writeBatch(db);
+      batch.update(doc(db, "restaurants", claim.restaurantId), {
         ownerClaimStatus: "claim_rejected",
-        claimDecidedAt: serverTimestamp(),
-        claimDecidedBy: auth.currentUser?.uid || "",
+        updatedAt: decidedAt,
       });
+      batch.update(doc(db, "restaurant_claims", claim.id), {
+        status: "rejected",
+        decidedAt,
+        decidedBy: adminUid,
+        updatedAt: decidedAt,
+      });
+      await batch.commit();
       await load();
     } catch (err) {
       console.error("Failed to reject claim:", err);
@@ -180,8 +222,8 @@ export default function AdminRestaurantClaimsPage() {
             <div key={claim.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <Link href={`/restaurants/${claim.id}`} className="font-semibold text-neutral-900 hover:underline">
-                    {claim.name}
+                  <Link href={`/restaurants/${claim.restaurantId}`} className="font-semibold text-neutral-900 hover:underline">
+                    {claim.restaurantName}
                   </Link>
                   <div className="mt-1 text-sm text-neutral-700">
                     {claim.claimantName || "(no name given)"}

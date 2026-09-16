@@ -67,19 +67,27 @@ three have no external page to point to by definition.
   than `restaurant_submitted`** — no import has actually been run against
   real data.
 
-## Ownership claim fields
+## Ownership claim field
 
-Separate from provenance, but documented here since they're on the same
+Separate from provenance, but documented here since it's on the same
 document and read by the same public notice:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `ownerClaimStatus` | `RestaurantOwnerClaimStatus` | `unclaimed` / `claim_pending` / `claimed` / `claim_rejected`. |
-| `claimantUid` | `string` | Uid of a user who submitted a claim — **never** treated as ownership by itself. |
-| `claimSubmittedAt` / `claimDecidedAt` / `claimDecidedBy` | timestamp / timestamp / uid | Audit trail. |
+| `ownerClaimStatus` | `RestaurantOwnerClaimStatus` | `unclaimed` / `claim_pending` / `claimed` / `claim_rejected`. The **only** claim-related field on this document. |
 
-Full workflow, including the security model for how `claimantUid` can (and
-specifically cannot) become `ownerUid`, is in
+**(Task K)** `claimantUid`, `claimantName`, `claimantContactEmail`,
+`claimantRole`, `claimantContactPhone`, `claimantNote`,
+`claimSubmittedAt`, `claimDecidedAt`, and `claimDecidedBy` used to also
+live here — moved to a private `restaurant_claims/{claimId}` collection
+after an audit found this document's public readability made them
+retrievable by any unauthenticated client. `firestore.rules` now
+structurally blocks all of them from ever being written back to this
+document. See `docs/RESTAURANT-CLAIM-WORKFLOW.md` and
+`docs/PRODUCTION-READINESS-AUDIT.md`'s "J-01".
+
+Full workflow, including the security model for how a claim's
+`claimantUid` can (and specifically cannot) become `ownerUid`, is in
 `docs/RESTAURANT-CLAIM-WORKFLOW.md`.
 
 ## Dietary declaration basis (import pipeline only, today)

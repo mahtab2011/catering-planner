@@ -145,21 +145,27 @@ below.
 
 **A Firestore-model caveat, not a discovery-code bug**: because
 `firestore.rules`' public read rule grants access to the *entire*
-restaurant document (Firestore has no field-level security rules), an
-`active`/`pending` restaurant's `claimantContactEmail`,
-`sourceUrl`/`sourceRetrievedAt`, `dataConfidence`, and similar fields are
-already technically fetchable by anyone reading the document directly —
-regardless of what any discovery page's UI chooses to render. This is a
-pre-existing architectural trade-off across the whole app (the owner
-workspace, the detail page, and every discovery page all read the same
-whole document), not something Task H introduced. Restructuring this
-(e.g. splitting restaurants into public/private subcollections) would be
-a significant, unambiguous-policy-requiring architecture change — out of
-scope here, and not attempted. What Task H *did* verify and can state
-confidently: **no discovery page's rendered UI displays any of these
-fields** — confirmed by a repo-wide search finding zero references to
-`claimantUid`, `claimantContactEmail`, `claimDecidedBy`, `sourceUrl`, or
-`sourceRetrievedAt` anywhere in the discovery components.
+restaurant document (Firestore has no field-level security rules),
+`sourceUrl`/`sourceRetrievedAt`/`dataConfidence` and similar provenance
+fields are technically fetchable by anyone reading the document
+directly — regardless of what any discovery page's UI chooses to render.
+This is a pre-existing architectural trade-off across the whole app (the
+owner workspace, the detail page, and every discovery page all read the
+same whole document), not something Task H introduced. What Task H *did*
+verify and can state confidently: **no discovery page's rendered UI
+displays any of these fields** — confirmed by a repo-wide search finding
+zero references to `sourceUrl`, `sourceRetrievedAt`, or any claim-audit
+field anywhere in the discovery components.
+
+**(Task K, later)** This same caveat used to apply to actual claimant
+*PII* too (`claimantContactEmail`, `claimantContactPhone`, etc.) — that
+part was a genuine defect, not just a theoretical trade-off (see
+`docs/PRODUCTION-READINESS-AUDIT.md`'s "J-01"), and has since been fixed
+by moving those fields to a private `restaurant_claims` collection that
+is never publicly readable at all — see
+`docs/RESTAURANT-CLAIM-WORKFLOW.md`. The remaining provenance-field
+caveat above (`sourceUrl` etc.) is lower-sensitivity internal metadata,
+not personal data, and was left as documented rather than restructured.
 
 ## Menu display (Phase 11)
 

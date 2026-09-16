@@ -50,7 +50,7 @@ changed to support them (see "Firestore rules" below).
 | Operations overview | `/admin` | `sales_signups`, `orders` (existing); **`restaurants`, `restaurant_correction_requests`, `restaurant_translation_requests`, `restaurant_import_candidates` (new, Task I)** | `useAdminGate()` + `isAdmin()` | View counts, navigate | Previously had zero restaurant-marketplace visibility | None — read-only |
 | Restaurant overview/inspection | **`/admin/restaurants` (new, Task I)** | `restaurants` (full collection, one-time read) | `useAdminGate()` + `isAdmin()` | Search/filter, view data-quality flags, link to public page and edit page | Did not exist before this task | None — read-only, never renders claimant PII (see "Privacy" below) |
 | Restaurant signups | `/admin/restaurant-signups` | `restaurant_signups` | `useAdminGate()` + `isAdmin()` (write side: `restaurant_signups` update rule) | Mark contacted/rejected, create the live restaurant profile | None found | Unchanged, not touched |
-| Ownership claims | `/admin/restaurant-claims` | `restaurants` (`ownerClaimStatus == 'claim_pending'`) | `useAdminGate()` + `isAdmin()` (the only path from `claimantUid` to `ownerUid`) | Approve (sets `ownerUid`), reject | None found — already shows claimant name/role/email/phone/note (Task F) | None — see `docs/RESTAURANT-CLAIM-WORKFLOW.md` |
+| Ownership claims | `/admin/restaurant-claims` | **`restaurant_claims` (`status == 'pending'`) for claimant data — Task K; `restaurants` only for a display-only name lookup** | `useAdminGate()` + `isAdmin()` (the only path from a claim's `claimantUid` to `ownerUid`) | Approve/reject via one atomic `WriteBatch` updating both the private claim record and the public restaurant status | None found — already shows claimant name/role/email/phone/note (Task F), now sourced from the private collection instead of the public restaurant document (Task K, closing J-01) | None — see `docs/RESTAURANT-CLAIM-WORKFLOW.md` |
 | Corrections/removals | `/admin/restaurant-claims` (same page) | `restaurant_correction_requests` | `useAdminGate()` + `isAdmin()` | Accept/reject the *request* only — never auto-edits the restaurant | None found | None — see "Corrections/removals" below |
 | Translation requests | **`/admin/restaurant-translation-requests` (new, Task I)** | `restaurant_translation_requests` | `useAdminGate()` + `isAdmin()` | Advance status one step at a time, or cancel; optional admin note | **Did not exist at all before this task** | Deliberately excludes any price/payment field — see "Translation requests" below |
 | Import candidate review | `/admin/restaurant-import-candidates` | `restaurant_import_candidates` (`status`-filtered) | `useAdminGate()` + `isAdmin()`; create is `allow create: if false` for every client | Approve/reject/mark duplicate/needs research; copy an approved-batch JSON for the offline apply script | None found — already thorough | None — apply remains a separate, manual, off-app script (unchanged, not run this task) |
@@ -114,11 +114,14 @@ for a given restaurant — this only surfaces the facts. Unit-tested (see
 
 **Not rebuilt — verified and reconfirmed.** `/admin/restaurant-claims`
 already shows claimant name, role, business email, phone, and
-verification note (added in Task F), and already enforces
-approve/reject exclusively through the `isAdmin()` rule branch — no
-automatic approval exists or was added, and no identity-document
-verification was built (unchanged, per this task's own instruction not
-to add it). The new `/admin` overview and `/admin/restaurants` pages both
+verification note (added in Task F; sourced from the private
+`restaurant_claims` collection rather than the public restaurant document
+since Task K's privacy fix — see `docs/PRODUCTION-READINESS-AUDIT.md`'s
+"J-01"), and already enforces approve/reject exclusively through
+`isAdmin()` rule branches on both collections — no automatic approval
+exists or was added, and no identity-document verification was built
+(unchanged, per this task's own instruction not to add it). The new
+`/admin` overview and `/admin/restaurants` pages both
 link directly to this queue whenever a pending claim exists, closing the
 one real navigation gap (previously reachable only via one static card on
 `/admin`, with no count or signal anywhere else).
@@ -272,13 +275,20 @@ key count, see "Validation").
 
 ## Firestore rules (Phase 18)
 
-**No rule was changed.** Every action this task's new UI performs was
-already permitted by an existing `isAdmin()` branch:
+**No rule was changed by this task.** Every action this task's new UI
+performs was already permitted by an existing `isAdmin()` branch:
 `restaurants` (read, for the overview), `restaurant_translation_requests`
 (read + the already-unrestricted-for-admins update), and the pre-existing
 `restaurant_correction_requests`/`restaurant_import_candidates` rules
 (read-only, unmodified, used by the new dashboard counts). No unresolved
 SmartServeUK collection policy from Task E was touched.
+
+**(Later, Task K)** the `/admin/restaurant-claims` page's own rules *did*
+change, as part of fixing the claimant-PII exposure this document's
+"Privacy" section already flagged as a concern — see
+`docs/RESTAURANT-CLAIM-WORKFLOW.md` and
+`docs/PRODUCTION-READINESS-AUDIT.md`'s "J-01". That change is unrelated to
+anything this task (I) built.
 
 ## Tests (Phase 17)
 

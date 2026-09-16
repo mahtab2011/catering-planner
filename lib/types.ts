@@ -307,31 +307,22 @@ export type RestaurantDoc = {
   lastVerifiedAt?: unknown;
   dataConfidence?: RestaurantDataConfidence;
 
-  /* ---- Ownership claim — see docs/RESTAURANT-CLAIM-WORKFLOW.md ---- */
+  /* ---- Ownership claim — see docs/RESTAURANT-CLAIM-WORKFLOW.md ----
+   * PUBLIC WORKFLOW STATE ONLY. Claimant identity/contact details
+   * (name, business email, phone, role, verification note) and claim
+   * decision audit trail (submittedAt/decidedAt/decidedBy) live
+   * exclusively in the private `restaurant_claims` collection
+   * (`RestaurantClaimDoc` below) — never on this document. This
+   * document is publicly readable for any active/pending restaurant
+   * (Firestore has no field-level rules — the whole document or
+   * nothing), so anything placed here is effectively public. Task K
+   * moved claimant PII off this type after Task J's audit found it
+   * was previously stored here and therefore retrievable by any
+   * unauthenticated Firestore client, despite never being rendered by
+   * any UI — see docs/PRODUCTION-READINESS-AUDIT.md's "J-01". Do not
+   * add claimant PII back here; add it to `RestaurantClaimDoc`
+   * instead. */
   ownerClaimStatus?: RestaurantOwnerClaimStatus;
-  /** Uid of the user who submitted an ownership claim. Deliberately
-   *  separate from `ownerUid` — submitting a claim never grants edit
-   *  access by itself. Only an admin approving the claim may also set
-   *  `ownerUid`; no client-writable path can set `ownerUid` from
-   *  `claimantUid` directly (see firestore.rules). */
-  claimantUid?: string;
-  /** Contact/evidence details supplied with a claim submission — see
-   *  docs/RESTAURANT-CLAIM-WORKFLOW.md. Collected once, at submission
-   *  time, so an admin has something to verify the claimant against
-   *  beyond a bare uid. `claimantName`/`claimantContactEmail` are
-   *  required by firestore.rules at submission; the rest are optional.
-   *  None of this is identity-document verification — see the doc's
-   *  "What this task did not do" section. */
-  claimantName?: string;
-  claimantRole?: string;
-  claimantContactEmail?: string;
-  claimantContactPhone?: string;
-  claimantNote?: string;
-  claimSubmittedAt?: unknown;
-  claimDecidedAt?: unknown;
-  /** Uid of the admin who approved/rejected the claim — an audit
-   *  trail field, not an authorization source. */
-  claimDecidedBy?: string;
 
   /** Owner-approved translations of THIS restaurant's OWN supplied
    *  content — see docs/MULTILINGUAL-ARCHITECTURE.md's "Restaurant-
@@ -900,6 +891,59 @@ export type RestaurantCorrectionRequestDoc = {
   moderatedBy?: string;
   moderatedAt?: unknown;
   moderationNote?: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
+
+/** An individual ownership claim's own lifecycle — distinct from
+ *  `RestaurantOwnerClaimStatus` (the restaurant's overall, public
+ *  claim-workflow phase: "has this restaurant ever been claimed, and
+ *  is a claim currently pending"). A claim record only exists once
+ *  someone has actually submitted one, so there is no "unclaimed"
+ *  value here — that's the absence of a claim, not a state of one. */
+export type RestaurantClaimStatus = "pending" | "approved" | "rejected";
+
+/** The private record of a single restaurant-ownership claim — see
+ *  docs/RESTAURANT-CLAIM-WORKFLOW.md and
+ *  docs/PRODUCTION-READINESS-AUDIT.md's "J-01". Holds the claimant's
+ *  identity/contact details, which used to live inline on the public
+ *  `RestaurantDoc` (a real privacy defect Task K fixed — any
+ *  active/pending restaurant's entire document, including that data,
+ *  was retrievable by an unauthenticated Firestore client, since
+ *  Firestore has no field-level rules). Never publicly readable —
+ *  see firestore.rules' `restaurant_claims` block: only the claimant
+ *  themselves and admins may read a given record, and only an admin
+ *  may ever change its `status` or record a decision.
+ *
+ *  A claim submission creates this document AND sets
+ *  `restaurants/{restaurantId}.ownerClaimStatus = 'claim_pending'` in
+ *  one client-side Firestore WriteBatch (atomic — both succeed or
+ *  neither does) — see `components/restaurants/RestaurantClaimPanel.tsx`.
+ *  Approving/rejecting similarly batches this document's `status`
+ *  update together with the restaurant document's own
+ *  `ownerClaimStatus` (and, on approval, `ownerUid`) update — see
+ *  `app/admin/restaurant-claims/page.tsx`. */
+export type RestaurantClaimDoc = {
+  id: string;
+  restaurantId: string;
+  /** Must equal the uid of whoever created this document — enforced
+   *  by firestore.rules, never trusted from the client alone. */
+  claimantUid: string;
+  /** Required at submission — the two things an admin actually needs
+   *  to evaluate and reach a real claimant. */
+  claimantName: string;
+  claimantContactEmail: string;
+  /** Optional context — never identity-document verification, see
+   *  docs/RESTAURANT-CLAIM-WORKFLOW.md's "What this task did not do". */
+  claimantRole?: string;
+  claimantContactPhone?: string;
+  claimantNote?: string;
+  status: RestaurantClaimStatus;
+  submittedAt?: unknown;
+  decidedAt?: unknown;
+  /** Uid of the admin who approved/rejected this claim — an audit
+   *  trail field, not an authorization source. */
+  decidedBy?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
 };

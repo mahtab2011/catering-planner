@@ -48,6 +48,11 @@ rules_version = '2';
 //     import-pipeline staging/review foundation — see
 //     docs/RESTAURANT-IMPORT-PIPELINE.md. Entirely admin-only, no
 //     client create path at all. Not one of the original 28.
+//   - restaurant_translation_requests: added for the restaurant
+//     content-translation request workflow — see
+//     docs/MULTILINGUAL-ARCHITECTURE.md. Owner-only create (status
+//     REQUESTED, cross-checked against the restaurant's own
+//     ownerUid), admin-only thereafter. Not one of the original 28.
 //   - staff, customers, events, sales_signups, blackcab_early_access,
 //     blackcab_bookings, blackcab_journey_ratings, blackcab_concerns,
 //     blackcab_signups, catering_house_signups, customer_signups,
@@ -316,6 +321,53 @@ service cloud.firestore {
     match /restaurant_import_candidates/{candidateId} {
       allow read, update, delete: if isAdmin();
       allow create: if false;
+    }
+
+    // ---------- restaurant_translation_requests ----------
+    // Data architecture for OPTIONAL, PAID, restaurant-approved
+    // translations of a restaurant's own content — see
+    // docs/MULTILINGUAL-ARCHITECTURE.md's "Restaurant-supplied
+    // content" policy. NO pricing or payment processing is
+    // implemented anywhere in this codebase; this collection is the
+    // request/workflow record only.
+    //
+    // Only the ACTUAL owner of the target restaurant may create a
+    // request (cross-checked against restaurants/{restaurantId}.ownerUid
+    // via get(), not just self-asserted), and only in status
+    // 'REQUESTED' — a client can never set any other status, and can
+    // never set quotedAmount/quotedCurrency/paymentReceivedAt at
+    // create time (pricing is an admin/ops-only, plain-stored-value
+    // decision made afterwards, never client-supplied or computed).
+    // Every later transition (QUOTED, PAYMENT_PENDING, IN_TRANSLATION,
+    // OWNER_REVIEW, PUBLISHED, CANCELLED) is admin-only through this
+    // collection. Reaching PUBLISHED here does NOT itself write
+    // RestaurantDoc.contentTranslations — that still requires a
+    // separate, deliberate admin write to the restaurant document
+    // (via the existing isAdmin() branch on /restaurants/{id}), so a
+    // translation can never appear live without a human explicitly
+    // publishing it there too.
+
+    match /restaurant_translation_requests/{requestId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.requestedByUid == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.requestedByUid == request.auth.uid
+        && request.resource.data.status == 'REQUESTED'
+        && request.resource.data.restaurantId is string
+        && request.resource.data.restaurantId.size() > 0
+        && get(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)).data.ownerUid == request.auth.uid
+        && !('quotedAmount' in request.resource.data)
+        && !('quotedCurrency' in request.resource.data)
+        && !('paymentReceivedAt' in request.resource.data)
+        && !('publishedAt' in request.resource.data);
+
+      // Only an admin may progress the workflow from here.
+      allow update: if isAdmin()
+        && unchanged('restaurantId')
+        && unchanged('requestedByUid');
+
+      allow delete: if isAdmin();
     }
 
     // ---------- restaurant_signups ----------

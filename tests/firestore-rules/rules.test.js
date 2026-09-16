@@ -36,6 +36,16 @@
  * candidates), denial of non-admin/anonymous read, admin read, denial
  * of non-admin status update, admin status update (review decision),
  * denial of non-admin delete, and admin delete.
+ *
+ * Also covers the restaurant content-translation request workflow
+ * (restaurant_translation_requests): owner-only create in status
+ * REQUESTED (cross-checked against the restaurant's own ownerUid via
+ * get()), denial of a non-owner creating a request, denial of
+ * impersonating another user's request, denial of creating with a
+ * non-REQUESTED status or a client-supplied price, denial of a
+ * non-admin/non-requester reading a request, denial of the requester
+ * progressing their own request's workflow, and admin-only workflow
+ * progression.
  */
 
 import { readFileSync } from "node:fs";
@@ -712,6 +722,131 @@ describe("restaurant_import_candidates (admin-only staging queue)", () => {
   it("lets an admin delete a candidate", async () => {
     await seedCandidate();
     await assertSucceeds(deleteDoc(doc(asAdmin(), "restaurant_import_candidates", "cand1")));
+  });
+});
+
+describe("restaurant_translation_requests (owner-create, admin-progress)", () => {
+  async function seedOwnedRestaurant(id = "r-translate-1", ownerUid = "owner-1") {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurants", id), {
+        name: "Test Restaurant",
+        ownerUid,
+        citySlug: "london",
+        status: "active",
+      });
+    });
+  }
+
+  it("lets the actual restaurant owner create a REQUESTED translation request", async () => {
+    await seedOwnedRestaurant();
+    await assertSucceeds(
+      addDoc(collection(asUser("owner-1"), "restaurant_translation_requests"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      })
+    );
+  });
+
+  it("denies a user who does not own the restaurant from creating a request", async () => {
+    await seedOwnedRestaurant();
+    await assertFails(
+      addDoc(collection(asUser("someone-else"), "restaurant_translation_requests"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "someone-else",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      })
+    );
+  });
+
+  it("denies impersonating another user's request", async () => {
+    await seedOwnedRestaurant();
+    await assertFails(
+      addDoc(collection(asUser("owner-1"), "restaurant_translation_requests"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "someone-else",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      })
+    );
+  });
+
+  it("denies creating a request with a non-REQUESTED status", async () => {
+    await seedOwnedRestaurant();
+    await assertFails(
+      addDoc(collection(asUser("owner-1"), "restaurant_translation_requests"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "PUBLISHED",
+      })
+    );
+  });
+
+  it("denies a client setting a price at creation time", async () => {
+    await seedOwnedRestaurant();
+    await assertFails(
+      addDoc(collection(asUser("owner-1"), "restaurant_translation_requests"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+        quotedAmount: 50,
+        quotedCurrency: "GBP",
+      })
+    );
+  });
+
+  it("denies a non-admin, non-requester reading a request", async () => {
+    await seedOwnedRestaurant();
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      });
+    });
+    await assertSucceeds(getDoc(doc(asUser("owner-1"), "restaurant_translation_requests", "req1")));
+    await assertFails(getDoc(doc(asUser("random-user"), "restaurant_translation_requests", "req1")));
+  });
+
+  it("denies the requester progressing their own request's workflow", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      });
+    });
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurant_translation_requests", "req1"), {
+        status: "QUOTED",
+        quotedAmount: 50,
+      })
+    );
+  });
+
+  it("lets an admin progress the workflow (e.g. to QUOTED)", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      });
+    });
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurant_translation_requests", "req1"), {
+        status: "QUOTED",
+        quotedAmount: 50,
+        quotedCurrency: "GBP",
+        quotedAt: serverTimestamp(),
+      })
+    );
   });
 });
 

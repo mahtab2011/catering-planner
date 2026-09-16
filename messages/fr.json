@@ -71,10 +71,13 @@
 
   "Restaurants": {
     "title": "Restaurants",
+    "subtitle": "Parcourez les restaurants des pôles culinaires de Londres. Recherchez par nom, propriétaire, pôle, quartier, cuisine ou plat populaire.",
     "searchLabel": "Rechercher",
     "searchPlaceholder": "Rechercher un restaurant, un propriétaire, un pôle, un quartier...",
     "hubLabel": "Pôle culinaire",
+    "regionLabel": "Région",
     "cuisineLabel": "Cuisine",
+    "dietaryLabel": "Régime",
     "statusLabel": "Statut",
     "all": "Tous",
     "clearFilters": "Réinitialiser les filtres",
@@ -83,7 +86,11 @@
     "noRestaurantsFound": "Aucun restaurant trouvé",
     "tryAnotherSearch": "Essayez un autre terme de recherche ou réinitialisez les filtres.",
     "viewProfileMenu": "Voir le profil et le menu",
-    "highlights": "Points forts"
+    "highlights": "Points forts",
+    "suppliers": "Fournisseurs",
+    "riders": "Livreurs",
+    "addRestaurant": "Ajouter un restaurant",
+    "placesCount": "{count} établissements"
   },
 
   "Dietary": {

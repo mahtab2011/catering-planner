@@ -71,10 +71,13 @@
 
   "Restaurants": {
     "title": "المطاعم",
+    "subtitle": "تصفح قوائم المطاعم عبر مراكز الطعام في لندن. ابحث بالاسم أو المالك أو المركز أو المنطقة أو نوع المأكولات أو الأطباق الشائعة.",
     "searchLabel": "بحث",
     "searchPlaceholder": "ابحث عن مطعم أو مالك أو مركز أو منطقة...",
     "hubLabel": "المركز",
+    "regionLabel": "المنطقة الإقليمية",
     "cuisineLabel": "نوع المأكولات",
+    "dietaryLabel": "النظام الغذائي",
     "statusLabel": "الحالة",
     "all": "الكل",
     "clearFilters": "مسح الفلاتر",
@@ -83,7 +86,11 @@
     "noRestaurantsFound": "لم يتم العثور على مطاعم",
     "tryAnotherSearch": "جرّب كلمة بحث أخرى أو أعد ضبط الفلاتر.",
     "viewProfileMenu": "عرض الملف والقائمة",
-    "highlights": "أبرز العناصر"
+    "highlights": "أبرز العناصر",
+    "suppliers": "الموردون",
+    "riders": "السائقون",
+    "addRestaurant": "أضف مطعمًا",
+    "placesCount": "{count} مكان"
   },
 
   "Dietary": {

@@ -71,10 +71,13 @@
 
   "Restaurants": {
     "title": "রেস্টুরেন্ট",
+    "subtitle": "লন্ডনের ফুড হাব জুড়ে রেস্টুরেন্ট তালিকা দেখুন। নাম, মালিক, হাব, এলাকা, খাবারের ধরন বা জনপ্রিয় পদ দিয়ে খুঁজুন।",
     "searchLabel": "খুঁজুন",
     "searchPlaceholder": "রেস্টুরেন্ট, মালিক, হাব, এলাকা খুঁজুন...",
     "hubLabel": "হাব",
+    "regionLabel": "অঞ্চল",
     "cuisineLabel": "খাবারের ধরন",
+    "dietaryLabel": "ডায়েটারি",
     "statusLabel": "অবস্থা",
     "all": "সব",
     "clearFilters": "ফিল্টার মুছুন",
@@ -83,7 +86,11 @@
     "noRestaurantsFound": "কোনো রেস্টুরেন্ট পাওয়া যায়নি",
     "tryAnotherSearch": "অন্য একটি অনুসন্ধান শব্দ ব্যবহার করুন অথবা ফিল্টার রিসেট করুন।",
     "viewProfileMenu": "প্রোফাইল ও মেনু দেখুন",
-    "highlights": "বিশেষ আকর্ষণ"
+    "highlights": "বিশেষ আকর্ষণ",
+    "suppliers": "সরবরাহকারী",
+    "riders": "রাইডার",
+    "addRestaurant": "রেস্টুরেন্ট যোগ করুন",
+    "placesCount": "{count}টি জায়গা"
   },
 
   "Dietary": {

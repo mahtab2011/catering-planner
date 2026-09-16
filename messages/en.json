@@ -71,10 +71,13 @@
 
   "Restaurants": {
     "title": "Restaurants",
+    "subtitle": "Browse restaurant listings across London food hubs. Search by restaurant name, owner, hub, area, cuisine, tags, or popular items.",
     "searchLabel": "Search",
     "searchPlaceholder": "Search restaurant, owner, hub, area...",
     "hubLabel": "Hub",
+    "regionLabel": "Region",
     "cuisineLabel": "Cuisine",
+    "dietaryLabel": "Dietary",
     "statusLabel": "Status",
     "all": "All",
     "clearFilters": "Clear filters",
@@ -83,7 +86,11 @@
     "noRestaurantsFound": "No restaurants found",
     "tryAnotherSearch": "Try another search term or reset the filters.",
     "viewProfileMenu": "View Profile & Menu",
-    "highlights": "Highlights"
+    "highlights": "Highlights",
+    "suppliers": "Suppliers",
+    "riders": "Riders",
+    "addRestaurant": "Add Restaurant",
+    "placesCount": "{count} places"
   },
 
   "Dietary": {

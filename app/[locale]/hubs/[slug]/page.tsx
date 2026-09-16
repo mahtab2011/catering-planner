@@ -10,6 +10,7 @@ import { getHubBySlug } from "@/lib/hubs";
 import { getAllCuisines } from "@/lib/cuisines";
 import { buildDietaryBadgeAttributes } from "@/lib/dietary";
 import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import { belongsToActiveCity } from "@/lib/cities";
 import type { AppLanguage } from "@/lib/i18n";
 import type { DietaryAttribute, RestaurantContentTranslation } from "@/lib/types";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
@@ -30,6 +31,7 @@ type LiveRestaurant = {
   dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
   status?: string;
+  citySlug?: string;
   rating?: number;
   reviewCount?: number;
   /** See docs/MULTILINGUAL-ARCHITECTURE.md — owner-approved
@@ -74,8 +76,11 @@ export default function HubDetailPage({ params }: { params: Promise<{ slug: stri
         }));
 
         if (!cancelled) {
+          // London is the only active launch city — see
+          // docs/RESTAURANT-DISCOVERY.md.
           setRestaurants(
             rows.filter((r) => {
+              if (!belongsToActiveCity(r.citySlug)) return false;
               const hubName = safeText(r.hubName).toLowerCase();
               const targetName = (hub?.name || formatSlug(slug)).toLowerCase();
               return hubName && (hubName === targetName || hubName.includes(slug.replace(/-/g, " ")));

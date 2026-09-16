@@ -11,6 +11,7 @@ import { getAllCuisines, getCuisineDisplayName, restaurantMatchesCuisineSlug } f
 import { getAllHubs } from "@/lib/hubs";
 import { buildDietaryBadgeAttributes } from "@/lib/dietary";
 import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import { belongsToActiveCity } from "@/lib/cities";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
@@ -30,6 +31,7 @@ type LiveRestaurant = {
   dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
   status?: string;
+  citySlug?: string;
   rating?: number;
   reviewCount?: number;
   /** See docs/MULTILINGUAL-ARCHITECTURE.md — owner-approved
@@ -69,7 +71,11 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
           ...(docSnap.data() as Omit<LiveRestaurant, "id">),
         }));
         if (!cancelled) {
-          setRestaurants(rows.filter((r) => restaurantMatchesCuisineSlug(r, cuisine)));
+          // London is the only active launch city — see
+          // docs/RESTAURANT-DISCOVERY.md.
+          setRestaurants(
+            rows.filter((r) => belongsToActiveCity(r.citySlug) && restaurantMatchesCuisineSlug(r, cuisine))
+          );
         }
       } catch (error) {
         console.error("Failed to load restaurants for cuisine page:", error);

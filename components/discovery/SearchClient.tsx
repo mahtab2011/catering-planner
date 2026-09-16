@@ -8,6 +8,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAllCuisines, getCuisineDisplayName } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
+import { belongsToActiveCity } from "@/lib/cities";
 import type { ArticleDoc } from "@/lib/types";
 import { getLocalizedArticleContent } from "@/lib/articles";
 import SiteHeader from "@/components/discovery/SiteHeader";
@@ -23,6 +24,7 @@ type LiveRestaurant = {
   fullAddress?: string;
   shortDescription?: string;
   status?: string;
+  citySlug?: string;
   menuCategories?: { category?: string; items?: { name?: string }[] }[];
 };
 
@@ -57,8 +59,12 @@ export default function SearchClient() {
         ]);
 
         if (!cancelled) {
+          // London is the only active launch city — see
+          // docs/RESTAURANT-DISCOVERY.md.
           setRestaurants(
-            restaurantSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<LiveRestaurant, "id">) }))
+            restaurantSnap.docs
+              .map((d) => ({ id: d.id, ...(d.data() as Omit<LiveRestaurant, "id">) }))
+              .filter((r) => belongsToActiveCity(r.citySlug))
           );
           setArticles(articleSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ArticleDoc, "id">) })));
         }

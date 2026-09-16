@@ -64,3 +64,23 @@ export function getActiveCities(): City[] {
  *  which edition a given deployment serves — or supporting more than
  *  one at once — is a change in one place. */
 export const DEFAULT_CITY_SLUG = "london";
+
+/**
+ * Does a listing belong to this deployment's active city edition?
+ *
+ * A missing `citySlug` counts as belonging (returns true) —
+ * deliberately, not a bug: every restaurant that exists today predates
+ * or otherwise lacks this field was created before/without
+ * `citySlug`, back when London was implicitly the only possibility
+ * (see `firestore.rules`' `restaurants` create rule, which has
+ * required `citySlug` on every NEW restaurant since the multi-city
+ * architecture was introduced — but does not retroactively backfill
+ * older documents). Treating "no citySlug" as "this city" avoids
+ * silently hiding real, already-live restaurants just because they
+ * predate the field — see docs/RESTAURANT-DISCOVERY.md's "London-only
+ * scope" section. This is a client-side READ-time filter only; it
+ * never writes or migrates any restaurant document.
+ */
+export function belongsToActiveCity(citySlug: string | undefined, activeCitySlug: string = DEFAULT_CITY_SLUG): boolean {
+  return !citySlug || citySlug === activeCitySlug;
+}

@@ -90,6 +90,7 @@
     "regionLabel": "Region",
     "cuisineLabel": "Cuisine",
     "dietaryLabel": "Dietary",
+    "serviceLabel": "Service",
     "statusLabel": "Status",
     "all": "All",
     "clearFilters": "Clear filters",

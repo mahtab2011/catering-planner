@@ -90,6 +90,7 @@
     "regionLabel": "Région",
     "cuisineLabel": "Cuisine",
     "dietaryLabel": "Régime",
+    "serviceLabel": "Service",
     "statusLabel": "Statut",
     "all": "Tous",
     "clearFilters": "Réinitialiser les filtres",

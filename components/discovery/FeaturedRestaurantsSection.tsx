@@ -8,6 +8,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { buildDietaryBadgeAttributes } from "@/lib/dietary";
 import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import { belongsToActiveCity } from "@/lib/cities";
 import type { DietaryAttribute, RestaurantContentTranslation } from "@/lib/types";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 
@@ -26,6 +27,7 @@ type LiveRestaurant = {
   dietaryCertifications?: DietaryAttribute[];
   isFeatured?: boolean;
   status?: string;
+  citySlug?: string;
   rating?: number;
   reviewCount?: number;
   /** See docs/MULTILINGUAL-ARCHITECTURE.md — owner-approved
@@ -53,10 +55,14 @@ export default function FeaturedRestaurantsSection() {
           where("status", "in", ["active", "pending"])
         );
         const snap = await getDocs(q);
-        const rows: LiveRestaurant[] = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Omit<LiveRestaurant, "id">),
-        }));
+        // London is the only active launch city — see
+        // docs/RESTAURANT-DISCOVERY.md.
+        const rows: LiveRestaurant[] = snap.docs
+          .map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<LiveRestaurant, "id">),
+          }))
+          .filter((r) => belongsToActiveCity(r.citySlug));
 
         const featured = rows.filter((r) => r.isFeatured);
         const chosen = (featured.length > 0 ? featured : rows).slice(0, 6);

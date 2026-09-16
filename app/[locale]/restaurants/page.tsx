@@ -6,13 +6,18 @@ import { useLocale, useTranslations } from "next-intl";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { buildDietaryBadgeAttributes, DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
+import { buildDietaryBadgeAttributes, DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_TRANSLATION_KEY } from "@/lib/dietary";
 import { CUISINE_REGION_ORDER, getAllCuisines, getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
 import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import { belongsToActiveCity } from "@/lib/cities";
+import { restaurantHasDietaryAttribute, restaurantOffersService, type ServiceFilterValue } from "@/lib/restaurantDiscoveryFilters";
 import type { Cuisine, DietaryAttribute, RestaurantContentTranslation } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
+
+type ServiceFilter = ServiceFilterValue;
 
 type LiveRestaurant = {
   id: string;
@@ -34,6 +39,7 @@ type LiveRestaurant = {
   cuisineSlugs?: string[];
   tags?: string[];
   priceRange?: string;
+  citySlug?: string;
 
   // Trusted aggregate maintained by a Cloud Function from approved
   // reviews only (see functions/index.js) — never written by a client.
@@ -181,17 +187,6 @@ function restaurantRegions(restaurant: { cuisineSlugs?: string[]; cuisine?: stri
   );
 }
 
-/** Does a restaurant carry a given dietary attribute? Checks the
- *  structured dietaryAttributes/dietaryCertifications arrays and the
- *  legacy isHalal boolean — see lib/dietary.ts. */
-function restaurantHasDietaryAttribute(restaurant: LiveRestaurant, attr: DietaryAttribute): boolean {
-  if (attr === "halal" && restaurant.isHalal) return true;
-  return (
-    (restaurant.dietaryAttributes || []).includes(attr) ||
-    (restaurant.dietaryCertifications || []).includes(attr)
-  );
-}
-
 export default function RestaurantsPage() {
   return (
     <Suspense fallback={null}>
@@ -202,8 +197,12 @@ export default function RestaurantsPage() {
 
 function RestaurantsPageContent() {
   const t = useTranslations("Restaurants");
+  const tDetail = useTranslations("RestaurantDetail");
+  const tDietary = useTranslations("Dietary");
   const locale = useLocale();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [restaurants, setRestaurants] = useState<LiveRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("q") || "");
@@ -213,9 +212,38 @@ function RestaurantsPageContent() {
   const [selectedDietary, setSelectedDietary] = useState<"All" | DietaryAttribute>(
     (searchParams.get("dietary") as DietaryAttribute | null) || "All"
   );
+  const [selectedService, setSelectedService] = useState<ServiceFilter>(
+    (searchParams.get("service") as ServiceFilter | null) || "All"
+  );
   const [selectedStatus, setSelectedStatus] = useState("active");
 
   const allCuisineDefs = useMemo(() => getAllCuisines(), []);
+
+  const serviceLabel: Record<Exclude<ServiceFilter, "All">, string> = {
+    dineIn: tDetail("dineIn"),
+    takeaway: tDetail("takeaway"),
+    delivery: tDetail("delivery"),
+    collection: tDetail("collection"),
+  };
+
+  // Reflects the active filters/search in the URL so a reload or a
+  // shared link reproduces the same view — see
+  // docs/RESTAURANT-DISCOVERY.md's "URL state" section. Shallow
+  // (`replace`, no history entry per keystroke) and locale-safe (uses
+  // the app/[locale] navigation wrapper, not next/navigation
+  // directly), so it never drops the current locale prefix.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("q", search.trim());
+    if (selectedHub !== "All") params.set("hub", selectedHub);
+    if (selectedCuisine !== "All") params.set("cuisine", selectedCuisine);
+    if (selectedRegion !== "All") params.set("region", selectedRegion);
+    if (selectedDietary !== "All") params.set("dietary", selectedDietary);
+    if (selectedService !== "All") params.set("service", selectedService);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, selectedHub, selectedCuisine, selectedRegion, selectedDietary, selectedService]);
 
   /** Canonical English cuisine name -> localized display name, for
    *  the filter dropdown's labels. The dropdown's underlying value
@@ -238,7 +266,13 @@ function RestaurantsPageContent() {
           const data = docSnap.data() as Omit<LiveRestaurant, "id">;
           return { id: docSnap.id, ...data };
         });
-        setRestaurants(rows);
+        // London is the only active launch city — see
+        // docs/RESTAURANT-DISCOVERY.md. Filtered client-side (not via
+        // a Firestore `where`) so this never requires a new composite
+        // index, and so restaurants that predate `citySlug` (treated
+        // as belonging to the active city — see
+        // belongsToActiveCity()) still show up.
+        setRestaurants(rows.filter((r) => belongsToActiveCity(r.citySlug)));
       } catch (error) {
         console.error("Failed to load restaurants:", error);
         setRestaurants([]);
@@ -288,11 +322,25 @@ function RestaurantsPageContent() {
       const matchesDietary =
         selectedDietary === "All" || restaurantHasDietaryAttribute(restaurant, selectedDietary);
 
+      const matchesService = restaurantOffersService(restaurant, selectedService);
+
       const matchesStatus = selectedStatus === "All" || safeText(restaurant.status) === selectedStatus;
 
-      return matchesSearch && matchesHub && matchesCuisine && matchesRegion && matchesDietary && matchesStatus;
+      return (
+        matchesSearch && matchesHub && matchesCuisine && matchesRegion && matchesDietary && matchesService && matchesStatus
+      );
     });
-  }, [restaurants, search, selectedHub, selectedCuisine, selectedRegion, selectedDietary, selectedStatus, allCuisineDefs]);
+  }, [
+    restaurants,
+    search,
+    selectedHub,
+    selectedCuisine,
+    selectedRegion,
+    selectedDietary,
+    selectedService,
+    selectedStatus,
+    allCuisineDefs,
+  ]);
 
   const visibleHubs = useMemo(() => {
     const hubsFromFiltered = uniqueStrings(filteredRestaurants.map((r) => r.hubName));
@@ -417,8 +465,25 @@ function RestaurantsPageContent() {
               >
                 <option value="All">{t("all")}</option>
                 {DIETARY_ATTRIBUTES.map((attr) => (
-                  <option key={attr} value={attr}>{DIETARY_ATTRIBUTE_LABELS[attr]}</option>
+                  <option key={attr} value={attr}>{tDietary(DIETARY_ATTRIBUTE_TRANSLATION_KEY[attr])}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-neutral-700">
+                {t("serviceLabel")}
+              </label>
+              <select
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value as ServiceFilter)}
+                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none focus:border-amber-500"
+              >
+                <option value="All">{t("all")}</option>
+                <option value="dineIn">{serviceLabel.dineIn}</option>
+                <option value="takeaway">{serviceLabel.takeaway}</option>
+                <option value="delivery">{serviceLabel.delivery}</option>
+                <option value="collection">{serviceLabel.collection}</option>
               </select>
             </div>
 
@@ -432,8 +497,8 @@ function RestaurantsPageContent() {
                 className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none focus:border-amber-500"
               >
                 <option value="All">{t("all")}</option>
-                <option value="active">active</option>
-                <option value="pending">pending</option>
+                <option value="active">{tDetail("liveListing")}</option>
+                <option value="pending">{tDetail("pendingApproval")}</option>
               </select>
             </div>
           </div>
@@ -451,6 +516,7 @@ function RestaurantsPageContent() {
                 setSelectedCuisine("All");
                 setSelectedRegion("All");
                 setSelectedDietary("All");
+                setSelectedService("All");
                 setSelectedStatus("active");
               }}
               className="rounded-full border border-neutral-300 bg-white px-3 py-1 font-medium text-neutral-700 hover:bg-neutral-50"

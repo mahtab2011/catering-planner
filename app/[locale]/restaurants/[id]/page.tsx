@@ -9,8 +9,11 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import RestaurantReviews from "@/components/reviews/RestaurantReviews";
 import { isRTLLocale } from "@/lib/locales";
+import { DIETARY_ATTRIBUTE_TRANSLATION_KEY } from "@/lib/dietary";
+import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
 import type {
   DietaryAttribute,
+  RestaurantContentTranslation,
   RestaurantDataConfidence,
   RestaurantOwnerClaimStatus,
   RestaurantSourceType,
@@ -53,6 +56,12 @@ type LiveRestaurant = {
 
   shortDescription?: string;
   longDescription?: string;
+  /** Owner-approved translations of this restaurant's own content —
+   *  see docs/MULTILINGUAL-ARCHITECTURE.md. Absent for every
+   *  restaurant today (no paid translation has ever been requested or
+   *  approved); read via getLocalizedRestaurantContent() below, which
+   *  falls back to the original text unchanged when absent. */
+  contentTranslations?: Partial<Record<string, RestaurantContentTranslation>>;
   popularItems?: string[];
 
   coverImage?: string;
@@ -95,17 +104,6 @@ type LiveRestaurant = {
 
   createdAt?: any;
   updatedAt?: any;
-};
-
-// Maps DietaryAttribute's snake_case values to the Dietary message
-// namespace's camelCase keys.
-const DIETARY_TRANSLATION_KEY: Record<DietaryAttribute, string> = {
-  vegetarian: "vegetarian",
-  vegan: "vegan",
-  non_vegetarian: "nonVegetarian",
-  halal: "halal",
-  kosher: "kosher",
-  jain: "jain",
 };
 
 function normalizeUrl(url?: string) {
@@ -228,6 +226,14 @@ export default function RestaurantDetailPage() {
     );
   }
 
+  // Restaurant-supplied content (name/description) — NEVER
+  // auto-translated. Falls back to the original text unchanged
+  // unless the restaurant itself has an admin-published, owner-
+  // approved translation for this locale — see
+  // docs/MULTILINGUAL-ARCHITECTURE.md and
+  // lib/restaurantTranslations.ts. No restaurant has one today.
+  const content = getLocalizedRestaurantContent(restaurant, locale);
+
   const statusLabel =
     restaurant.status === "active"
       ? t("liveListing")
@@ -281,7 +287,7 @@ export default function RestaurantDetailPage() {
         <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
           {safeText(restaurant.coverImage) ? (
             <div className="relative h-64 w-full bg-neutral-100 md:h-96">
-              <img src={restaurant.coverImage} alt={restaurant.name} className="h-full w-full object-cover" />
+              <img src={restaurant.coverImage} alt={content.name} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-linear-to-t from-black/50 via-black/10 to-transparent" />
             </div>
           ) : (
@@ -334,7 +340,7 @@ export default function RestaurantDetailPage() {
                     key={attr}
                     className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
                   >
-                    {tDietary(DIETARY_TRANSLATION_KEY[attr])}
+                    {tDietary(DIETARY_ATTRIBUTE_TRANSLATION_KEY[attr])}
                   </span>
                 ))}
 
@@ -349,10 +355,10 @@ export default function RestaurantDetailPage() {
               <div>
                 <div className="text-sm font-medium text-neutral-500">{t("openingSoon")}</div>
 
-                <h1 className="mt-2 text-3xl font-bold text-neutral-900 md:text-5xl">{restaurant.name}</h1>
+                <h1 className="mt-2 text-3xl font-bold text-neutral-900 md:text-5xl">{content.name}</h1>
 
                 <p className="mt-4 max-w-4xl text-base leading-7 text-neutral-700">
-                  {safeText(restaurant.shortDescription) || t("defaultShortDescription")}
+                  {safeText(content.shortDescription) || t("defaultShortDescription")}
                 </p>
               </div>
 
@@ -446,11 +452,11 @@ export default function RestaurantDetailPage() {
                 </div>
               </div>
 
-              {safeText(restaurant.longDescription) ? (
+              {safeText(content.longDescription) ? (
                 <div className="mt-6 rounded-2xl border border-neutral-200 p-5">
                   <div className="text-sm font-semibold text-neutral-900">{t("fullDescription")}</div>
                   <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-700">
-                    {restaurant.longDescription}
+                    {content.longDescription}
                   </p>
                 </div>
               ) : null}
@@ -562,13 +568,13 @@ export default function RestaurantDetailPage() {
               />
               <RestaurantClaimPanel
                 restaurantId={restaurant.id}
-                restaurantName={restaurant.name}
+                restaurantName={content.name}
                 ownerUid={restaurant.ownerUid}
                 ownerClaimStatus={restaurant.ownerClaimStatus}
               />
             </section>
 
-            <RestaurantReviews restaurantId={restaurant.id} restaurantName={restaurant.name} />
+            <RestaurantReviews restaurantId={restaurant.id} restaurantName={content.name} />
           </section>
 
           <aside className="space-y-6">

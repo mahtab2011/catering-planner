@@ -2,12 +2,13 @@
 
 import NextLink from "next/link";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { buildDietaryBadgeLabels } from "@/lib/dietary";
-import type { DietaryAttribute } from "@/lib/types";
+import { buildDietaryBadgeAttributes } from "@/lib/dietary";
+import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import type { DietaryAttribute, RestaurantContentTranslation } from "@/lib/types";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 
 type LiveRestaurant = {
@@ -27,6 +28,9 @@ type LiveRestaurant = {
   status?: string;
   rating?: number;
   reviewCount?: number;
+  /** See docs/MULTILINGUAL-ARCHITECTURE.md — owner-approved
+   *  translations only, never auto-translated. */
+  contentTranslations?: Partial<Record<string, RestaurantContentTranslation>>;
 };
 
 function safeText(value?: string) {
@@ -35,6 +39,7 @@ function safeText(value?: string) {
 
 export default function FeaturedRestaurantsSection() {
   const t = useTranslations("Home");
+  const locale = useLocale();
   const [restaurants, setRestaurants] = useState<LiveRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -95,21 +100,25 @@ export default function FeaturedRestaurantsSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {restaurants.map((r) => (
+            {restaurants.map((r) => {
+              const content = getLocalizedRestaurantContent(r, locale);
+              return (
               <RestaurantCard
                 key={r.id}
-                name={safeText(r.name) || "Restaurant"}
+                name={safeText(content.name) || "Restaurant"}
                 cuisine={safeText(r.cuisine) || "Cuisine not added"}
                 area={safeText(r.area) || safeText(r.hubName) || "London"}
-                tags={[...buildDietaryBadgeLabels(r), ...(r.tags || [])].slice(0, 5)}
+                dietaryAttributes={buildDietaryBadgeAttributes(r)}
+                ownerTags={r.tags || []}
                 popularItems={(r.popularItems || []).slice(0, 3)}
                 imageUrl={r.coverImage}
-                shortDescription={r.shortDescription}
+                shortDescription={content.shortDescription}
                 rating={r.rating}
                 reviewCount={r.reviewCount}
                 href={`/restaurants/${r.id}`}
               />
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

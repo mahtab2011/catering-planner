@@ -6,9 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { buildDietaryBadgeLabels, DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
+import { buildDietaryBadgeAttributes, DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
 import { CUISINE_REGION_ORDER, getAllCuisines, getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
-import type { Cuisine, DietaryAttribute } from "@/lib/types";
+import { getLocalizedRestaurantContent } from "@/lib/restaurantTranslations";
+import type { Cuisine, DietaryAttribute, RestaurantContentTranslation } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
@@ -70,6 +71,10 @@ type LiveRestaurant = {
   adsEnabled?: boolean;
 
   status?: "draft" | "active" | "pending" | "blocked";
+
+  /** See docs/MULTILINGUAL-ARCHITECTURE.md — owner-approved
+   *  translations only, never auto-translated. */
+  contentTranslations?: Partial<Record<string, RestaurantContentTranslation>>;
 
   createdAt?: any;
   updatedAt?: any;
@@ -507,7 +512,6 @@ function RestaurantsPageContent() {
                                 const tags = [
                                   restaurant.status === "pending" ? "Pending" : "Live Listing",
                                   ...(safeText(restaurant.priceRange) ? [safeText(restaurant.priceRange)] : []),
-                                  ...buildDietaryBadgeLabels(restaurant),
                                   ...(restaurant.isHmcApproved ? ["HMC Approved"] : []),
                                   ...(restaurant.isPremium ? ["Premium"] : []),
                                   ...serviceTags.slice(0, 2),
@@ -518,15 +522,19 @@ function RestaurantsPageContent() {
                                   ...(safeText(restaurant.area) ? [safeText(restaurant.area)] : []),
                                 ].slice(0, 3);
 
+                                const content = getLocalizedRestaurantContent(restaurant, locale);
+
                                 return (
                                   <RestaurantCard
                                     key={restaurant.id}
-                                    name={safeText(restaurant.name) || "Restaurant"}
+                                    name={safeText(content.name) || "Restaurant"}
                                     cuisine={safeText(restaurant.cuisine) || "Cuisine not added"}
                                     area={safeText(restaurant.area) || safeText(restaurant.hubName) || "Area not added"}
                                     rating={restaurant.rating}
                                     reviewCount={restaurant.reviewCount}
                                     tags={tags}
+                                    dietaryAttributes={buildDietaryBadgeAttributes(restaurant)}
+                                    ownerTags={restaurant.tags || []}
                                     popularItems={
                                       popularItems.length > 0
                                         ? popularItems

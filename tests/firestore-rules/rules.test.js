@@ -3,13 +3,17 @@
  *
  * NOT RUN IN THIS SESSION. @firebase/rules-unit-testing drives these
  * tests against the real Firestore emulator, which requires a local
- * Java runtime — `java -version` in this sandbox reports "command not
- * found" (see docs/SECURITY-FOLLOWUP.md). These tests were written
- * and reviewed for correctness against the rules language and the
- * actual firestore.rules content, but have never actually executed,
- * and nothing in this repository claims otherwise. Run them for real
- * wherever Java + the Firebase emulator are available — see
- * README.md in this directory.
+ * Java runtime. The harness itself (npm install, dependency
+ * resolution) has been verified to work in this sandbox; the emulator
+ * invocation itself (`npx firebase-tools emulators:exec --only
+ * firestore "npm test"`) fails with "Could not spawn `java -version`.
+ * Please make sure Java is installed and on your system PATH." — see
+ * docs/FIRESTORE-SECURITY-AUDIT.md and docs/SECURITY-FOLLOWUP.md.
+ * These tests were written and reviewed for correctness against the
+ * rules language and the actual firestore.rules content, but have
+ * never actually executed, and nothing in this repository claims
+ * otherwise. Run them for real wherever Java + the Firebase emulator
+ * are available — see README.md in this directory.
  *
  * Covers, at minimum, every scenario requested for launch validation:
  * anonymous public reads, draft article denial, published article
@@ -43,9 +47,13 @@
  * get()), denial of a non-owner creating a request, denial of
  * impersonating another user's request, denial of creating with a
  * non-REQUESTED status or a client-supplied price, denial of a
- * non-admin/non-requester reading a request, denial of the requester
- * progressing their own request's workflow, and admin-only workflow
- * progression.
+ * non-admin/non-requester reading a request, denial of a *different,
+ * verified restaurant owner* (not just an unrelated user) reading
+ * another restaurant's request, denial of the requester progressing
+ * their own request's workflow, admin-only workflow progression, and
+ * denial of an admin reassigning a request's restaurantId or
+ * requestedByUid via update (the two fields the rules pin with
+ * unchanged()).
  */
 
 import { readFileSync } from "node:fs";
@@ -813,6 +821,26 @@ describe("restaurant_translation_requests (owner-create, admin-progress)", () =>
     await assertFails(getDoc(doc(asUser("random-user"), "restaurant_translation_requests", "req1")));
   });
 
+  it("denies a different restaurant's owner reading another restaurant's translation request", async () => {
+    await seedOwnedRestaurant("r-translate-1", "owner-1");
+    await seedOwnedRestaurant("r-translate-2", "owner-2");
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      });
+    });
+    // owner-2 is a real, verified restaurant owner (not just an
+    // unrelated signed-in user) — confirms the read rule scopes on
+    // requestedByUid, not merely "any restaurant owner may read any
+    // translation request."
+    await assertFails(
+      getDoc(doc(asUser("owner-2"), "restaurant_translation_requests", "req1"))
+    );
+  });
+
   it("denies the requester progressing their own request's workflow", async () => {
     await seed(async (db) => {
       await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
@@ -845,6 +873,29 @@ describe("restaurant_translation_requests (owner-create, admin-progress)", () =>
         quotedAmount: 50,
         quotedCurrency: "GBP",
         quotedAt: serverTimestamp(),
+      })
+    );
+  });
+
+  it("denies an admin reassigning a request's restaurantId or requestedByUid", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_translation_requests", "req1"), {
+        restaurantId: "r-translate-1",
+        requestedByUid: "owner-1",
+        targetLocales: ["bn"],
+        status: "REQUESTED",
+      });
+    });
+    await assertFails(
+      updateDoc(doc(asAdmin(), "restaurant_translation_requests", "req1"), {
+        status: "QUOTED",
+        restaurantId: "some-other-restaurant",
+      })
+    );
+    await assertFails(
+      updateDoc(doc(asAdmin(), "restaurant_translation_requests", "req1"), {
+        status: "QUOTED",
+        requestedByUid: "someone-else",
       })
     );
   });

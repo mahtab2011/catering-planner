@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import NextLink from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
   addDoc,
@@ -23,6 +24,8 @@ function tsToMs(value: unknown) {
   return 0;
 }
 
+// /login is a SmartServeUK operational route outside app/[locale] —
+// plain next/link, not the locale-aware Link.
 export default function RestaurantReviews({
   restaurantId,
   restaurantName,
@@ -30,6 +33,8 @@ export default function RestaurantReviews({
   restaurantId: string;
   restaurantName: string;
 }) {
+  const t = useTranslations("Reviews");
+  const tCommon = useTranslations("Common");
   const [reviews, setReviews] = useState<ReviewDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -87,12 +92,12 @@ export default function RestaurantReviews({
     setSubmitError("");
 
     if (!user) {
-      setSubmitError("Please sign in to write a review.");
+      setSubmitError(t("pleaseSignIn"));
       return;
     }
 
     if (!reviewText.trim()) {
-      setSubmitError("Please write a few words about your experience.");
+      setSubmitError(t("pleaseWriteAFewWords"));
       return;
     }
 
@@ -125,7 +130,7 @@ export default function RestaurantReviews({
       setRating(5);
     } catch (error) {
       console.error("Failed to submit review:", error);
-      setSubmitError("Something went wrong submitting your review. Please try again.");
+      setSubmitError(t("submitErrorMessage"));
     } finally {
       setSubmitting(false);
     }
@@ -135,16 +140,16 @@ export default function RestaurantReviews({
     <section className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-neutral-900">Customer Reviews</h2>
+          <h2 className="text-2xl font-bold text-neutral-900">{t("customerReviews")}</h2>
           {reviews.length > 0 ? (
             <div className="mt-2 flex items-center gap-3">
               <span className="text-2xl font-bold text-amber-700">{avg.toFixed(1)}</span>
               <span className="text-sm text-neutral-600">
-                out of 5 · {reviews.length} approved review{reviews.length === 1 ? "" : "s"}
+                {t("outOf5")} · {t("reviewCount", { count: reviews.length })}
               </span>
             </div>
           ) : (
-            <p className="mt-2 text-sm text-neutral-500">No approved reviews yet.</p>
+            <p className="mt-2 text-sm text-neutral-500">{t("noApprovedReviews")}</p>
           )}
         </div>
 
@@ -154,15 +159,15 @@ export default function RestaurantReviews({
             onClick={() => setShowForm((v) => !v)}
             className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
           >
-            {showForm ? "Cancel" : "Write a Review"}
+            {showForm ? t("cancel") : t("writeAReview")}
           </button>
         ) : (
-          <Link
+          <NextLink
             href="/login"
             className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
           >
-            Sign in to write a review
-          </Link>
+            {t("signInToReview")}
+          </NextLink>
         )}
       </div>
 
@@ -173,11 +178,11 @@ export default function RestaurantReviews({
             const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
             return (
               <div key={star} className="flex items-center gap-2 text-xs text-neutral-600">
-                <span className="w-10 shrink-0">{star} star</span>
+                <span className="w-10 shrink-0">{t("starLabel", { count: star })}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100">
                   <div className="h-full bg-amber-400" style={{ width: `${pct}%` }} />
                 </div>
-                <span className="w-8 shrink-0 text-right">{count}</span>
+                <span className="w-8 shrink-0 text-end">{count}</span>
               </div>
             );
           })}
@@ -186,8 +191,7 @@ export default function RestaurantReviews({
 
       {justSubmitted ? (
         <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          Thank you — your review has been submitted and will appear here once it has been
-          approved by our moderation team.
+          {t("thankYouSubmitted")}
         </div>
       ) : null}
 
@@ -195,7 +199,7 @@ export default function RestaurantReviews({
         <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-2xl border border-neutral-200 p-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
-              Your rating of {restaurantName}
+              {t("yourRating", { restaurant: restaurantName })}
             </label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -203,7 +207,7 @@ export default function RestaurantReviews({
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  aria-label={`${star} star${star === 1 ? "" : "s"}`}
+                  aria-label={t("starLabel", { count: star })}
                   className={`h-10 w-10 rounded-full text-lg font-semibold transition ${
                     star <= rating
                       ? "bg-amber-500 text-white"
@@ -218,20 +222,20 @@ export default function RestaurantReviews({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
-              Title (optional)
+              {t("titleOptional")}
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={120}
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-amber-500"
-              placeholder="Sum up your visit"
+              placeholder={t("sumUpVisitPlaceholder")}
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
-              Your review
+              {t("yourReview")}
             </label>
             <textarea
               value={reviewText}
@@ -239,7 +243,7 @@ export default function RestaurantReviews({
               maxLength={2000}
               rows={4}
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-amber-500"
-              placeholder="What did you order? What stood out?"
+              placeholder={t("reviewTextPlaceholder")}
             />
           </div>
 
@@ -250,11 +254,11 @@ export default function RestaurantReviews({
             disabled={submitting}
             className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
           >
-            {submitting ? "Submitting..." : "Submit Review"}
+            {submitting ? t("submitting") : t("submitReview")}
           </button>
 
           <p className="text-xs text-neutral-500">
-            Reviews are checked by our team before they appear publicly.
+            {t("moderationNote")}
           </p>
         </form>
       ) : null}
@@ -262,11 +266,11 @@ export default function RestaurantReviews({
       <div className="mt-6 space-y-4">
         {loading ? (
           <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-            Loading reviews...
+            {tCommon("loading")}
           </div>
         ) : reviews.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-            Be the first to review {restaurantName}.
+            {t("beFirstToReview", { restaurant: restaurantName })}
           </div>
         ) : (
           reviews.map((review) => (

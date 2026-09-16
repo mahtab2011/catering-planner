@@ -132,7 +132,13 @@
     "noApprovedReviews": "No approved reviews yet.",
     "beFirstToReview": "Be the first to review {restaurant}.",
     "outOf5": "out of 5",
-    "reviewCount": "{count, plural, =1 {approved review} other {approved reviews}}"
+    "reviewCount": "{count, plural, =1 {approved review} other {approved reviews}}",
+    "sumUpVisitPlaceholder": "Sum up your visit",
+    "reviewTextPlaceholder": "What did you order? What stood out?",
+    "starLabel": "{count, plural, =1 {1 star} other {# stars}}",
+    "pleaseSignIn": "Please sign in to write a review.",
+    "pleaseWriteAFewWords": "Please write a few words about your experience.",
+    "submitErrorMessage": "Something went wrong submitting your review. Please try again."
   },
 
   "Blog": {
@@ -305,6 +311,20 @@
     "cancel": "Cancel",
     "requestSubmittedMessage": "Thank you — our team will review this shortly.",
     "requestErrorMessage": "Something went wrong submitting your request. Please try again."
+  },
+
+  "ListingNotice": {
+    "originRestaurantSubmitted": "submitted by this business",
+    "originOwnerClaimed": "submitted by this business",
+    "originOpenData": "compiled from a public open dataset",
+    "originLicensedProvider": "supplied by a licensed data provider",
+    "originOfficialPublicSource": "compiled from an official public source",
+    "originEditorialResearch": "compiled by the London Food Hubs editorial team",
+    "originDefault": "provided to London Food Hubs",
+    "mainSentence": "This listing was {origin}{source}.",
+    "claimedSuffix": "This business manages its own listing.",
+    "unclaimedSuffix": "This business has not yet claimed or verified this listing.",
+    "disclaimerBody": "London Food Hubs is not affiliated with, endorsed by, or a certifying body for this business, and this listing does not imply any government, council or tourism-board affiliation. Customer reviews below reflect individual reviewers' own opinions, not London Food Hubs'."
   },
 
   "Footer": {

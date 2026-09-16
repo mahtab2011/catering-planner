@@ -132,7 +132,13 @@
     "noApprovedReviews": "لا توجد تقييمات معتمدة بعد.",
     "beFirstToReview": "كن أول من يقيّم {restaurant}.",
     "outOf5": "من 5",
-    "reviewCount": "{count, plural, one {تقييم معتمد} two {تقييمان معتمدان} few {تقييمات معتمدة} many {تقييمًا معتمدًا} other {تقييم معتمد}}"
+    "reviewCount": "{count, plural, one {تقييم معتمد} two {تقييمان معتمدان} few {تقييمات معتمدة} many {تقييمًا معتمدًا} other {تقييم معتمد}}",
+    "sumUpVisitPlaceholder": "لخّص زيارتك",
+    "reviewTextPlaceholder": "ماذا طلبت؟ ما الذي أعجبك؟",
+    "starLabel": "{count, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+    "pleaseSignIn": "يرجى تسجيل الدخول لكتابة تقييم.",
+    "pleaseWriteAFewWords": "يرجى كتابة بضع كلمات عن تجربتك.",
+    "submitErrorMessage": "حدث خطأ أثناء إرسال تقييمك. يرجى المحاولة مرة أخرى."
   },
 
   "Blog": {
@@ -305,6 +311,20 @@
     "cancel": "إلغاء",
     "requestSubmittedMessage": "شكرًا لك — سيراجع فريقنا هذا قريبًا.",
     "requestErrorMessage": "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى."
+  },
+
+  "ListingNotice": {
+    "originRestaurantSubmitted": "مُقدَّم من هذا المطعم",
+    "originOwnerClaimed": "مُقدَّم من هذا المطعم",
+    "originOpenData": "مُجمَّع من مجموعة بيانات عامة مفتوحة",
+    "originLicensedProvider": "مُقدَّم من مزود بيانات مرخّص",
+    "originOfficialPublicSource": "مُجمَّع من مصدر عام رسمي",
+    "originEditorialResearch": "مُجمَّع من قبل فريق London Food Hubs التحريري",
+    "originDefault": "مُقدَّم إلى London Food Hubs",
+    "mainSentence": "هذا الإعلان {origin}{source}.",
+    "claimedSuffix": "يدير هذا المطعم إعلانه بنفسه.",
+    "unclaimedSuffix": "لم يطالب هذا المطعم بهذا الإعلان أو يتحقق منه بعد.",
+    "disclaimerBody": "London Food Hubs ليست تابعة لهذا المطعم أو معتمِدة له أو جهة اعتماد له، ولا يعني هذا الإعلان وجود أي ارتباط حكومي أو بلدي أو سياحي رسمي. تعكس تقييمات العملاء أدناه آراء المراجعين الفردية، وليست آراء London Food Hubs."
   },
 
   "Footer": {

@@ -619,40 +619,40 @@ export default function RestaurantDetailPage() {
               <div className="mt-4 space-y-3 text-sm text-neutral-700">
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("restaurantId")}</span>
-                  <span className="break-all text-right font-medium text-neutral-900">{restaurant.id}</span>
+                  <span className="break-all text-end font-medium text-neutral-900">{restaurant.id}</span>
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("hub")}</span>
-                  <span className="text-right font-medium text-neutral-900">
+                  <span className="text-end font-medium text-neutral-900">
                     {safeText(restaurant.hubName) || t("notAdded")}
                   </span>
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("area")}</span>
-                  <span className="text-right font-medium text-neutral-900">
+                  <span className="text-end font-medium text-neutral-900">
                     {safeText(restaurant.area) || t("notAdded")}
                   </span>
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("cuisine")}</span>
-                  <span className="text-right font-medium text-neutral-900">
+                  <span className="text-end font-medium text-neutral-900">
                     {safeText(restaurant.cuisine) || t("notAdded")}
                   </span>
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("openingHours")}</span>
-                  <span className="whitespace-pre-line text-right font-medium text-neutral-900">
+                  <span className="whitespace-pre-line text-end font-medium text-neutral-900">
                     {safeText(restaurant.openingHoursText) || t("notAddedYet")}
                   </span>
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-neutral-500">{t("locationId")}</span>
-                  <span className="text-right font-medium text-neutral-900">
+                  <span className="text-end font-medium text-neutral-900">
                     {safeText(restaurant.locationId) || t("notAdded")}
                   </span>
                 </div>

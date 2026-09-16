@@ -132,7 +132,13 @@
     "noApprovedReviews": "এখনও কোনো অনুমোদিত রিভিউ নেই।",
     "beFirstToReview": "{restaurant} এর প্রথম রিভিউ লিখুন।",
     "outOf5": "৫ এর মধ্যে",
-    "reviewCount": "{count, plural, =1 {টি অনুমোদিত রিভিউ} other {টি অনুমোদিত রিভিউ}}"
+    "reviewCount": "{count, plural, =1 {টি অনুমোদিত রিভিউ} other {টি অনুমোদিত রিভিউ}}",
+    "sumUpVisitPlaceholder": "আপনার ভ্রমণ সংক্ষেপে লিখুন",
+    "reviewTextPlaceholder": "আপনি কী অর্ডার করেছিলেন? কী ভালো লেগেছে?",
+    "starLabel": "{count, plural, =1 {১টি তারকা} other {#টি তারকা}}",
+    "pleaseSignIn": "রিভিউ লিখতে অনুগ্রহ করে সাইন ইন করুন।",
+    "pleaseWriteAFewWords": "আপনার অভিজ্ঞতা সম্পর্কে কিছু কথা লিখুন।",
+    "submitErrorMessage": "আপনার রিভিউ জমা দিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।"
   },
 
   "Blog": {
@@ -305,6 +311,20 @@
     "cancel": "বাতিল",
     "requestSubmittedMessage": "ধন্যবাদ — আমাদের দল শীঘ্রই এটি পর্যালোচনা করবে।",
     "requestErrorMessage": "আপনার অনুরোধ জমা দিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।"
+  },
+
+  "ListingNotice": {
+    "originRestaurantSubmitted": "এই ব্যবসা দ্বারা জমা দেওয়া",
+    "originOwnerClaimed": "এই ব্যবসা দ্বারা জমা দেওয়া",
+    "originOpenData": "একটি পাবলিক ওপেন ডেটাসেট থেকে সংকলিত",
+    "originLicensedProvider": "একটি লাইসেন্সপ্রাপ্ত ডেটা প্রদানকারী দ্বারা সরবরাহকৃত",
+    "originOfficialPublicSource": "একটি অফিসিয়াল সরকারি উৎস থেকে সংকলিত",
+    "originEditorialResearch": "London Food Hubs সম্পাদকীয় দল দ্বারা সংকলিত",
+    "originDefault": "London Food Hubs-এ প্রদান করা হয়েছে",
+    "mainSentence": "এই লিস্টিংটি {origin}{source}।",
+    "claimedSuffix": "এই ব্যবসাটি নিজেই তাদের লিস্টিং পরিচালনা করে।",
+    "unclaimedSuffix": "এই ব্যবসাটি এখনও এই লিস্টিং দাবি বা যাচাই করেনি।",
+    "disclaimerBody": "London Food Hubs এই ব্যবসার সাথে সংশ্লিষ্ট নয়, এটি অনুমোদন করে না, এবং এটি কোনো সার্টিফাইং সংস্থা নয়, আর এই লিস্টিং কোনো সরকারি, কাউন্সিল বা পর্যটন বোর্ড সংশ্লিষ্টতা বোঝায় না। নিচের গ্রাহক রিভিউগুলো পৃথক রিভিউয়ারদের নিজস্ব মতামত প্রতিফলিত করে, London Food Hubs-এর নয়।"
   },
 
   "Footer": {

@@ -132,7 +132,13 @@
     "noApprovedReviews": "Aucun avis approuvé pour le moment.",
     "beFirstToReview": "Soyez le premier à donner votre avis sur {restaurant}.",
     "outOf5": "sur 5",
-    "reviewCount": "{count, plural, one {avis approuvé} other {avis approuvés}}"
+    "reviewCount": "{count, plural, one {avis approuvé} other {avis approuvés}}",
+    "sumUpVisitPlaceholder": "Résumez votre visite",
+    "reviewTextPlaceholder": "Qu'avez-vous commandé ? Qu'est-ce qui vous a marqué ?",
+    "starLabel": "{count, plural, one {1 étoile} other {# étoiles}}",
+    "pleaseSignIn": "Veuillez vous connecter pour rédiger un avis.",
+    "pleaseWriteAFewWords": "Veuillez écrire quelques mots sur votre expérience.",
+    "submitErrorMessage": "Une erreur s'est produite lors de l'envoi de votre avis. Veuillez réessayer."
   },
 
   "Blog": {
@@ -305,6 +311,20 @@
     "cancel": "Annuler",
     "requestSubmittedMessage": "Merci — notre équipe examinera cela sous peu.",
     "requestErrorMessage": "Une erreur s'est produite lors de l'envoi de votre demande. Veuillez réessayer."
+  },
+
+  "ListingNotice": {
+    "originRestaurantSubmitted": "soumis par ce commerce",
+    "originOwnerClaimed": "soumis par ce commerce",
+    "originOpenData": "compilé à partir d'un jeu de données publiques ouvert",
+    "originLicensedProvider": "fourni par un prestataire de données sous licence",
+    "originOfficialPublicSource": "compilé à partir d'une source publique officielle",
+    "originEditorialResearch": "compilé par l'équipe éditoriale de London Food Hubs",
+    "originDefault": "fourni à London Food Hubs",
+    "mainSentence": "Cette fiche a été {origin}{source}.",
+    "claimedSuffix": "Ce commerce gère sa propre fiche.",
+    "unclaimedSuffix": "Ce commerce n'a pas encore revendiqué ni vérifié cette fiche.",
+    "disclaimerBody": "London Food Hubs n'est ni affilié à ce commerce, ni approuvé par lui, ni un organisme de certification pour celui-ci, et cette fiche n'implique aucune affiliation gouvernementale, municipale ou touristique officielle. Les avis clients ci-dessous reflètent l'opinion individuelle de chaque auteur, et non celle de London Food Hubs."
   },
 
   "Footer": {

@@ -1,11 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
 import { BLOG_CATEGORIES } from "@/lib/blogCategories";
+import { getLocalizedArticleContent } from "@/lib/articles";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
@@ -16,6 +18,8 @@ function tsToMs(value: unknown) {
 }
 
 export default function BlogIndexClient() {
+  const t = useTranslations("Blog");
+  const locale = useLocale();
   const [articles, setArticles] = useState<ArticleDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -63,13 +67,13 @@ export default function BlogIndexClient() {
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-900">
-            Blog
+            {t("title")}
           </div>
           <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">
-            The London Food Hubs Blog
+            {t("title")}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
-            Cuisine guides, restaurant stories, and what to eat across London.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -84,7 +88,7 @@ export default function BlogIndexClient() {
                   : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
               }`}
             >
-              All
+              {t("all")}
             </button>
             {categoriesPresent.map((c) => (
               <button
@@ -106,39 +110,42 @@ export default function BlogIndexClient() {
         <div className="mt-8">
           {loading ? (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-              Loading articles...
+              {t("loadingArticles")}
             </div>
           ) : filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-              No articles published yet. Check back soon.
+              {t("noArticlesYet")}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/blog/${article.slug}`}
-                  className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                >
-                  {article.heroImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={article.heroImage}
-                      alt={article.title}
-                      className="h-44 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-44 w-full bg-linear-to-br from-amber-100 via-orange-50 to-rose-100" />
-                  )}
-                  <div className="p-5">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                      {article.category}
+              {filtered.map((article) => {
+                const content = getLocalizedArticleContent(article, locale);
+                return (
+                  <Link
+                    key={article.id}
+                    href={`/blog/${article.slug}`}
+                    className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  >
+                    {article.heroImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={article.heroImage}
+                        alt={content.title}
+                        className="h-44 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-44 w-full bg-linear-to-br from-amber-100 via-orange-50 to-rose-100" />
+                    )}
+                    <div className="p-5">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        {article.category}
+                      </div>
+                      <div className="mt-2 text-lg font-bold text-neutral-900">{content.title}</div>
+                      <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{content.excerpt}</p>
                     </div>
-                    <div className="mt-2 text-lg font-bold text-neutral-900">{article.title}</div>
-                    <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{article.excerpt}</p>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

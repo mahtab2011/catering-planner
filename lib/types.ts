@@ -517,6 +517,7 @@ export type FavouriteDoc = {
 ========================================================= */
 
 import type { AppLanguage } from "./i18n";
+import type { LocaleCode } from "./locales";
 
 /** Partial multilingual text — only languages that have real,
  *  human-written copy should be present. Never auto-fill with
@@ -703,15 +704,39 @@ export type ReviewDoc = {
 
 export type ArticleStatus = "draft" | "published";
 
+/** A human-translated version of an article's reader-facing text. Any
+ *  subset of fields may be present — a translator may only have done
+ *  the title and excerpt so far, for instance — see
+ *  getLocalizedArticleContent() in lib/articles.ts for exactly how
+ *  partial translations fall back to the canonical English fields. */
+export type ArticleTranslation = {
+  title?: string;
+  excerpt?: string;
+  body?: string;
+};
+
 export type ArticleDoc = {
   id: string;
   slug: string;
+  /** Canonical identity + English content — every article has this,
+   *  regardless of which locales it's also been translated into. */
   title: string;
   excerpt: string;
   /** Body content stored as plain text / simple markdown-like paragraphs
    *  separated by blank lines — rendered as paragraphs, not raw HTML,
    *  so author-entered text can never inject markup. */
   body: string;
+  /** Optional per-locale human translations, keyed by LocaleCode (see
+   *  lib/locales.ts). One article, one canonical identity/slug — never
+   *  a duplicate document per language. Not every locale needs an
+   *  entry, and an entry doesn't need every field — see
+   *  ArticleTranslation and getLocalizedArticleContent() in
+   *  lib/articles.ts. Never machine-translated: only real,
+   *  human-reviewed copy belongs here (same rule as
+   *  Cuisine.localizedName and FoodHub.description). Never applies to
+   *  customer reviews, which are a different collection entirely and
+   *  are never translated as if they were editorial content. */
+  translations?: Partial<Record<LocaleCode, ArticleTranslation>>;
   authorName: string;
   heroImage?: string;
   category: string;

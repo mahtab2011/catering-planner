@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
+import { getLocalizedArticleContent } from "@/lib/articles";
 
 function tsToMs(value: unknown) {
   const v = value as { seconds?: number } | undefined;
@@ -15,6 +16,7 @@ function tsToMs(value: unknown) {
 
 export default function BlogPreviewSection() {
   const t = useTranslations("Home");
+  const locale = useLocale();
   const [articles, setArticles] = useState<ArticleDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,27 +63,30 @@ export default function BlogPreviewSection() {
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {articles.map((article) => (
-            <Link
-              key={article.id}
-              href={`/blog/${article.slug}`}
-              className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-            >
-              {article.heroImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={article.heroImage} alt={article.title} className="h-36 w-full object-cover" />
-              ) : (
-                <div className="h-36 w-full bg-linear-to-br from-amber-100 via-orange-50 to-rose-100" />
-              )}
-              <div className="p-5">
-                <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                  {article.category}
+          {articles.map((article) => {
+            const content = getLocalizedArticleContent(article, locale);
+            return (
+              <Link
+                key={article.id}
+                href={`/blog/${article.slug}`}
+                className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              >
+                {article.heroImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={article.heroImage} alt={content.title} className="h-36 w-full object-cover" />
+                ) : (
+                  <div className="h-36 w-full bg-linear-to-br from-amber-100 via-orange-50 to-rose-100" />
+                )}
+                <div className="p-5">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                    {article.category}
+                  </div>
+                  <div className="mt-2 text-base font-bold text-neutral-900">{content.title}</div>
+                  <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{content.excerpt}</p>
                 </div>
-                <div className="mt-2 text-base font-bold text-neutral-900">{article.title}</div>
-                <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{article.excerpt}</p>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>

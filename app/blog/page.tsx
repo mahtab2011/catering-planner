@@ -1,13 +1,7 @@
-import type { Metadata } from "next";
-import BlogIndexClient from "@/components/blog/BlogIndexClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "The London Food Hubs Blog",
-  description:
-    "Cuisine guides, restaurant stories and what to eat across London — from the London Food Hubs editorial team.",
-  alternates: { canonical: "/blog" },
-};
-
-export default function BlogIndexPage() {
-  return <BlogIndexClient />;
+/** Legacy URL compatibility — the real implementation now lives at
+ *  app/[locale]/blog/page.tsx. See docs/MULTILINGUAL-ARCHITECTURE.md. */
+export default function LegacyBlogIndexRedirect() {
+  redirect("/en/blog");
 }

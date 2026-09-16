@@ -1,15 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
-import { getCuisineBySlug } from "@/lib/cuisines";
+import { getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
+import { getLocalizedArticleContent } from "@/lib/articles";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 
 export default function BlogArticleClient({ slug }: { slug: string }) {
+  const locale = useLocale();
+  const t = useTranslations("Blog");
+  const tCommon = useTranslations("Common");
   const [article, setArticle] = useState<ArticleDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -52,7 +57,7 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
       <>
         <SiteHeader />
         <main className="min-h-screen bg-neutral-50 px-4 py-8">
-          <div className="mx-auto max-w-3xl text-sm text-neutral-500">Loading article...</div>
+          <div className="mx-auto max-w-3xl text-sm text-neutral-500">{tCommon("loading")}</div>
         </main>
         <SiteFooter />
       </>
@@ -65,12 +70,12 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
         <SiteHeader />
         <main className="min-h-screen bg-neutral-50 px-4 py-8">
           <div className="mx-auto max-w-3xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
-            <h1 className="text-2xl font-bold text-neutral-900">Article not found</h1>
+            <h1 className="text-2xl font-bold text-neutral-900">{t("articleNotFound")}</h1>
             <p className="mt-3 text-neutral-600">
-              This article may have been unpublished or the link is incorrect.
+              {t("articleNotFoundBody")}
             </p>
             <Link href="/blog" className="mt-6 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">
-              ← Back to Blog
+              ← {t("backToBlog")}
             </Link>
           </div>
         </main>
@@ -83,19 +88,22 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
     .map((s) => getCuisineBySlug(s))
     .filter(Boolean);
 
+  const content = getLocalizedArticleContent(article, locale);
+  const showOriginalLanguageNote = locale !== "en" && !content.isFullyTranslated;
+
   return (
     <>
       <SiteHeader />
       <main className="min-h-screen bg-neutral-50 px-4 py-8 md:px-6">
       <div className="mx-auto max-w-3xl">
         <Link href="/blog" className="text-sm text-amber-700 hover:underline">
-          ← Back to Blog
+          ← {t("backToBlog")}
         </Link>
 
         <div className="mt-4 rounded-3xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
           {article.heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={article.heroImage} alt={article.title} className="h-64 w-full object-cover md:h-80" />
+            <img src={article.heroImage} alt={content.title} className="h-64 w-full object-cover md:h-80" />
           ) : null}
 
           <div className="p-8">
@@ -103,12 +111,18 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
               {article.category}
             </div>
 
-            <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">{article.title}</h1>
+            {showOriginalLanguageNote ? (
+              <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-xs text-neutral-600">
+                {t("originalLanguageNote")}
+              </p>
+            ) : null}
 
-            <div className="mt-3 text-sm text-neutral-500">By {article.authorName}</div>
+            <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">{content.title}</h1>
+
+            <div className="mt-3 text-sm text-neutral-500">{t("by", { author: article.authorName })}</div>
 
             <div className="mt-6 space-y-4 text-base leading-7 text-neutral-700">
-              {article.body.split("\n\n").map((para, i) => (
+              {content.body.split("\n\n").map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
             </div>
@@ -125,7 +139,7 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
 
             {relatedCuisines.length > 0 ? (
               <div className="mt-6">
-                <div className="text-sm font-semibold text-neutral-700">Related cuisines</div>
+                <div className="text-sm font-semibold text-neutral-700">{t("relatedCuisines")}</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {relatedCuisines.map((c) => (
                     <Link
@@ -133,7 +147,7 @@ export default function BlogArticleClient({ slug }: { slug: string }) {
                       href={`/cuisine/${c!.slug}`}
                       className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
                     >
-                      {c!.name} →
+                      {getCuisineDisplayName(c!, locale)} →
                     </Link>
                   ))}
                 </div>

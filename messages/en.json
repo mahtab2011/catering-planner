@@ -126,7 +126,8 @@
     "articleNotFoundBody": "This article may have been unpublished or the link is incorrect.",
     "backToBlog": "Back to Blog",
     "by": "By {author}",
-    "relatedCuisines": "Related cuisines"
+    "relatedCuisines": "Related cuisines",
+    "originalLanguageNote": "This article isn't translated into your language yet — shown in English."
   },
 
   "Recommendations": {

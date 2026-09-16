@@ -126,7 +126,8 @@
     "articleNotFoundBody": "Cet article a peut-être été dépublié ou le lien est incorrect.",
     "backToBlog": "Retour au blog",
     "by": "Par {author}",
-    "relatedCuisines": "Cuisines associées"
+    "relatedCuisines": "Cuisines associées",
+    "originalLanguageNote": "Cet article n'est pas encore traduit dans votre langue — affiché en anglais."
   },
 
   "Recommendations": {

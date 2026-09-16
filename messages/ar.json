@@ -126,7 +126,8 @@
     "articleNotFoundBody": "قد يكون هذا المقال قد أُلغي نشره أو أن الرابط غير صحيح.",
     "backToBlog": "العودة إلى المدونة",
     "by": "بقلم {author}",
-    "relatedCuisines": "مأكولات ذات صلة"
+    "relatedCuisines": "مأكولات ذات صلة",
+    "originalLanguageNote": "لم تتم ترجمة هذا المقال إلى لغتك بعد — يُعرض باللغة الإنجليزية."
   },
 
   "Recommendations": {

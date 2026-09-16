@@ -126,7 +126,8 @@
     "articleNotFoundBody": "এই নিবন্ধটি হয়তো অপ্রকাশিত করা হয়েছে অথবা লিংকটি সঠিক নয়।",
     "backToBlog": "ব্লগে ফিরে যান",
     "by": "লেখক: {author}",
-    "relatedCuisines": "সম্পর্কিত খাবারের ধরন"
+    "relatedCuisines": "সম্পর্কিত খাবারের ধরন",
+    "originalLanguageNote": "এই লেখাটি এখনও আপনার ভাষায় অনূদিত হয়নি — ইংরেজিতে দেখানো হচ্ছে।"
   },
 
   "Recommendations": {

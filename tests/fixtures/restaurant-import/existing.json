@@ -1,0 +1,10 @@
+[
+  {
+    "id": "fixture-existing-1",
+    "name": "TEST FIXTURE — Spice Garden",
+    "postcode": "E1 6QL",
+    "addressLine1": "12 Fixture Lane",
+    "phone": "020 7946 0001",
+    "website": "https://fixture-spicegarden.example"
+  }
+]

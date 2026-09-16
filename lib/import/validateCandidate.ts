@@ -56,17 +56,20 @@ export function validateCandidate(candidate: ImportCandidate): ImportValidationR
     });
   }
 
+  // Empty cuisineSlugs is NOT a validation error — it's a legitimate
+  // "the source didn't say" outcome, routed to human review by
+  // classifyCuisine()/runImportDryRun() rather than rejected here.
+  // Never guess a cuisine to satisfy this check — see
+  // docs/RESTAURANT-IMPORT-PIPELINE.md's "Unknown cuisine" section.
+  // An explicitly-provided but unrecognised slug IS still an error —
+  // that's a data-quality problem, not an "unknown" case.
   const cuisineSlugs = candidate.cuisineSlugs || [];
-  if (cuisineSlugs.length === 0) {
-    errors.push({ field: "cuisineSlugs", message: "At least one cuisineSlugs entry is required." });
-  } else {
-    for (const slug of cuisineSlugs) {
-      if (!getCuisineBySlug(slug)) {
-        errors.push({
-          field: "cuisineSlugs",
-          message: `"${slug}" is not a known cuisine slug in lib/cuisines.ts.`,
-        });
-      }
+  for (const slug of cuisineSlugs) {
+    if (!getCuisineBySlug(slug)) {
+      errors.push({
+        field: "cuisineSlugs",
+        message: `"${slug}" is not a known cuisine slug in lib/cuisines.ts.`,
+      });
     }
   }
 

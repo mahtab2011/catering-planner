@@ -68,8 +68,13 @@ const UK_POSTCODE_PATTERN = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
 // either registry changes, update these lists to match — see the
 // "keep in sync" note above.
 const KNOWN_CITY_SLUGS = new Set(["london"]);
-const KNOWN_CUISINE_SLUGS_HINT =
-  "Check lib/cuisines.ts for the current list — this script does not duplicate it. cuisineSlugs are not validated against the full registry here, only checked for presence.";
+// cuisineSlugs values are NOT validated against the full lib/cuisines.ts
+// registry here (would require a build step this standalone script
+// deliberately has none of) — only whether the source provided any at
+// all (see classifyCuisine below). Check lib/cuisines.ts by hand for
+// the current list if unsure a slug is real.
+
+const VALID_DIETARY_ATTRIBUTES = new Set(["vegetarian", "vegan", "non_vegetarian", "halal", "kosher", "jain"]);
 
 function normalizeName(name) {
   return String(name || "")
@@ -126,13 +131,10 @@ function validateCandidate(candidate) {
     errors.push({ field: "postcode", message: `"${postcode}" doesn't look like a UK postcode.` });
   }
 
-  const cuisineSlugs = candidate.cuisineSlugs || [];
-  if (!Array.isArray(cuisineSlugs) || cuisineSlugs.length === 0) {
-    errors.push({
-      field: "cuisineSlugs",
-      message: `At least one cuisineSlugs entry is required. ${KNOWN_CUISINE_SLUGS_HINT}`,
-    });
-  }
+  // Empty cuisineSlugs is NOT a validation error — see
+  // classifyCuisine() below. This script does not validate provided
+  // slugs against the full lib/cuisines.ts registry (would require a
+  // build step) — see KNOWN_CUISINE_SLUGS_HINT.
 
   if (!candidate.sourceType) {
     errors.push({ field: "sourceType", message: "sourceType is required." });
@@ -229,6 +231,60 @@ function classifyFromSignals(signals) {
   return "possible_match";
 }
 
+// Never guesses a cuisine from name/nationality/neighbourhood/review
+// text — only confirms whether the source explicitly provided one,
+// and drops (does not keep) any slug that isn't at least a plausible
+// non-empty string. See lib/import/classifyCuisine.ts (canonical).
+function classifyCuisine(candidate) {
+  const provided = Array.isArray(candidate.cuisineSlugs) ? candidate.cuisineSlugs : [];
+  const errors = [];
+
+  if (provided.length === 0) {
+    return { batchRowId: candidate.batchRowId, cuisineSlugs: [], status: "unknown_requires_review", errors };
+  }
+
+  const validSlugs = provided.filter((slug) => {
+    const ok = typeof slug === "string" && slug.trim().length > 0;
+    if (!ok) errors.push(`"${slug}" is not a usable cuisine slug — dropped, not guessed at.`);
+    return ok;
+  });
+
+  if (validSlugs.length === 0) {
+    return { batchRowId: candidate.batchRowId, cuisineSlugs: [], status: "unknown_requires_review", errors };
+  }
+
+  return { batchRowId: candidate.batchRowId, cuisineSlugs: validSlugs, status: "classified", errors };
+}
+
+// Never infers a dietary attribute from cuisine — only accepts one
+// that has an explicit, non-"platform_verified" declared basis. See
+// lib/import/validateDietaryClaims.ts (canonical).
+function validateDietaryClaims(candidate) {
+  const errors = [];
+  const attributes = Array.isArray(candidate.dietaryAttributes) ? candidate.dietaryAttributes : [];
+  const basisMap = candidate.dietaryDeclarationBasis || {};
+  const accepted = [];
+
+  for (const attr of attributes) {
+    if (!VALID_DIETARY_ATTRIBUTES.has(attr)) {
+      errors.push(`"${attr}" is not a recognised dietary attribute — dropped.`);
+      continue;
+    }
+    const basis = basisMap[attr];
+    if (!basis) {
+      errors.push(`Dietary attribute "${attr}" has no declared basis — dropped, not assumed.`);
+      continue;
+    }
+    if (basis === "platform_verified") {
+      errors.push(`Dietary attribute "${attr}" cannot be marked "platform_verified" at import time — dropped.`);
+      continue;
+    }
+    accepted.push(attr);
+  }
+
+  return { batchRowId: candidate.batchRowId, acceptedAttributes: [...new Set(accepted)], errors };
+}
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -275,6 +331,8 @@ function main() {
   const rows = candidates.map((candidate) => {
     const validation = validateCandidate(candidate);
     const duplicateCheck = classifyDuplicate(candidate, existing);
+    const cuisineResult = classifyCuisine(candidate);
+    const dietaryResult = validateDietaryClaims(candidate);
 
     let recommendedAction;
     if (!validation.isValid) {
@@ -282,6 +340,8 @@ function main() {
     } else if (duplicateCheck.classification === "match") {
       recommendedAction = "skip";
     } else if (duplicateCheck.classification === "possible_match" || duplicateCheck.classification === "requires_review") {
+      recommendedAction = "human_review";
+    } else if (cuisineResult.status === "unknown_requires_review") {
       recommendedAction = "human_review";
     } else {
       recommendedAction = "would_create";
@@ -292,6 +352,10 @@ function main() {
       candidateName: candidate.name || "(no name)",
       validation,
       duplicateCheck,
+      cuisineClassificationStatus: cuisineResult.status,
+      cuisineErrors: cuisineResult.errors,
+      acceptedDietaryAttributes: dietaryResult.acceptedAttributes,
+      dietaryErrors: dietaryResult.errors,
       recommendedAction,
     };
   });

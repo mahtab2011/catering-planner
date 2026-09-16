@@ -1,0 +1,90 @@
+[
+  {
+    "batchRowId": "fixture-1",
+    "name": "TEST FIXTURE — Spice Garden",
+    "citySlug": "london",
+    "addressLine1": "12 Fixture Lane",
+    "postcode": "E1 6QL",
+    "phone": "020 7946 0001",
+    "website": "https://fixture-spicegarden.example",
+    "cuisineSlugs": ["bangladeshi-food-east-london"],
+    "dietaryAttributes": ["halal"],
+    "dietaryDeclarationBasis": { "halal": "source_reported" },
+    "sourceType": "open_data",
+    "sourceName": "TEST FIXTURE — sample council dataset",
+    "sourceUrl": "https://example.gov.uk/fixture-data",
+    "sourceRetrievedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "batchRowId": "fixture-2",
+    "name": "TEST FIXTURE — The Spice Garden Ltd",
+    "citySlug": "london",
+    "addressLine1": "12 Fixture Lane",
+    "postcode": "E1 6QL",
+    "cuisineSlugs": ["bangladeshi-food-east-london"],
+    "sourceType": "open_data",
+    "sourceName": "TEST FIXTURE — sample council dataset",
+    "sourceUrl": "https://example.gov.uk/fixture-data"
+  },
+  {
+    "batchRowId": "fixture-3",
+    "name": "TEST FIXTURE — Green Leaf Kitchen",
+    "citySlug": "london",
+    "addressLine1": "5 Fixture Street",
+    "postcode": "E7 8LN",
+    "phone": "020 7946 0099",
+    "cuisineSlugs": ["indian-food-london"],
+    "dietaryAttributes": ["vegetarian", "vegan"],
+    "dietaryDeclarationBasis": { "vegetarian": "restaurant_declared", "vegan": "restaurant_declared" },
+    "sourceType": "editorial_research",
+    "sourceName": "TEST FIXTURE — LFH team visit"
+  },
+  {
+    "batchRowId": "fixture-4",
+    "name": "TEST FIXTURE — Unnamed Place With No Contact Details",
+    "citySlug": "london",
+    "addressLine1": "1 Fixture Nowhere St",
+    "cuisineSlugs": ["turkish-food-london"],
+    "sourceType": "open_data",
+    "sourceName": "TEST FIXTURE — sample dataset",
+    "sourceUrl": "https://example.gov.uk/fixture-data"
+  },
+  {
+    "batchRowId": "fixture-5",
+    "name": "TEST FIXTURE — Mystery Diner",
+    "citySlug": "london",
+    "addressLine1": "8 Fixture Road",
+    "postcode": "N1 1AA",
+    "phone": "020 7946 0055",
+    "sourceType": "licensed_provider",
+    "sourceName": "TEST FIXTURE — sample licensed provider",
+    "sourceUrl": "https://example.com/fixture-provider"
+  },
+  {
+    "batchRowId": "fixture-6",
+    "name": "TEST FIXTURE — Halal Claim Without Basis",
+    "citySlug": "london",
+    "addressLine1": "3 Fixture Court",
+    "postcode": "SW1A 1AA",
+    "phone": "020 7946 0033",
+    "cuisineSlugs": ["turkish-food-london"],
+    "dietaryAttributes": ["halal"],
+    "sourceType": "open_data",
+    "sourceName": "TEST FIXTURE — sample dataset",
+    "sourceUrl": "https://example.gov.uk/fixture-data"
+  },
+  {
+    "batchRowId": "fixture-7",
+    "name": "TEST FIXTURE — Overclaimed Verification",
+    "citySlug": "london",
+    "addressLine1": "9 Fixture Gardens",
+    "postcode": "W1A 1AA",
+    "phone": "020 7946 0077",
+    "cuisineSlugs": ["thai-food-london"],
+    "dietaryAttributes": ["vegan"],
+    "dietaryDeclarationBasis": { "vegan": "platform_verified" },
+    "sourceType": "open_data",
+    "sourceName": "TEST FIXTURE — sample dataset",
+    "sourceUrl": "https://example.gov.uk/fixture-data"
+  }
+]

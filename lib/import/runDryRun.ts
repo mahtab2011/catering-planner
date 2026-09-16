@@ -5,11 +5,14 @@ import type {
 } from "./types";
 import { validateCandidate } from "./validateCandidate";
 import { classifyDuplicate } from "./duplicateDetection";
+import { classifyCuisine } from "./classifyCuisine";
+import { validateDietaryClaims } from "./validateDietaryClaims";
 
 /**
- * Runs validation + duplicate detection over a batch of import
- * candidates and produces a report — never writes anything anywhere.
- * See docs/RESTAURANT-IMPORT-PIPELINE.md and
+ * Runs validation + cuisine classification + dietary-claim validation
+ * + duplicate detection over a batch of import candidates and
+ * produces a report — never writes anything anywhere. See
+ * docs/RESTAURANT-IMPORT-PIPELINE.md and
  * functions/scripts/importRestaurantsDryRun.js (the CLI entry point
  * that loads local JSON files and calls this).
  */
@@ -20,6 +23,8 @@ export function runImportDryRun(
   return candidates.map((candidate) => {
     const validation = validateCandidate(candidate);
     const duplicateCheck = classifyDuplicate(candidate, existing);
+    const cuisineResult = classifyCuisine(candidate);
+    const dietaryResult = validateDietaryClaims(candidate);
 
     let recommendedAction: ImportDryRunReportRow["recommendedAction"];
     if (!validation.isValid) {
@@ -31,6 +36,10 @@ export function runImportDryRun(
       duplicateCheck.classification === "requires_review"
     ) {
       recommendedAction = "human_review";
+    } else if (cuisineResult.status === "unknown_requires_review") {
+      // Never auto-imported with a guessed cuisine — see
+      // classifyCuisine()'s own doc comment.
+      recommendedAction = "human_review";
     } else {
       recommendedAction = "would_create";
     }
@@ -40,6 +49,10 @@ export function runImportDryRun(
       candidateName: candidate.name || "(no name)",
       validation,
       duplicateCheck,
+      cuisineClassificationStatus: cuisineResult.status,
+      cuisineErrors: cuisineResult.errors,
+      acceptedDietaryAttributes: dietaryResult.acceptedAttributes,
+      dietaryErrors: dietaryResult.errors,
       recommendedAction,
     };
   });

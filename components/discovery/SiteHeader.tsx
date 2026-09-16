@@ -1,21 +1,20 @@
 "use client";
 
-import Link from "next/link";
+import PlainLink from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import LanguageSelector from "@/components/discovery/LanguageSelector";
 
-const NAV_LINKS = [
-  { label: "Explore Food", href: "/restaurants" },
-  { label: "Restaurants", href: "/restaurants" },
-  { label: "Cuisines", href: "/cuisines" },
-  { label: "Food Hubs", href: "/hubs" },
-  { label: "Reviews", href: "/reviews" },
-  { label: "Blog", href: "/blog" },
-  { label: "Recommends", href: "/recommendations" },
-];
+// Login/signup/dashboard are SmartServeUK operational routes OUTSIDE
+// the app/[locale] subtree — they must use next/link (no locale
+// prefix exists for them), never the locale-aware Link from
+// @/i18n/navigation used for every other link on this page.
 
 export default function SiteHeader() {
+  const t = useTranslations("Nav");
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -23,6 +22,15 @@ export default function SiteHeader() {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
+
+  const navLinks = [
+    { label: t("restaurants"), href: "/restaurants" },
+    { label: t("cuisines"), href: "/cuisines" },
+    { label: t("foodHubs"), href: "/hubs" },
+    { label: t("reviews"), href: "/reviews" },
+    { label: t("blog"), href: "/blog" },
+    { label: t("recommends"), href: "/recommendations" },
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
@@ -34,7 +42,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href + link.label}
               href={link.href}
@@ -46,27 +54,29 @@ export default function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <LanguageSelector />
+
           {user ? (
-            <Link
+            <PlainLink
               href="/dashboard"
               className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
-              My Account
-            </Link>
+              {t("myAccount")}
+            </PlainLink>
           ) : (
             <>
-              <Link
+              <PlainLink
                 href="/login"
                 className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                Log In
-              </Link>
-              <Link
+                {t("logIn")}
+              </PlainLink>
+              <PlainLink
                 href="/signup"
                 className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
               >
-                Sign Up
-              </Link>
+                {t("signUp")}
+              </PlainLink>
             </>
           )}
         </div>
@@ -74,7 +84,7 @@ export default function SiteHeader() {
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Toggle menu"
+          aria-label={t("menu")}
           aria-expanded={menuOpen}
           className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-300 lg:hidden"
         >
@@ -85,7 +95,7 @@ export default function SiteHeader() {
       {menuOpen ? (
         <div className="border-t border-neutral-200 bg-white px-4 py-3 lg:hidden">
           <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href + link.label}
                 href={link.href}
@@ -95,28 +105,33 @@ export default function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+
+            <div className="mt-2 border-t border-neutral-200 pt-3">
+              <LanguageSelector variant="mobile" />
+            </div>
+
             <div className="mt-2 flex gap-2 border-t border-neutral-200 pt-3">
               {user ? (
-                <Link
+                <PlainLink
                   href="/dashboard"
                   className="flex-1 rounded-xl border border-neutral-300 bg-white px-4 py-3 text-center text-sm font-semibold text-neutral-700"
                 >
-                  My Account
-                </Link>
+                  {t("myAccount")}
+                </PlainLink>
               ) : (
                 <>
-                  <Link
+                  <PlainLink
                     href="/login"
                     className="flex-1 rounded-xl border border-neutral-300 bg-white px-4 py-3 text-center text-sm font-semibold text-neutral-700"
                   >
-                    Log In
-                  </Link>
-                  <Link
+                    {t("logIn")}
+                  </PlainLink>
+                  <PlainLink
                     href="/signup"
                     className="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-center text-sm font-semibold text-white"
                   >
-                    Sign Up
-                  </Link>
+                    {t("signUp")}
+                  </PlainLink>
                 </>
               )}
             </div>

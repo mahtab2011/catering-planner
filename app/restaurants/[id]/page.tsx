@@ -7,9 +7,16 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import RestaurantReviews from "@/components/reviews/RestaurantReviews";
 import { DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
-import type { DietaryAttribute } from "@/lib/types";
+import type {
+  DietaryAttribute,
+  RestaurantDataConfidence,
+  RestaurantOwnerClaimStatus,
+  RestaurantSourceType,
+} from "@/lib/types";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
+import PublicListingNotice from "@/components/restaurants/PublicListingNotice";
+import RestaurantClaimPanel from "@/components/restaurants/RestaurantClaimPanel";
 
 type LangKey = "en" | "it" | "fr" | "de" | "es" | "ar" | "zh";
 
@@ -65,7 +72,17 @@ type LiveRestaurant = {
 
   isHalal?: boolean;
   isHmcApproved?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
+
+  cuisineSlugs?: string[];
+  primaryCuisineSlug?: string;
+
+  sourceType?: RestaurantSourceType;
+  sourceName?: string;
+  dataConfidence?: RestaurantDataConfidence;
+  ownerClaimStatus?: RestaurantOwnerClaimStatus;
+  claimantUid?: string;
 
   isPremium?: boolean;
   subscriptionPlan?: "free" | "premium";
@@ -1043,7 +1060,7 @@ export default function RestaurantDetailPage() {
                 </span>
               ) : null}
 
-              {(restaurant.dietaryCertifications || [])
+              {[...new Set([...(restaurant.dietaryAttributes || []), ...(restaurant.dietaryCertifications || [])])]
                 .filter((attr) => attr !== "halal")
                 .map((attr) => (
                   <span
@@ -1318,6 +1335,21 @@ export default function RestaurantDetailPage() {
               <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
                 {copy.galleryEmpty}
               </div>
+            </section>
+
+            <section className="space-y-4">
+              <PublicListingNotice
+                sourceType={restaurant.sourceType}
+                sourceName={restaurant.sourceName}
+                ownerClaimStatus={restaurant.ownerClaimStatus}
+                dataConfidence={restaurant.dataConfidence}
+              />
+              <RestaurantClaimPanel
+                restaurantId={restaurant.id}
+                restaurantName={restaurant.name}
+                ownerUid={restaurant.ownerUid}
+                ownerClaimStatus={restaurant.ownerClaimStatus}
+              />
             </section>
 
             <RestaurantReviews restaurantId={restaurant.id} restaurantName={restaurant.name} />

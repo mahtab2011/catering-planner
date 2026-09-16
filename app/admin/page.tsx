@@ -219,6 +219,18 @@ export default function AdminPage() {
         </Link>
 
         <Link
+          href="/admin/restaurant-claims"
+          className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
+        >
+          <div className="font-semibold text-neutral-900">
+            Restaurant Claims
+          </div>
+          <div className="text-sm text-neutral-500">
+            Review ownership claims and correction requests
+          </div>
+        </Link>
+
+        <Link
           href="/orders/search"
           className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
         >

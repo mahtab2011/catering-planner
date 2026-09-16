@@ -357,7 +357,12 @@ export const CUISINES: Record<string, Cuisine> = {
       "Dishes from West, East, North and South Africa, offering bold flavours, spices and traditional cooking styles.",
     longDescription:
       "African food in London includes dishes from West, East, North and South Africa, offering bold flavours, spices and traditional cooking styles.",
-    matchTerms: ["African", "West African", "Nigerian", "Ghanaian", "Ethiopian", "Eritrean", "Somali"],
+    // Ethiopian/Eritrean and Somali cuisine are distinct culinary
+    // traditions with their own dedicated entries below — kept out of
+    // this list so a restaurant tagged with either matches ONLY its
+    // specific cuisine page, not this broader West/Central/Southern
+    // African one as well.
+    matchTerms: ["African", "West African", "Nigerian", "Ghanaian"],
     dishes: [
       "Jollof Rice",
       "Fufu & Egusi Soup",
@@ -585,6 +590,331 @@ export const CUISINES: Record<string, Cuisine> = {
     isActive: true,
   },
 
+  "ethiopian-eritrean-food-london": {
+    id: "ethiopian-eritrean-food-london",
+    slug: "ethiopian-eritrean-food-london",
+    kind: "cuisine",
+    name: "Ethiopian & Eritrean",
+    region: "African",
+    shortDescription:
+      "Injera flatbread served with richly spiced stews, shared from a single plate in the traditional style.",
+    longDescription:
+      "Ethiopian and Eritrean food centres on injera — a soft, spongy sourdough flatbread — served alongside richly spiced stews (wat) made with lentils, vegetables or meat. Meals are traditionally shared from one large plate, torn and scooped by hand rather than eaten with cutlery.",
+    matchTerms: ["Ethiopian", "Eritrean", "Habesha"],
+    dishes: [
+      "Injera",
+      "Doro Wat",
+      "Tibs",
+      "Misir Wat",
+      "Kitfo",
+      "Shiro",
+      "Gomen",
+      "Zigni",
+    ],
+    dietaryTags: ["Strong vegan/vegetarian options (fasting dishes)"],
+    seoTitle: "Ethiopian & Eritrean Food in London | Injera, Doro Wat & Tibs",
+    seoDescription:
+      "Discover Ethiopian and Eritrean food in London including injera, doro wat, tibs, misir wat and shiro.",
+    isActive: true,
+  },
+
+  "somali-food-london": {
+    id: "somali-food-london",
+    slug: "somali-food-london",
+    kind: "cuisine",
+    name: "Somali",
+    region: "African",
+    shortDescription:
+      "Fragrant spiced rice, slow-cooked meats and East African/Middle Eastern-influenced flavours.",
+    longDescription:
+      "Somali food blends East African, Arabian and South Asian influences into fragrant spiced rice dishes, slow-cooked meats and flatbreads. Basmati rice cooked with xawaash spice blend, alongside grilled or stewed meat, is a common everyday meal.",
+    matchTerms: ["Somali"],
+    dishes: [
+      "Bariis (Somali Rice)",
+      "Suqaar",
+      "Hilib Ari",
+      "Sambuusa",
+      "Canjeero",
+      "Malawah",
+      "Muqmad",
+    ],
+    dietaryTags: ["Halal widely available"],
+    seoTitle: "Somali Food in London | Bariis, Suqaar & Sambuusa",
+    seoDescription:
+      "Discover Somali food in London including bariis spiced rice, suqaar, sambuusa and canjeero.",
+    isActive: true,
+  },
+
+  "chinese-food-london": {
+    id: "chinese-food-london",
+    slug: "chinese-food-london",
+    kind: "cuisine",
+    name: "Chinese",
+    region: "East Asian",
+    shortDescription:
+      "From Cantonese dim sum to Sichuan spice — one of London's most widespread and varied cuisines.",
+    longDescription:
+      "Chinese food in London spans many regional traditions, from Cantonese dim sum and roast meats to the bold chilli-and-Sichuan-pepper flavours of Sichuan cooking. It ranges from everyday takeaway staples to specialist regional restaurants.",
+    matchTerms: ["Chinese", "Cantonese", "Sichuan", "Szechuan"],
+    dishCategories: [
+      {
+        title: "Dim Sum",
+        items: ["Har Gow", "Siu Mai", "Char Siu Bao", "Spring Rolls"],
+      },
+      {
+        title: "Popular Dishes",
+        items: [
+          "Sweet and Sour Chicken",
+          "Kung Pao Chicken",
+          "Mapo Tofu",
+          "Peking Duck",
+          "Char Siu",
+          "Chow Mein",
+          "Egg Fried Rice",
+          "Hot and Sour Soup",
+        ],
+      },
+    ],
+    dishes: [],
+    seoTitle: "Chinese Food in London | Dim Sum, Cantonese & Sichuan",
+    seoDescription:
+      "Discover Chinese food in London including dim sum, Cantonese roast meats, Sichuan classics and takeaway favourites.",
+    isActive: true,
+  },
+
+  "vietnamese-food-london": {
+    id: "vietnamese-food-london",
+    slug: "vietnamese-food-london",
+    kind: "cuisine",
+    name: "Vietnamese",
+    region: "Southeast Asian",
+    shortDescription:
+      "Fresh herbs, light broths and bold dipping sauces — best known for pho and banh mi.",
+    longDescription:
+      "Vietnamese food is known for its balance of fresh herbs, light broths, rice noodles and bold dipping sauces. London has a well-established Vietnamese food scene, especially in areas like Kingsland Road, offering everything from pho to banh mi.",
+    matchTerms: ["Vietnamese"],
+    dishes: [
+      "Pho",
+      "Banh Mi",
+      "Bun Cha",
+      "Goi Cuon (Fresh Spring Rolls)",
+      "Banh Xeo",
+      "Com Tam",
+      "Vietnamese Iced Coffee",
+    ],
+    seoTitle: "Vietnamese Food in London | Pho, Banh Mi & Fresh Spring Rolls",
+    seoDescription:
+      "Discover Vietnamese food in London including pho, banh mi, bun cha and fresh spring rolls.",
+    isActive: true,
+  },
+
+  "korean-food-london": {
+    id: "korean-food-london",
+    slug: "korean-food-london",
+    kind: "cuisine",
+    name: "Korean",
+    region: "East Asian",
+    shortDescription:
+      "Bold fermented flavours, sizzling barbecue and comforting stews.",
+    longDescription:
+      "Korean food is loved for its bold fermented flavours (kimchi, gochujang), sizzling barbecue and comforting stews. London's Korean food scene has grown quickly, from casual fried chicken shops to full barbecue restaurants.",
+    matchTerms: ["Korean"],
+    dishes: [
+      "Kimchi",
+      "Bibimbap",
+      "Korean Fried Chicken",
+      "Bulgogi",
+      "Tteokbokki",
+      "Japchae",
+      "Kimchi Jjigae",
+      "Samgyeopsal",
+    ],
+    seoTitle: "Korean Food in London | Bibimbap, BBQ & Fried Chicken",
+    seoDescription:
+      "Discover Korean food in London including bibimbap, Korean fried chicken, bulgogi and tteokbokki.",
+    isActive: true,
+  },
+
+  "nepalese-food-london": {
+    id: "nepalese-food-london",
+    slug: "nepalese-food-london",
+    kind: "cuisine",
+    name: "Nepalese",
+    region: "South Asian",
+    shortDescription:
+      "Hearty dumplings, lentil dishes and mild, comforting spicing distinct from neighbouring cuisines.",
+    longDescription:
+      "Nepalese food is distinct from Indian cuisine — generally milder, with lentil-based dal-bhat as an everyday staple, alongside steamed or fried momo dumplings and grilled meats influenced by Tibetan and Himalayan traditions.",
+    matchTerms: ["Nepalese", "Nepali"],
+    dishes: [
+      "Momo",
+      "Dal Bhat",
+      "Thukpa",
+      "Sekuwa",
+      "Gundruk",
+      "Chatamari",
+    ],
+    seoTitle: "Nepalese Food in London | Momo, Dal Bhat & Thukpa",
+    seoDescription:
+      "Discover Nepalese food in London including momo dumplings, dal bhat, thukpa and sekuwa.",
+    isActive: true,
+  },
+
+  "sri-lankan-food-london": {
+    id: "sri-lankan-food-london",
+    slug: "sri-lankan-food-london",
+    kind: "cuisine",
+    name: "Sri Lankan",
+    region: "South Asian",
+    shortDescription:
+      "Coconut-rich curries, hoppers and fiery sambols — distinct from South Indian cuisine despite some overlap.",
+    longDescription:
+      "Sri Lankan food shares some techniques with South Indian cooking but has its own identity — coconut milk, curry leaves and fiery sambols feature heavily, alongside bowl-shaped hoppers and string hoppers.",
+    matchTerms: ["Sri Lankan"],
+    dishes: [
+      "Hoppers (Appa)",
+      "String Hoppers",
+      "Kottu Roti",
+      "Sri Lankan Fish Curry",
+      "Pol Sambol",
+      "Lamprais",
+    ],
+    seoTitle: "Sri Lankan Food in London | Hoppers, Kottu Roti & Sambol",
+    seoDescription:
+      "Discover Sri Lankan food in London including hoppers, kottu roti, fish curry and pol sambol.",
+    isActive: true,
+  },
+
+  "persian-food-london": {
+    id: "persian-food-london",
+    slug: "persian-food-london",
+    kind: "cuisine",
+    name: "Persian / Iranian",
+    region: "Middle Eastern",
+    shortDescription:
+      "Fragrant saffron rice, slow-grilled kebabs and herb-forward stews.",
+    longDescription:
+      "Persian (Iranian) food is known for fragrant saffron-infused rice, slow-grilled kebabs and herb-forward stews (khoresh) simmered for hours. Fresh herbs, dried limes, pomegranate and walnuts are common flavourings.",
+    matchTerms: ["Persian", "Iranian"],
+    dishes: [
+      "Chelo Kebab",
+      "Joojeh Kebab",
+      "Ghormeh Sabzi",
+      "Zereshk Polo",
+      "Tahdig",
+      "Fesenjan",
+      "Ash Reshteh",
+    ],
+    seoTitle: "Persian & Iranian Food in London | Saffron Rice, Kebabs & Khoresh",
+    seoDescription:
+      "Discover Persian and Iranian food in London including chelo kebab, ghormeh sabzi, tahdig and fesenjan.",
+    isActive: true,
+  },
+
+  "greek-food-london": {
+    id: "greek-food-london",
+    slug: "greek-food-london",
+    kind: "cuisine",
+    name: "Greek",
+    region: "European",
+    shortDescription:
+      "Grilled meats, fresh salads, olive oil and sharing-style mezze plates.",
+    longDescription:
+      "Greek food centres on grilled meats, fresh salads, olive oil and sharing-style mezze plates. Souvlaki and gyros are popular everyday takeaway options, alongside slow-baked dishes like moussaka.",
+    matchTerms: ["Greek"],
+    dishes: [
+      "Souvlaki",
+      "Gyros",
+      "Moussaka",
+      "Greek Salad",
+      "Tzatziki",
+      "Spanakopita",
+      "Dolmades",
+      "Baklava",
+    ],
+    seoTitle: "Greek Food in London | Souvlaki, Gyros & Moussaka",
+    seoDescription:
+      "Discover Greek food in London including souvlaki, gyros, moussaka, Greek salad and baklava.",
+    isActive: true,
+  },
+
+  "italian-food-london": {
+    id: "italian-food-london",
+    slug: "italian-food-london",
+    kind: "cuisine",
+    name: "Italian",
+    region: "European",
+    shortDescription:
+      "Pasta, pizza and regional specialities, from casual trattorias to family-run restaurants.",
+    longDescription:
+      "Italian food in London ranges from classic pizza and pasta to regional specialities from across Italy, served in everything from casual trattorias to family-run restaurants and delis.",
+    matchTerms: ["Italian"],
+    dishes: [
+      "Pizza Napoletana",
+      "Carbonara",
+      "Lasagne",
+      "Risotto",
+      "Arancini",
+      "Tiramisu",
+      "Bruschetta",
+      "Gnocchi",
+    ],
+    seoTitle: "Italian Food in London | Pizza, Pasta & Regional Specialities",
+    seoDescription:
+      "Discover Italian food in London including pizza, carbonara, lasagne, risotto and tiramisu.",
+    isActive: true,
+  },
+
+  "polish-food-london": {
+    id: "polish-food-london",
+    slug: "polish-food-london",
+    kind: "cuisine",
+    name: "Polish",
+    region: "European",
+    shortDescription:
+      "Hearty, comforting dishes — dumplings, cured meats and slow-cooked stews.",
+    longDescription:
+      "Polish food is hearty and comforting, built around dumplings (pierogi), cured meats, soups and slow-cooked stews. London has a long-established Polish community and a strong network of Polish delis and restaurants.",
+    matchTerms: ["Polish"],
+    dishes: [
+      "Pierogi",
+      "Bigos",
+      "Zurek",
+      "Kielbasa",
+      "Golabki",
+      "Placki Ziemniaczane",
+    ],
+    seoTitle: "Polish Food in London | Pierogi, Bigos & Kielbasa",
+    seoDescription:
+      "Discover Polish food in London including pierogi, bigos, zurek and kielbasa.",
+    isActive: true,
+  },
+
+  "filipino-food-london": {
+    id: "filipino-food-london",
+    slug: "filipino-food-london",
+    kind: "cuisine",
+    name: "Filipino",
+    region: "Southeast Asian",
+    shortDescription:
+      "Sweet, sour and savoury flavours combined in dishes like adobo, sisig and lumpia.",
+    longDescription:
+      "Filipino food combines sweet, sour and savoury flavours, often built around vinegar and soy-based marinades. Adobo, sisig and lumpia are among the dishes most commonly found in London's growing Filipino food scene.",
+    matchTerms: ["Filipino"],
+    dishes: [
+      "Adobo",
+      "Sisig",
+      "Lumpia",
+      "Pancit",
+      "Lechon",
+      "Halo-Halo",
+    ],
+    seoTitle: "Filipino Food in London | Adobo, Sisig & Lumpia",
+    seoDescription:
+      "Discover Filipino food in London including adobo, sisig, lumpia, pancit and halo-halo.",
+    isActive: true,
+  },
+
   "chicken-tikka-london": {
     id: "chicken-tikka-london",
     slug: "chicken-tikka-london",
@@ -620,7 +950,9 @@ export function getFeaturedCuisines(): Cuisine[] {
  *  against a canonical Cuisine entry. Restaurant records store cuisine
  *  as plain text (e.g. "Bangladeshi", "Indian / Pakistani"), not a
  *  cuisine id, so this is a substring match rather than an exact key
- *  lookup. */
+ *  lookup. Prefer restaurantMatchesCuisineSlug() for any restaurant
+ *  that has been tagged with structured `cuisineSlugs` — this remains
+ *  only for restaurants that haven't been re-tagged yet. */
 export function restaurantMatchesCuisine(
   restaurantCuisineText: string | undefined,
   cuisine: Cuisine
@@ -628,4 +960,48 @@ export function restaurantMatchesCuisine(
   const text = (restaurantCuisineText || "").toLowerCase();
   if (!text) return false;
   return cuisine.matchTerms.some((term) => text.includes(term.toLowerCase()));
+}
+
+/** Structured match: does a restaurant's `cuisineSlugs` array include
+ *  this cuisine? Exact, not a substring guess — the preferred check
+ *  wherever a restaurant has been tagged with the canonical taxonomy.
+ *  Falls back to restaurantMatchesCuisine() for legacy records with no
+ *  `cuisineSlugs` at all, so older untagged listings don't disappear
+ *  from cuisine pages during the transition. */
+export function restaurantMatchesCuisineSlug(
+  restaurant: { cuisineSlugs?: string[]; cuisine?: string },
+  cuisine: Cuisine
+): boolean {
+  if (restaurant.cuisineSlugs && restaurant.cuisineSlugs.length > 0) {
+    return restaurant.cuisineSlugs.includes(cuisine.slug);
+  }
+  return restaurantMatchesCuisine(restaurant.cuisine, cuisine);
+}
+
+/** Every distinct `region` value in use, in a fixed, sensible display
+ *  order — the "parent grouping" layer over individual cuisines (see
+ *  docs/CUISINE-TAXONOMY.md). Supplements the flat cuisine list; never
+ *  replaces it, and never merges distinct cuisines together. */
+export const CUISINE_REGION_ORDER: Cuisine["region"][] = [
+  "South Asian",
+  "Middle Eastern",
+  "East Asian",
+  "Southeast Asian",
+  "African",
+  "Caribbean",
+  "European",
+  "Americas",
+];
+
+/** Groups all active, full cuisines (kind === "cuisine"; dish-guides
+ *  like "biryani-polao-london" are excluded since they're not a
+ *  region-level category) by their parent region, in
+ *  CUISINE_REGION_ORDER. Regions with no active cuisines are omitted
+ *  rather than shown empty. */
+export function getCuisinesByRegion(): { region: Cuisine["region"]; cuisines: Cuisine[] }[] {
+  const cuisines = getAllCuisines().filter((c) => c.kind === "cuisine");
+  return CUISINE_REGION_ORDER.map((region) => ({
+    region,
+    cuisines: cuisines.filter((c) => c.region === region),
+  })).filter((group) => group.cuisines.length > 0);
 }

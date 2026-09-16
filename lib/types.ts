@@ -174,12 +174,80 @@ export type HubDoc = {
   updatedAt?: unknown;
 };
 
+/**
+ * How a restaurant record entered the platform. Set once at creation
+ * and not expected to change afterwards — see
+ * docs/RESTAURANT-DATA-PROVENANCE.md for the full model and exactly
+ * what each value means and who is allowed to set it.
+ */
+export type RestaurantSourceType =
+  | "restaurant_submitted"
+  | "owner_claimed"
+  | "open_data"
+  | "licensed_provider"
+  | "official_public_source"
+  | "editorial_research";
+
+/** How much this record's factual accuracy can currently be trusted.
+ *  A plain stored value set by an admin/moderation process — never
+ *  computed from ratings, review sentiment, or popularity. */
+export type RestaurantDataConfidence = "verified" | "unverified" | "flagged";
+
+/** Where a restaurant's ownership claim stands. "unclaimed" is the
+ *  default for any restaurant with no `ownerUid` (mainly editorial /
+ *  imported records — see docs/RESTAURANT-IMPORT-PIPELINE.md).
+ *  "claim_pending" means a `claimantUid` has been submitted but not
+ *  yet reviewed. Only an admin moving a record to "claimed" may also
+ *  set `ownerUid` — see docs/RESTAURANT-CLAIM-WORKFLOW.md and the
+ *  matching firestore.rules branch; no client path can set `ownerUid`
+ *  any other way. */
+export type RestaurantOwnerClaimStatus =
+  | "unclaimed"
+  | "claim_pending"
+  | "claimed"
+  | "claim_rejected";
+
+/** Where a piece of media (a photo, a logo) actually came from —
+ *  distinct from data provenance because a business can be
+ *  owner-claimed while still using a platform-created cover photo, or
+ *  vice versa. See docs/RESTAURANT-DATA-PROVENANCE.md. */
+export type MediaProvenance =
+  | "owner_uploaded"
+  | "platform_created"
+  | "licensed"
+  | "open_license";
+
+export type MediaAsset = {
+  url: string;
+  provenance: MediaProvenance;
+  /** Required in practice (not type-enforced) when provenance is
+   *  "licensed" or "open_license" — the attribution/license text that
+   *  license requires displaying alongside the image. */
+  attribution?: string;
+  uploadedAt?: unknown;
+};
+
 export type RestaurantDoc = {
   id: string;
   ownerUid: string;
   name: string;
   slug: string;
   cuisine?: string;
+  /** Canonical, language-independent cuisine slugs (keys into
+   *  lib/cuisines.ts's CUISINES) this restaurant genuinely serves. A
+   *  restaurant can belong to more than one cuisine (e.g. an "Indian
+   *  / Pakistani grill") — list every slug that applies. Distinct
+   *  cuisines (Bangladeshi and Indian, for example) must never be
+   *  collapsed into one slug just because a restaurant serves both;
+   *  add both. This is the structured companion to the free-text
+   *  `cuisine` field above, which stays for backward compatibility
+   *  and for restaurants that haven't been re-tagged yet. */
+  cuisineSlugs?: string[];
+  /** The single most representative entry from `cuisineSlugs`, used
+   *  wherever only one cuisine can be displayed (card badges, the
+   *  hero cuisine label). Must be one of `cuisineSlugs` when both are
+   *  present. */
+  primaryCuisineSlug?: string;
   description?: string;
   phone?: string;
   email?: string;
@@ -197,17 +265,62 @@ export type RestaurantDoc = {
   hubIds: string[];
   serviceTypes: ServiceType[];
   halal?: boolean;
-  /** Structured, self-declared dietary certifications for the whole
+  /** Structured, self-declared dietary attributes for the whole
    *  business (as opposed to a single dish) — see DietaryAttribute.
-   *  Additive alongside the legacy `halal` boolean above, which
-   *  stays for backward compatibility rather than being removed. */
+   *  Additive alongside the legacy `halal` boolean above, which stays
+   *  for backward compatibility rather than being removed. */
+  dietaryAttributes?: DietaryAttribute[];
+  /** @deprecated Renamed to `dietaryAttributes` — this name
+   *  misleadingly implied every entry was a formal third-party
+   *  certification, when most (e.g. "vegetarian", "non_vegetarian")
+   *  are just a self-declared fact. Kept, additively, so existing
+   *  documents and earlier docs referencing this name keep working;
+   *  lib/dietary.ts's buildDietaryBadgeLabels() reads both fields.
+   *  New code should read/write `dietaryAttributes` only. */
   dietaryCertifications?: DietaryAttribute[];
   openingHours?: Record<string, string>;
   imageUrl?: string;
   logoUrl?: string;
+  /** Optional richer media list with per-asset provenance — additive
+   *  alongside `imageUrl`/`logoUrl`, not a replacement for them. */
+  mediaAssets?: MediaAsset[];
   isFeatured?: boolean;
   isApproved?: boolean;
   isActive?: boolean;
+
+  /* ---- Data provenance — see docs/RESTAURANT-DATA-PROVENANCE.md ---- */
+  sourceType?: RestaurantSourceType;
+  /** Human-readable name of the source (e.g. "Restaurant self-signup
+   *  form", "Camden Council food hygiene open dataset", "Editorial
+   *  research — London Food Hubs team"). Required in practice for any
+   *  non-"restaurant_submitted" sourceType — see the provenance doc. */
+  sourceName?: string;
+  /** Public URL of the source record, when the source is an external
+   *  dataset or official page. Never a competitor listing page — see
+   *  docs/RESTAURANT-IMPORT-PIPELINE.md's prohibited-sources list. */
+  sourceUrl?: string;
+  sourceRetrievedAt?: unknown;
+  /** Last time an admin (or the owning business) confirmed this
+   *  record's core facts are still accurate. Distinct from
+   *  `updatedAt`, which changes on every edit regardless of whether
+   *  anything was actually re-verified. */
+  lastVerifiedAt?: unknown;
+  dataConfidence?: RestaurantDataConfidence;
+
+  /* ---- Ownership claim — see docs/RESTAURANT-CLAIM-WORKFLOW.md ---- */
+  ownerClaimStatus?: RestaurantOwnerClaimStatus;
+  /** Uid of the user who submitted an ownership claim. Deliberately
+   *  separate from `ownerUid` — submitting a claim never grants edit
+   *  access by itself. Only an admin approving the claim may also set
+   *  `ownerUid`; no client-writable path can set `ownerUid` from
+   *  `claimantUid` directly (see firestore.rules). */
+  claimantUid?: string;
+  claimSubmittedAt?: unknown;
+  claimDecidedAt?: unknown;
+  /** Uid of the admin who approved/rejected the claim — an audit
+   *  trail field, not an authorization source. */
+  claimDecidedBy?: string;
+
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -432,8 +545,20 @@ export type Cuisine = {
    *  through the same /cuisine/[slug] route. */
   kind: "cuisine" | "dish-guide";
   name: string;
-  /** Broad geographic/cultural grouping used for homepage variety
-   *  and to avoid the site skewing toward one region. */
+  /** Optional human-translated display names, keyed by locale. The
+   *  `slug` (and Firestore/route identity) never changes based on
+   *  language — this is purely a display override so a cuisine is one
+   *  entity everywhere, not a duplicated entity per language. Only
+   *  populate a locale here once real, human-reviewed copy exists for
+   *  it; an absent locale falls back to `name` (English). */
+  localizedName?: LocalizedText;
+  /** Broad geographic/cultural grouping — this is deliberately reused
+   *  as the parent-grouping mechanism the taxonomy needs (South
+   *  Asian, Middle Eastern, etc.): it supplements individual cuisines
+   *  for browsing/variety, it never replaces or merges them (e.g.
+   *  Bangladeshi and Indian both sit under "South Asian" but remain
+   *  distinct cuisine entries with their own slugs). See
+   *  docs/CUISINE-TAXONOMY.md. */
   region:
     | "South Asian"
     | "East Asian"
@@ -499,6 +624,10 @@ export type BusinessSummary = {
   id: string;
   name: string;
   cuisine?: string;
+  /** Structured, language-independent cuisine slugs — see the matching
+   *  field on RestaurantDoc. */
+  cuisineSlugs?: string[];
+  primaryCuisineSlug?: string;
   /** References a City.slug from lib/cities.ts. */
   citySlug?: string;
   hubName?: string;
@@ -506,11 +635,52 @@ export type BusinessSummary = {
   shortDescription?: string;
   coverImage?: string;
   isHalal?: boolean;
-  /** Structured, self-declared certifications — see DietaryAttribute.
-   *  Additive alongside `isHalal`, not a replacement for it. */
+  /** Structured, self-declared dietary attributes — see
+   *  DietaryAttribute. Additive alongside `isHalal`, not a
+   *  replacement for it. */
+  dietaryAttributes?: DietaryAttribute[];
+  /** @deprecated Renamed to `dietaryAttributes` — see the matching
+   *  field on RestaurantDoc for why. */
   dietaryCertifications?: DietaryAttribute[];
+  dataConfidence?: RestaurantDataConfidence;
   tags?: string[];
   href: string;
+};
+
+/** A moderation-queue request from a member of the public asking for
+ *  a restaurant's details to be corrected, or for the listing to be
+ *  removed entirely. Never applied automatically — see
+ *  docs/RESTAURANT-CLAIM-WORKFLOW.md, which covers this alongside the
+ *  ownership claim flow since both are "someone other than the
+ *  current owner asking to change a listing" requests reviewed by the
+ *  same admin queue. */
+export type RestaurantRequestType = "correction" | "removal";
+export type RestaurantRequestStatus = "pending" | "accepted" | "rejected";
+
+export type RestaurantCorrectionRequestDoc = {
+  id: string;
+  restaurantId: string;
+  requestType: RestaurantRequestType;
+  submittedByUid: string;
+  submittedByEmail?: string;
+  /** For requestType "correction": plain-text description of which
+   *  field is wrong and what it should say instead. Deliberately
+   *  free-text rather than a strict per-field enum, since a correction
+   *  can touch anything from a phone number to opening hours to the
+   *  cuisine tagging. */
+  fieldDescription?: string;
+  currentValueNote?: string;
+  suggestedValueNote?: string;
+  /** For requestType "removal": why the requester believes the
+   *  listing shouldn't exist (e.g. "permanently closed", "duplicate
+   *  of another listing", "not a real business"). */
+  reasonNote?: string;
+  status: RestaurantRequestStatus;
+  moderatedBy?: string;
+  moderatedAt?: unknown;
+  moderationNote?: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
 };
 
 export type ReviewStatus = "pending" | "approved" | "rejected";

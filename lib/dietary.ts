@@ -41,17 +41,25 @@ export const DIETARY_ATTRIBUTE_HELP: Record<DietaryAttribute, string> = {
 
 /**
  * Builds a deduplicated list of dietary badge labels for a restaurant
- * card/page, combining the structured `dietaryCertifications` array
- * with the legacy `isHalal` boolean so both data shapes display
- * consistently without showing "Halal" twice. Shared by every place
- * that renders a restaurant card so the display logic lives in one
- * place rather than being re-implemented per page.
+ * card/page, combining the structured `dietaryAttributes` array (or
+ * its deprecated predecessor `dietaryCertifications`, for documents
+ * that haven't been re-saved since the rename) with the legacy
+ * `isHalal` boolean so all three data shapes display consistently
+ * without showing "Halal" twice. Shared by every place that renders a
+ * restaurant card so the display logic lives in one place rather than
+ * being re-implemented per page.
  */
 export function buildDietaryBadgeLabels(business: {
   isHalal?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
+  /** @deprecated Use `dietaryAttributes`. Still read here so
+   *  documents written before the rename keep displaying correctly. */
   dietaryCertifications?: DietaryAttribute[];
 }): string[] {
-  const attributes = new Set<DietaryAttribute>(business.dietaryCertifications || []);
+  const attributes = new Set<DietaryAttribute>([
+    ...(business.dietaryAttributes || []),
+    ...(business.dietaryCertifications || []),
+  ]);
   if (business.isHalal) attributes.add("halal");
   return [...attributes].map((attr) => DIETARY_ATTRIBUTE_LABELS[attr]);
 }

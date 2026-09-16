@@ -205,8 +205,10 @@ function RestaurantsPageContent() {
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [selectedHub, setSelectedHub] = useState(searchParams.get("hub") || "All");
   const [selectedCuisine, setSelectedCuisine] = useState(searchParams.get("cuisine") || "All");
-  const [selectedRegion, setSelectedRegion] = useState("All");
-  const [selectedDietary, setSelectedDietary] = useState<"All" | DietaryAttribute>("All");
+  const [selectedRegion, setSelectedRegion] = useState(searchParams.get("region") || "All");
+  const [selectedDietary, setSelectedDietary] = useState<"All" | DietaryAttribute>(
+    (searchParams.get("dietary") as DietaryAttribute | null) || "All"
+  );
   const [selectedStatus, setSelectedStatus] = useState("active");
 
   const allCuisineDefs = useMemo(() => getAllCuisines(), []);

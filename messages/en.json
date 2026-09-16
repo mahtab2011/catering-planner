@@ -69,6 +69,18 @@
     "communityCtaStartExploring": "Start Exploring"
   },
 
+  "TouristDiscovery": {
+    "title": "Quick Ways to Discover London Food",
+    "subtitle": "Popular starting points — browse by what you're in the mood for.",
+    "britishFood": "British Food",
+    "worldCuisines": "World Cuisines",
+    "halalFood": "Halal Food",
+    "vegetarianFood": "Vegetarian Food",
+    "veganFood": "Vegan Food",
+    "londonFoodHubs": "London Food Hubs",
+    "londonFoodGuides": "London Food Guides"
+  },
+
   "Restaurants": {
     "title": "Restaurants",
     "subtitle": "Browse restaurant listings across London food hubs. Search by restaurant name, owner, hub, area, cuisine, tags, or popular items.",

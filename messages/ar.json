@@ -69,6 +69,18 @@
     "communityCtaStartExploring": "ابدأ الاستكشاف"
   },
 
+  "TouristDiscovery": {
+    "title": "طرق سريعة لاكتشاف طعام لندن",
+    "subtitle": "نقاط بداية شائعة — تصفح حسب ما يناسب رغبتك.",
+    "britishFood": "طعام بريطاني",
+    "worldCuisines": "مأكولات عالمية",
+    "halalFood": "طعام حلال",
+    "vegetarianFood": "طعام نباتي",
+    "veganFood": "طعام نباتي صرف",
+    "londonFoodHubs": "مراكز طعام لندن",
+    "londonFoodGuides": "أدلة طعام لندن"
+  },
+
   "Restaurants": {
     "title": "المطاعم",
     "subtitle": "تصفح قوائم المطاعم عبر مراكز الطعام في لندن. ابحث بالاسم أو المالك أو المركز أو المنطقة أو نوع المأكولات أو الأطباق الشائعة.",

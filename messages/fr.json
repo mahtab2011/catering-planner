@@ -69,6 +69,18 @@
     "communityCtaStartExploring": "Commencer à explorer"
   },
 
+  "TouristDiscovery": {
+    "title": "Découvrir la cuisine londonienne rapidement",
+    "subtitle": "Points de départ populaires — parcourez selon vos envies.",
+    "britishFood": "Cuisine britannique",
+    "worldCuisines": "Cuisines du monde",
+    "halalFood": "Nourriture halal",
+    "vegetarianFood": "Cuisine végétarienne",
+    "veganFood": "Cuisine végane",
+    "londonFoodHubs": "Pôles culinaires de Londres",
+    "londonFoodGuides": "Guides culinaires de Londres"
+  },
+
   "Restaurants": {
     "title": "Restaurants",
     "subtitle": "Parcourez les restaurants des pôles culinaires de Londres. Recherchez par nom, propriétaire, pôle, quartier, cuisine ou plat populaire.",

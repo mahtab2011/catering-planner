@@ -92,6 +92,33 @@ throughout this document.
   project, which this task explicitly did not do and was not authorized
   to do.
 
+## STATUS UPDATE (Task M) — J-03 legal content replaced, still blocked on real identity facts
+
+Task M replaced the placeholder `/privacy-policy`, `/terms`, and
+`/cookie-policy` pages with substantive content reflecting this
+application's actual, audited data practices, and corrected the Cookie
+Policy's stale "analytics cookies"/"performance cookies"/"cookie banner"
+claims (re-confirmed: still zero analytics or tracking anywhere in this
+codebase). Full detail: `docs/LEGAL-READINESS.md`.
+
+- **This is real, substantive legal content — not a certification.** It
+  was written by inspecting actual application behavior (Firestore
+  collections, forms, third-party SDKs), not invented or copied from a
+  template.
+- **J-03 is NOT fully closed.** Essential business-identity facts this
+  task was explicitly forbidden from inventing — the operator's legal
+  name, registered business address, and privacy/legal contact emails —
+  are **not yet known** and are marked with explicit, visible
+  `[... TO CONFIRM BEFORE LAUNCH]` placeholders on all three pages. J-03
+  is downgraded from "placeholder text" to "substantive content pending
+  business-identity confirmation," but **stays P0** until those
+  placeholders are filled in with real, confirmed facts — see
+  `docs/LEGAL-READINESS.md`'s "Remaining launch blockers."
+- A new static regression suite,
+  `tests/legal-pages/run-legal-content-tests.ts` (8/8 passing), guards
+  against the old placeholder text, stale cookie claims, or
+  order/payment/delivery wording ever silently reappearing.
+
 ## The one finding that matters most: claimant PII is publicly retrievable
 
 **Before anything else in this document: a restaurant's claimant contact
@@ -174,7 +201,7 @@ run against the (currently unavailable) emulator before deployment.
 |---|---|---|---|---|---|---|---|
 | J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection. **Architecture fixed (Task K), now emulator-verified (Task L)** — data moved to a private `restaurant_claims` collection; rules updated; 105/105 emulator tests pass including 21 dedicated `restaurant_claims` cases. **Not yet deployed to production.** | **P0** (kept — deployment, not verification, is now the only remaining gap; see "Status update (Task L)" above) | Real personal data exposed to the public internet indefinitely; see full writeup above | ~~Redesign claim-data storage~~ done (Task K) — ~~emulator-verified tests~~ done (Task L) — remaining: production deployment (separately authorized) | Done — architecture fixed and local-emulator-verified | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
 | J-02 | Firestore rules deployment | `firestore.rules` (105 test cases as of Task K) has now executed against a real local rules engine for the first time (Task L) — **105/105 passed, zero rule changes needed.** Still never deployed to any production Firebase project. | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended — this risk is now substantially reduced (local-verified) but deployment itself remains unauthorized and unperformed | ~~Install Java and run the full suite~~ done (Task L) — remaining: authorize and perform an actual `firebase deploy --only firestore:rules` against the correct production project | Local verification done (Task L); production deployment out of every task's scope so far | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
-| J-03 | Legal/compliance content | `/privacy-policy` and `/terms` are literal placeholders ("SmartServeUK privacy policy will be updated here.") linked from every London Food Hubs page's footer | **P0** | A live consumer marketplace collecting accounts, reviews, claims, and business contact data with no real privacy policy or terms is a genuine compliance gap, not a cosmetic one | Legal/business decision + real content — outside this task's authority to write | No — business/legal content decision | Human legal review |
+| J-03 | Legal/compliance content | **(Task M)** `/privacy-policy`, `/terms`, and `/cookie-policy` now have substantive, audit-based content reflecting actual data practices — no longer placeholders. **Still blocked**: the operator legal name, registered address, and privacy/legal contact emails are unknown and marked with explicit `[... TO CONFIRM BEFORE LAUNCH]` placeholders on all three pages. | **P0** (kept — real content written, but essential identity facts still missing; see "Status update (Task M)" above) | Publishing a privacy policy or terms with no real operator identity or contact route is still not launch-ready, even though the substantive content is now accurate | ~~Write real privacy policy/terms/cookie-policy content~~ done (Task M) — remaining: confirm operator legal name, registered address, and privacy/legal contact emails, then fill in the bracketed placeholders | Content: done. Identity facts: no — requires business/legal input this task could not invent | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (8/8 passing) |
 | J-04 | Firebase Auth | `londonfoodhubs.com` (and `www.londonfoodhubs.com`) are not yet on Firebase Auth's "Authorized domains" allowlist (external Firebase console setting, confirmed not repo-managed) | **P0** for auth-dependent features on the new domain | Sign-in/sign-up/claim/owner-workspace will fail on the new domain until this is added — Firebase Auth rejects unauthorized origins regardless of correct client config | Add the domain in Firebase console once DNS is live | No — external Firebase console action | Manual sign-in test on the live domain post-deploy |
 | J-05 | Dependencies | `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 | Current usage is export-only (`json_to_sheet`/`writeFile`, confirmed by code search — never parses untrusted uploaded files), which meaningfully reduces real exploitability, but the vulnerable code ships regardless | Accept documented risk, or evaluate replacing `xlsx` for export-only use, as a deliberate decision | Not without a dependency change (out of scope here) | N/A — risk-acceptance decision |
 | J-06 | Dependencies | `websocket-driver` (critical) and `protobufjs` (critical/moderate) vulnerabilities — both transitive via the `firebase` package (Realtime Database's websocket client, Firestore's gRPC proto loader); fixes available via plain `npm audit fix` | P1 | This app never uses Realtime Database, so `websocket-driver`'s vulnerable code path is very likely unreachable in practice; still worth clearing since a fix exists with no breaking change | Run `npm audit fix` (non-`--force`) in a dedicated, tested change — not done in this audit per "no dependency changes" scope | Yes, narrowly | `npm run build` + full regression after |
@@ -198,7 +225,7 @@ run against the (currently unavailable) emulator before deployment.
 
 1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit. **Architecture fixed as of Task K and emulator-verified as of Task L** (see "Status update (Task L)" above) — remains listed as a blocker only pending actual production deployment of the verified rules, same as J-02.
 2. **J-02** — Firestore rules have now run against a real local rules engine for the first time (Task L, 105/105 passed), but have never been deployed to any production Firebase project. Deploying is the only remaining step, and requires separate explicit authorization.
-3. **J-03** — Privacy policy and terms are placeholder text, linked from every consumer page.
+3. **J-03** — Privacy policy, terms, and cookie policy now have real, substantive content (Task M), but the operator's legal name, registered address, and contact emails are still unknown and marked with visible placeholders that must be confirmed before launch.
 4. **J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth, so sign-in-dependent features (claim, review, owner workspace, admin) will not work on the live domain until this external step is done.
 
 None of these are things this audit could or should have fixed itself — J-01/J-02 need a scoped engineering task with rules-engine verification, J-03 needs real legal content, J-04 is an external Firebase console action requiring a live domain to point at.
@@ -209,7 +236,7 @@ Concrete actions required before launch, roughly in dependency order:
 
 1. ~~Resolve **J-01** (claimant PII) — design and implement a fix, with tests.~~ Done (Task K).
 2. ~~Get Java (or any machine with it) and run the full Firestore rules suite (**J-02**) — fix any failures, including verifying J-01's fix actually works as intended.~~ Done (Task L) — 105/105 passed locally. Remaining: authorize and perform the actual production `firebase deploy --only firestore:rules`.
-3. Write and publish real privacy policy and terms content (**J-03**) — a business/legal task.
+3. ~~Write and publish real privacy policy and terms content~~ done (Task M). Remaining (**J-03**): confirm the operator's legal name, registered business address, and privacy/legal contact emails, and fill in the bracketed placeholders on `/privacy-policy`, `/terms`, and `/cookie-policy` — a business/legal decision, not an engineering one.
 4. Decide whether a cookie-consent banner is needed (see "Cookies / tracking" below — currently no tracking exists, so the honest answer today is "not technically required by what's implemented," but this should be revisited the moment any analytics is added).
 5. Confirm the actual Hostinger product/plan supports a persistent Node.js process (this repo cannot verify Hostinger account configuration — see `docs/HOSTINGER-DEPLOYMENT.md`'s own "Prerequisites").
 6. Have the 6 `NEXT_PUBLIC_FIREBASE_*` values (and optionally `NEXT_PUBLIC_SITE_URL`) ready to configure as Hostinger environment variables — see "Environment variables" below for the exact list (names only).
@@ -367,13 +394,13 @@ This is a technical audit, not legal advice. What the application actually colle
 - **Translation requests**: requesting owner's uid, target locales, admin notes.
 - **Admin workflow data**: moderator uid, timestamps, review notes (not publicly exposed — these collections have no public read rule at all, unlike `restaurants`).
 
-**Missing customer-facing documents** (see J-03): privacy policy and terms are placeholders; no data-deletion/contact process is documented anywhere in the app (no "how to request your data be deleted" page or email address found in the customer-facing UI). A cookie policy page exists with real generic content, but see "Cookies / tracking" below for why its current wording ("analytics cookies," "performance cookies," "cookie banner") doesn't match actual implemented behavior.
+**Customer-facing documents (Task M update)**: `/privacy-policy`, `/terms`, and `/cookie-policy` now have real, substantive content reflecting actual data practices (see "Status update (Task M)" above and `docs/LEGAL-READINESS.md`) — this is no longer an open gap in itself. What remains open under J-03 is narrower: the operator's legal name, registered address, and privacy/legal contact emails are still unknown, so there is still no confirmed, real address for a "how to request your data be deleted" contact — the new Privacy Policy points at a placeholder email pending that confirmation, and correction/removal requests remain the only actually-working self-service mechanism today.
 
 ### Cookies / tracking (Phase 11)
 
-**Confirmed: no analytics, advertising trackers, or third-party tracking scripts exist anywhere in this codebase** — no Google Analytics, Meta Pixel, Hotjar, Mixpanel, Segment, or any similar library, verified by repository-wide search (re-verified independently in this session, not solely from a subagent report). Firebase Auth's own persistence (`indexedDBLocalPersistence`/`browserLocalPersistence`) uses browser storage for session continuity — this is strictly-necessary functional storage (keeping a user logged in), not tracking in the cookie-consent-law sense.
+**Confirmed: no analytics, advertising trackers, or third-party tracking scripts exist anywhere in this codebase** — no Google Analytics, Meta Pixel, Hotjar, Mixpanel, Segment, or any similar library, verified by repository-wide search (re-verified independently in this session, not solely from a subagent report, and re-confirmed again in Task M). Firebase Auth's own persistence (`indexedDBLocalPersistence`/`browserLocalPersistence`) uses browser storage for session continuity — this is strictly-necessary functional storage (keeping a user logged in), not tracking in the cookie-consent-law sense.
 
-**Practical, non-legal conclusion**: based purely on what's actually implemented today, this application does not appear to require a cookie-consent banner, since no non-essential cookies/tracking are in use. **This is a technical observation, not legal advice** — the existing `/cookie-policy` page's content (mentioning "analytics cookies," "performance cookies," a "cookie banner") describes tracking that isn't actually implemented, which is itself worth fixing for accuracy (either implement what it describes, or correct the page to describe reality) — flagged as part of J-03's broader legal-content gap rather than a separate item.
+**Practical, non-legal conclusion**: based purely on what's actually implemented today, this application does not appear to require a cookie-consent banner, since no non-essential cookies/tracking are in use. **This is a technical observation, not legal advice.** **(Task M)** The `/cookie-policy` page's stale wording (mentioning "analytics cookies," "performance cookies," a "cookie banner" that don't exist) has now been corrected to describe only the actual Firebase Auth session storage in use, and explicitly explains why no consent banner has been added — see `docs/LEGAL-READINESS.md`.
 
 ### Domain / canonical / SEO (Phase 12)
 

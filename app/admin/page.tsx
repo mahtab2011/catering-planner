@@ -7,9 +7,13 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
+import { deriveOwnershipDisplayState } from "@/lib/adminRestaurantOverview";
+import { assessRestaurantDataQuality } from "@/lib/adminDataQuality";
+import type { RestaurantOwnerClaimStatus, RestaurantDataConfidence } from "@/lib/types";
 
 type SalesSignupStatus = "new" | "reviewing" | "approved" | "rejected";
 
@@ -54,6 +58,32 @@ type OrderDoc = {
   createdAt?: any;
 };
 
+/** Minimal shape for the restaurant-marketplace overview counts below
+ *  — see docs/ADMIN-OPERATIONS.md. Deliberately does not include
+ *  claimant contact fields; this page only ever shows counts, never
+ *  individual claimant details (those stay on /admin/restaurant-claims). */
+type AdminRestaurantSummaryRow = {
+  id: string;
+  ownerUid?: string;
+  ownerClaimStatus?: RestaurantOwnerClaimStatus;
+  name?: string;
+  fullAddress?: string;
+  postcode?: string;
+  shortDescription?: string;
+  longDescription?: string;
+  cuisine?: string;
+  cuisineSlugs?: string[];
+  phone?: string;
+  email?: string;
+  openingHoursText?: string;
+  coverImage?: string;
+  imageUrl?: string;
+  menuCategories?: { items?: unknown[] }[];
+  hubName?: string;
+  area?: string;
+  dataConfidence?: RestaurantDataConfidence;
+};
+
 function tsToMs(value: any) {
   if (value?.seconds != null) return value.seconds * 1000;
   if (value instanceof Date) return value.getTime();
@@ -82,6 +112,10 @@ export default function AdminPage() {
   const { checking: checkingAdmin, allowed: isAdmin } = useAdminGate();
   const [sales, setSales] = useState<SalesSignup[]>([]);
   const [orders, setOrders] = useState<OrderDoc[]>([]);
+  const [marketplaceRestaurants, setMarketplaceRestaurants] = useState<AdminRestaurantSummaryRow[]>([]);
+  const [pendingCorrectionsCount, setPendingCorrectionsCount] = useState(0);
+  const [pendingTranslationRequestsCount, setPendingTranslationRequestsCount] = useState(0);
+  const [pendingImportCandidatesCount, setPendingImportCandidatesCount] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -112,11 +146,56 @@ export default function AdminPage() {
       setOrders(rows);
     });
 
+    // Restaurant-marketplace overview (Task I) — see
+    // docs/ADMIN-OPERATIONS.md. One listener on the whole restaurants
+    // collection (bounded, single-city launch) plus three narrowly
+    // filtered listeners for the pending queues, so this stays a
+    // handful of reads rather than an expensive analytics query.
+    const unsubRestaurants = onSnapshot(collection(db, "restaurants"), (snap) => {
+      setMarketplaceRestaurants(
+        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AdminRestaurantSummaryRow, "id">) }))
+      );
+    });
+
+    const unsubCorrections = onSnapshot(
+      query(collection(db, "restaurant_correction_requests"), where("status", "==", "pending")),
+      (snap) => setPendingCorrectionsCount(snap.size)
+    );
+
+    const unsubTranslationRequests = onSnapshot(
+      query(collection(db, "restaurant_translation_requests"), where("status", "==", "REQUESTED")),
+      (snap) => setPendingTranslationRequestsCount(snap.size)
+    );
+
+    const unsubImportCandidates = onSnapshot(
+      query(collection(db, "restaurant_import_candidates"), where("status", "==", "PENDING_REVIEW")),
+      (snap) => setPendingImportCandidatesCount(snap.size)
+    );
+
     return () => {
       unsubSales();
       unsubOrders();
+      unsubRestaurants();
+      unsubCorrections();
+      unsubTranslationRequests();
+      unsubImportCandidates();
     };
   }, [isAdmin]);
+
+  const marketplaceOwnership = useMemo(() => {
+    let unclaimed = 0;
+    let claimPending = 0;
+    let claimed = 0;
+    let withDataQualityFlags = 0;
+    for (const r of marketplaceRestaurants) {
+      const state = deriveOwnershipDisplayState(r);
+      if (state === "claimed") claimed += 1;
+      else if (state === "claim_pending") claimPending += 1;
+      else unclaimed += 1;
+      if (assessRestaurantDataQuality(r).length > 0) withDataQualityFlags += 1;
+    }
+    return { total: marketplaceRestaurants.length, unclaimed, claimPending, claimed, withDataQualityFlags };
+  }, [marketplaceRestaurants]);
 
   const newLeads = useMemo(
     () => sales.filter((s) => (s.status || "new") === "new"),
@@ -207,6 +286,18 @@ export default function AdminPage() {
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Link
+          href="/admin/restaurants"
+          className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
+        >
+          <div className="font-semibold text-neutral-900">
+            Restaurants Overview
+          </div>
+          <div className="text-sm text-neutral-500">
+            Inspect ownership state and data-quality flags for every restaurant
+          </div>
+        </Link>
+
+        <Link
           href="/admin/restaurant-signups"
           className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
         >
@@ -227,6 +318,18 @@ export default function AdminPage() {
           </div>
           <div className="text-sm text-neutral-500">
             Review ownership claims and correction requests
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/restaurant-translation-requests"
+          className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
+        >
+          <div className="font-semibold text-neutral-900">
+            Translation Requests
+          </div>
+          <div className="text-sm text-neutral-500">
+            Track owner-submitted translation requests through their workflow
           </div>
         </Link>
 
@@ -264,6 +367,43 @@ export default function AdminPage() {
           </div>
         </Link>
       </div>
+
+      <h2 className="mb-3 text-lg font-semibold text-neutral-900">
+        Restaurant Marketplace
+      </h2>
+      <div className="mb-6 grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <Link href="/admin/restaurants" className="rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow">
+          <div className="text-sm font-medium text-neutral-600">Restaurants</div>
+          <div className="mt-1 text-2xl font-bold text-neutral-900">{marketplaceOwnership.total}</div>
+        </Link>
+        <Link href="/admin/restaurants" className="rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow">
+          <div className="text-sm font-medium text-neutral-600">Unclaimed</div>
+          <div className="mt-1 text-2xl font-bold text-neutral-900">{marketplaceOwnership.unclaimed}</div>
+        </Link>
+        <Link href="/admin/restaurant-claims" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:shadow">
+          <div className="text-sm font-medium text-amber-700">Pending Claims</div>
+          <div className="mt-1 text-2xl font-bold text-amber-900">{marketplaceOwnership.claimPending}</div>
+        </Link>
+        <Link href="/admin/restaurant-claims" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:shadow">
+          <div className="text-sm font-medium text-amber-700">Pending Corrections</div>
+          <div className="mt-1 text-2xl font-bold text-amber-900">{pendingCorrectionsCount}</div>
+        </Link>
+        <Link href="/admin/restaurant-translation-requests" className="rounded-2xl border border-blue-200 bg-blue-50 p-4 hover:shadow">
+          <div className="text-sm font-medium text-blue-700">Translation Requests</div>
+          <div className="mt-1 text-2xl font-bold text-blue-900">{pendingTranslationRequestsCount}</div>
+        </Link>
+        <Link href="/admin/restaurant-import-candidates" className="rounded-2xl border border-purple-200 bg-purple-50 p-4 hover:shadow">
+          <div className="text-sm font-medium text-purple-700">Staged Imports</div>
+          <div className="mt-1 text-2xl font-bold text-purple-900">{pendingImportCandidatesCount}</div>
+        </Link>
+      </div>
+      {marketplaceOwnership.withDataQualityFlags > 0 ? (
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <Link href="/admin/restaurants" className="font-semibold hover:underline">
+            {marketplaceOwnership.withDataQualityFlags} restaurant{marketplaceOwnership.withDataQualityFlags === 1 ? "" : "s"} have data-quality flags →
+          </Link>
+        </div>
+      ) : null}
 
       <div className="mb-6 grid gap-4 md:grid-cols-5">
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">

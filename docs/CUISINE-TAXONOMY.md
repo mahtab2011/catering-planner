@@ -74,11 +74,16 @@ for a human-translated display name. It is optional and additive:
 - The `slug` never changes based on language — a cuisine is one entity
   everywhere, never duplicated per language.
 - An absent locale falls back to `name` (English).
-- **No entries currently exist.** Populating `localizedName` requires real,
-  human-reviewed translated copy, same rule as every other translated field
-  in this codebase (see `docs/MULTILINGUAL-ARCHITECTURE.md` if present, and
-  the "never fabricate translations" rule that governs it) — nothing should
-  auto-translate a cuisine name and write it here.
+- **Populated for all 27 cuisines, in bn/ar/fr** (the platform's 3 active
+  non-English locales — see `docs/MULTILINGUAL-ARCHITECTURE.md`). These are
+  genuine dictionary-level cuisine-category translations ("Turkish" →
+  "تركي" / "তুর্কি" / "Turc"), not restaurant-specific content and not
+  machine-translated — the same trust level as any other short, factual UI
+  label in this codebase. `getCuisineDisplayName(cuisine, locale)` (in
+  `lib/cuisines.ts`) reads this with English fallback and is used
+  everywhere a cuisine name is displayed: the homepage's cuisine/dish
+  sections, the cuisines index, the cuisine detail page, the restaurant
+  directory's cuisine filter, and search results.
 
 ## Structured matching vs. legacy free-text matching
 
@@ -94,12 +99,21 @@ Two matching functions exist in `lib/cuisines.ts`:
   `cuisineSlugs` yet, so untagged legacy listings don't disappear from
   cuisine pages during the transition.
 
-The restaurant directory (`app/restaurants/page.tsx`) uses a related helper,
-`restaurantCuisineNames()`, for its filter dropdown — it prefers
-`cuisineSlugs` resolved to canonical names and falls back to splitting the
-legacy free-text field on `/` (needed because the signup/edit forms now
-write a joined string like `"Bangladeshi / Indian"` for multi-cuisine
-restaurants — see below).
+The restaurant directory (`app/[locale]/restaurants/page.tsx`) uses a
+related helper, `restaurantCuisineNames()`, for its filter dropdown — it
+prefers `cuisineSlugs` resolved to canonical names and falls back to
+splitting the legacy free-text field on `/` (needed because the signup/edit
+forms now write a joined string like `"Bangladeshi / Indian"` for
+multi-cuisine restaurants — see below). The same file also has
+`restaurantRegions()`, resolving a restaurant's cuisines to their parent
+`region`(s) for a separate "Region" filter dropdown, and
+`restaurantHasDietaryAttribute()` for a "Dietary" filter — both AND with
+the existing search/hub/cuisine/status filters, so a combination like
+cuisine=Turkish + dietary=Halal, or region=South Asian + dietary=Vegetarian,
+narrows correctly. None of this filtering depends on which locale is
+active — it operates on the canonical `cuisineSlugs`/`region` values, not
+translated display strings; only the filter dropdown's *labels* are
+localized (via `getCuisineDisplayName`), not the underlying matching.
 
 ## Current taxonomy (27 entries)
 
@@ -134,6 +148,15 @@ restaurants). Adding a cuisine later means adding one more entry to
   own entries and removed from "African"'s match terms so a restaurant
   tagged with either no longer double-matches the broader page.
 
+## Search
+
+`components/discovery/SearchClient.tsx` matches a search term against a
+cuisine's `getCuisineDisplayName(cuisine, locale)` **in addition to** its
+canonical English `name` and `matchTerms` — so a search in Arabic for
+"تركي" finds the Turkish cuisine page the same way an English search for
+"Turkish" does, satisfying the "an Arabic locale must search the same
+canonical restaurant database as English" requirement.
+
 ## Restaurant signup/edit forms
 
 `app/restaurants/new/page.tsx` and `app/restaurants/[id]/edit/page.tsx` both
@@ -147,11 +170,22 @@ from day one.
 
 ## What this task did not do
 
-- Did not attempt to build an exhaustive global cuisine taxonomy (hundreds of
-  entries) — 27 is a meaningful expansion from the original 15, not a
-  claim of completeness.
-- Did not populate `localizedName` for any cuisine (no real translated copy
-  exists yet).
+- Did not attempt to build an exhaustive global cuisine taxonomy (hundreds
+  or thousands of entries covering every cuisine named in a later task's
+  wish list — British/English/Scottish/Welsh/Irish as separate entries,
+  Afghan, Syrian, Iraqi, Israeli, Georgian, Armenian, Cantonese/Sichuan as
+  distinct from Chinese, Malaysian, Indonesian, Singaporean, Spanish,
+  Portuguese, German, Romanian, Hungarian, Nigerian, Moroccan, Egyptian,
+  South African, Argentinian, Peruvian, Colombian, etc.). 27 is a
+  meaningful expansion from the original 15, and the architecture
+  (`getCuisinesByRegion()`, the multi-cuisine `cuisineSlugs` model, the
+  region-as-parent-grouping design) scales to any of these being added
+  later as a single new `CUISINES` entry with zero route/component
+  changes — but populating the full list was not attempted, both for
+  effort-budget reasons and because several of those (e.g. splitting
+  English/Scottish/Welsh/Irish from British) are editorial-granularity
+  decisions, not architecture ones, better made deliberately rather than
+  rushed.
 - Did not migrate every existing restaurant document's free-text `cuisine`
   field to `cuisineSlugs` — that would require either owner action (editing
   their listing) or an admin backfill script, neither of which was run

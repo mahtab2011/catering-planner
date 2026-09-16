@@ -179,43 +179,203 @@ dropdown on small screens).
   trigger (not an inline list of 4 buttons), so it scales to more active
   locales later without needing new navbar space.
 
-## Translation content policy — what gets translated and what doesn't
+## Translation content policy — PRODUCT POLICY (binding)
 
-Enforced by convention and code review, not a runtime check (same trust
-model as every other content-safety rule in this codebase):
+This is a formal product policy, not just a description of current
+behavior — it applies to all current and future London Food Hubs
+multilingual architecture, and any new feature must be checked against it
+before shipping.
 
-**Translated** (UI/system chrome — real, human-reviewed copy in all 4
-active locales' message catalogs, `messages/{en,bn,ar,fr}.json`, 294 keys
+**London Food Hubs provides and maintains translations ONLY for
+platform-owned content, by default.** Platform-owned content includes:
+navigation, buttons, forms, instructions, search/filter UI, cuisine labels,
+dietary labels, claim/update/removal instructions, help content, platform
+notices, and London Food Hubs-owned editorial/interface content where
+translations have actually been authored. This is enforced by convention
+and code review, not a runtime check (same trust model as every other
+content-safety rule in this codebase) — real, human-reviewed copy in all 4
+active locales' message catalogs, `messages/{en,bn,ar,fr}.json`, 296 keys
 each, verified byte-identical key sets via a parity script after every
-change this task made):
+change this task made. Concretely: navigation/footer/buttons/form labels/
+empty/loading/error states; dietary attribute labels (Vegetarian/Vegan/
+Non-Vegetarian/Halal/Kosher/Jain); claim/correction action labels ("Claim
+this listing", "Suggest an update", "Request removal"); the public-listing
+provenance/affiliation notice (`ListingNotice` namespace, including its
+positioning statement and actions note); cuisine **category** display
+names (`Cuisine.localizedName` — see `docs/CUISINE-TAXONOMY.md`, itself
+platform-owned taxonomy content, not any specific restaurant's).
 
-- Navigation, footer, buttons, form labels, empty/loading/error states.
-- Dietary attribute labels (Vegetarian/Vegan/Non-Vegetarian/Halal/Kosher/
-  Jain).
-- Claim/correction actions ("Claim this listing", "Suggest an update",
-  "Request removal") — explicitly named as examples in this task's own
-  spec.
-- The public-listing provenance/affiliation notice (`ListingNotice`
-  namespace) — sensitive trust-disclosure copy, translated carefully rather
-  than left as a known gap, since a restaurant detail page without it in a
-  non-English locale would be a real omission.
-- Cuisine **category** display names (`Cuisine.localizedName`) — see
-  `docs/CUISINE-TAXONOMY.md`.
+**London Food Hubs does NOT automatically translate restaurant-supplied
+content.** Restaurant-supplied content includes: restaurant descriptions,
+menu descriptions, promotional text, offers, announcements, owner-uploaded
+textual content, restaurant names, trademarks, proper dish names, and any
+other free-text field a restaurant owner typed themselves (including their
+own custom listing tags — see "A real violation this task fixed" below).
+**The original restaurant-supplied content remains canonical and is
+displayed unchanged in every locale when no restaurant-approved translation
+exists** — switching the platform's UI language changes the platform UI
+around a listing; it does not imply that listing's own content has been
+translated.
 
-**Never auto-translated, and never will be by anything in this codebase:**
+Customer review text is a related but distinct rule, unchanged from
+before this policy was formalized: always shown exactly as the reviewer
+wrote it, in whatever language that was, regardless of the viewer's
+locale — search does match a locale's script against review text where
+relevant, but nothing rewrites the review itself, and no review is ever
+routed through the restaurant-translation workflow described below (that
+workflow only ever concerns the restaurant's *own* words about itself).
 
-- Customer review text (`reviews` collection) — always shown exactly as the
-  reviewer wrote it, in whatever language that was, regardless of the
-  viewer's locale. Search does match a locale's script against review text
-  where relevant, but nothing rewrites the review itself.
-- Restaurant-authored descriptions, restaurant names, menu item names/
-  descriptions typed by an owner, and any other business-provided content —
-  shown as-is.
-- Proper dish names.
-- Third-party factual content (e.g. an open-data source's field values).
+Restaurant names, trademarks, and proper dish names are never translated
+**unless the restaurant explicitly supplies/approves an alternative
+localized name** — see `RestaurantContentTranslation.name` below.
 
-**Editorial content (`articles`) is the one place with a deliberate,
-explicit middle ground** — see the next section.
+**Editorial content (`articles`) is platform-owned and may be translated
+by London Food Hubs' own team** — this is not an exception to the policy
+above, it's squarely inside it (LFH-authored content, not
+restaurant-supplied) — see "Editorial (blog) localization" below.
+
+### A real violation this task found and fixed
+
+Auditing the existing code against this new policy found one real gap:
+`RestaurantCard.tsx`'s `tags` prop mixed a restaurant's own free-text
+listing tags (the `tags` field on `RestaurantDoc`, typed by the owner —
+e.g. "family dining", "biryani") together with platform-generated status
+labels ("Live Listing", "Premium", "HMC Approved") into a single array,
+all run through the same small English→locale lookup table. Any owner tag
+that happened to coincidentally match a platform vocabulary word (e.g. an
+owner tagging their listing "Grill", "Value", or "Busy") would have been
+silently swapped for a *different* string in another locale — technically
+translating the platform's own vocabulary correctly, but incorrectly
+treating a restaurant's own word choice as if it were that vocabulary.
+
+Fixed by splitting `RestaurantCard`'s props three ways:
+
+- **`tags`** — platform-generated labels only (status, price range,
+  service type, HMC/Premium flags). Still translated via the small fixed
+  lookup table, since this really is platform vocabulary.
+- **`dietaryAttributes`** — the structured `DietaryAttribute[]` set (also
+  platform-defined vocabulary, not free text) — now translated via the
+  shared `Dietary` namespace + `DIETARY_ATTRIBUTE_TRANSLATION_KEY`
+  (`lib/dietary.ts`), fixing a second, related bug: dietary badges on
+  restaurant cards were previously always-English regardless of locale,
+  because `buildDietaryBadgeLabels()` returns pre-translated (English-only)
+  strings that never matched the tag lookup table's keys. New
+  `buildDietaryBadgeAttributes()` returns the raw attribute keys instead,
+  for any locale-aware caller to translate itself.
+- **`ownerTags`** — the restaurant's own free-text tags. Rendered exactly
+  as written, in every locale, never passed through any translation
+  function. All 5 call sites (`FeaturedRestaurantsSection`,
+  `CuisineDetailClient`, the hub detail page, the restaurant directory, and
+  the restaurant detail page's own inline tag rendering) were audited and
+  updated to route owner tags through this prop, never `tags`.
+
+`shortDescription`/`longDescription`/`cuisine`(free text)/`popularItems`/
+`name` were already rendered as-is everywhere with no translation call —
+audited and confirmed compliant, not changed.
+
+## Restaurant content translation architecture (data model only — no payment)
+
+Restaurants may request PAID translation of their own content into one or
+more supported languages. **This task builds the data architecture for
+that request/approval workflow only — no pricing, currency conversion, or
+payment processing exists anywhere in this codebase, and no translation UI
+was built.** A future task would add: an actual request form, an admin/ops
+pricing and payment-collection flow, and a real translation-delivery
+mechanism.
+
+### Data model (`lib/types.ts`)
+
+```ts
+type RestaurantContentTranslation = {
+  name?: string;              // only if the restaurant explicitly approved
+                               // an alternative localized name
+  shortDescription?: string;
+  longDescription?: string;
+};
+
+// On RestaurantDoc — additive, optional, absent for every restaurant today:
+contentTranslations?: Partial<Record<LocaleCode, RestaurantContentTranslation>>;
+
+type RestaurantTranslationRequestStatus =
+  | "REQUESTED" | "QUOTED" | "PAYMENT_PENDING"
+  | "IN_TRANSLATION" | "OWNER_REVIEW" | "PUBLISHED" | "CANCELLED";
+
+type RestaurantTranslationRequestDoc = {
+  id: string;
+  restaurantId: string;
+  requestedByUid: string;       // must equal the restaurant's own ownerUid
+  targetLocales: LocaleCode[];
+  status: RestaurantTranslationRequestStatus;
+  quotedAmount?: number;        // plain stored value — never computed/invented
+  quotedCurrency?: CurrencyCode;
+  requestedAt?: unknown;
+  quotedAt?: unknown;
+  paymentReceivedAt?: unknown;
+  translationStartedAt?: unknown;
+  ownerReviewRequestedAt?: unknown;
+  publishedAt?: unknown;
+  cancelledAt?: unknown;
+  notes?: string;
+};
+```
+
+`CANCELLED` was added alongside the suggested `REQUESTED → QUOTED →
+PAYMENT_PENDING → IN_TRANSLATION → OWNER_REVIEW → PUBLISHED` workflow as
+the one addition beyond what was specified — a real workflow needs an exit
+path (e.g. an owner declining a quote), and without one the state machine
+has no way to end except `PUBLISHED`. No price was invented anywhere;
+`quotedAmount`/`quotedCurrency` are plain fields an admin/ops process would
+fill in by hand.
+
+### Two separate write gates, matching the two-step trust model used
+### elsewhere in this codebase (e.g. the claim workflow)
+
+1. **`restaurant_translation_requests`** (`firestore.rules`): only the
+   actual restaurant owner may create a request, cross-checked via
+   `get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.ownerUid
+   == request.auth.uid` (not just a self-asserted field) — and only in
+   status `REQUESTED`, with no client-writable price/payment fields at
+   creation. Every later transition is admin-only.
+2. **`RestaurantDoc.contentTranslations`**: reaching `PUBLISHED` on a
+   translation request does **not** itself write anything to the
+   restaurant document. Publishing the actual translated content still
+   requires a separate, deliberate admin write to
+   `restaurants/{id}.contentTranslations` (through the existing
+   `isAdmin()` branch) — so a translation can never go live purely by a
+   status flip in the request collection. "Do not mark a translation as
+   published until the appropriate approval workflow is complete" is
+   enforced by this being two genuinely separate writes, not one
+   convenience function that could skip a step.
+
+### Read path
+
+`lib/restaurantTranslations.ts`'s `getLocalizedRestaurantContent(restaurant,
+locale)` is the only correct way to read a restaurant's name/description
+for display. It reads `contentTranslations[locale]` and falls back to the
+canonical original **per field** (a restaurant with an approved translated
+description but no approved alternative name still shows its real name) —
+the same per-field-fallback pattern as `getLocalizedArticleContent()` for
+editorial content. Wired into every place a restaurant's own name/
+description is rendered: the restaurant detail page (name, short/long
+description, and the name passed to the claim panel and reviews section)
+and every `RestaurantCard` call site (homepage featured restaurants,
+cuisine detail, hub detail, the restaurant directory). Since no restaurant
+has any `contentTranslations` today, this is currently a no-op everywhere
+it's wired in — the architecture is ready, nothing behaves differently yet.
+
+### What this task did not do
+
+- Did not build a "request translation" UI anywhere — the task asked for
+  data architecture, not a UI.
+- Did not build the admin/ops quoting or payment-collection flow.
+- Did not implement any actual translation-delivery mechanism (human
+  translator workflow, third-party API, etc.).
+- Did not backfill or populate `contentTranslations` for any restaurant.
+- Did not extend this architecture to menu items — `RestaurantMenuItemDoc`
+  already has its own, pre-existing `translatedNames`/
+  `translatedDescriptions` mechanism (owner-provided per-language text,
+  not machine translation, predating this task) — left unchanged since it
+  already satisfies "restaurant explicitly supplies" for dish names.
 
 ## Editorial (blog) localization
 

@@ -143,6 +143,7 @@
   },
 
   "CuisineDetail": {
+    "regionCuisineBadge": "{region} খাবার",
     "foodInLondon": "লন্ডনে {cuisine} খাবার",
     "aboutDishes": "এই খাবারগুলো সম্পর্কে",
     "popularDishes": "জনপ্রিয় {cuisine} খাবার",

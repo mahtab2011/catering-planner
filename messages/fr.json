@@ -143,6 +143,7 @@
   },
 
   "CuisineDetail": {
+    "regionCuisineBadge": "Cuisine {region}",
     "foodInLondon": "Cuisine {cuisine} à Londres",
     "aboutDishes": "À propos de ces plats",
     "popularDishes": "Plats {cuisine} populaires",

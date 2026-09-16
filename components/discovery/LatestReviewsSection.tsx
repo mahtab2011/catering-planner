@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ReviewDoc } from "@/lib/types";
@@ -16,13 +17,17 @@ type ReviewWithRestaurant = ReviewDoc & { restaurantName?: string };
 
 export default function LatestReviewsSection({
   limit = 6,
-  heading = "Latest Reviews",
+  heading,
   showEmptyState = true,
 }: {
   limit?: number;
   heading?: string;
   showEmptyState?: boolean;
 }) {
+  const t = useTranslations("Home");
+  const tCommon = useTranslations("Common");
+  const tReviews = useTranslations("Reviews");
+  const resolvedHeading = heading ?? t("latestReviews");
   const [reviews, setReviews] = useState<ReviewWithRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,9 +78,9 @@ export default function LatestReviewsSection({
   if (loading) {
     return (
       <section>
-        <h2 className="text-2xl font-bold text-neutral-900">{heading}</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{resolvedHeading}</h2>
         <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-          Loading reviews...
+          {tCommon("loading")}
         </div>
       </section>
     );
@@ -85,9 +90,9 @@ export default function LatestReviewsSection({
     if (!showEmptyState) return null;
     return (
       <section>
-        <h2 className="text-2xl font-bold text-neutral-900">{heading}</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{resolvedHeading}</h2>
         <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-          No approved reviews yet — be the first to review a restaurant on London Food Hubs.
+          {tReviews("noApprovedReviews")}
         </div>
       </section>
     );
@@ -95,7 +100,7 @@ export default function LatestReviewsSection({
 
   return (
     <section>
-      <h2 className="text-2xl font-bold text-neutral-900">{heading}</h2>
+      <h2 className="text-2xl font-bold text-neutral-900">{resolvedHeading}</h2>
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {reviews.map((review) => (
           <Link
@@ -110,7 +115,7 @@ export default function LatestReviewsSection({
                 {"☆".repeat(5 - review.rating)}
               </div>
             </div>
-            <div className="mt-1 text-xs text-neutral-500">by {review.displayName}</div>
+            <div className="mt-1 text-xs text-neutral-500">{review.displayName}</div>
             <p className="mt-2 line-clamp-3 text-sm text-neutral-700">{review.reviewText}</p>
           </Link>
         ))}

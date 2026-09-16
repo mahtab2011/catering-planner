@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import NextLink from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { buildDietaryBadgeLabels } from "@/lib/dietary";
@@ -19,6 +21,7 @@ type LiveRestaurant = {
   tags?: string[];
   popularItems?: string[];
   isHalal?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
   isFeatured?: boolean;
   status?: string;
@@ -31,6 +34,7 @@ function safeText(value?: string) {
 }
 
 export default function FeaturedRestaurantsSection() {
+  const t = useTranslations("Home");
   const [restaurants, setRestaurants] = useState<LiveRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,23 +74,23 @@ export default function FeaturedRestaurantsSection() {
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-neutral-900">Featured Restaurants</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{t("featuredRestaurants")}</h2>
         <Link href="/restaurants" className="text-sm font-semibold text-amber-700 hover:underline">
-          Browse All Restaurants →
+          {t("browseAllRestaurants")} →
         </Link>
       </div>
 
       <div className="mt-6">
         {loading ? (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-            Loading restaurants...
+            {t("loadingRestaurants")}
           </div>
         ) : restaurants.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-            No restaurants listed yet.{" "}
-            <Link href="/signup/restaurant" className="font-semibold text-amber-700 underline">
-              Be the first to join London Food Hubs
-            </Link>
+            {t("noRestaurantsYet")}{" "}
+            <NextLink href="/signup/restaurant" className="font-semibold text-amber-700 underline">
+              {t("beFirstToJoin")}
+            </NextLink>
             .
           </div>
         ) : (

@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Legacy hardcoded cuisine pages (app/<slug>/page.tsx) are superseded by
 // the data-driven app/cuisine/[slug] route backed by lib/cuisines.ts.
@@ -43,4 +46,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

@@ -1,4 +1,5 @@
 import type { Cuisine } from "./types";
+import type { LocaleCode } from "./locales";
 
 /**
  * Canonical cuisine / dish-guide data source for London Food Hubs.
@@ -21,6 +22,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "bangladeshi-food-east-london",
     kind: "cuisine",
     name: "Bangladeshi",
+    localizedName: { bn: "বাংলাদেশি", ar: "بنغلاديشي", fr: "Bangladais" },
     region: "South Asian",
     shortDescription:
       "East London is home to one of the largest Bangladeshi communities in the UK, with authentic cuisine ranging from home-style cooking to vibrant street food.",
@@ -93,6 +95,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "indian-food-london",
     kind: "cuisine",
     name: "Indian",
+    localizedName: { bn: "ভারতীয়", ar: "هندي", fr: "Indien" },
     region: "South Asian",
     shortDescription:
       "Rich curries, vegetarian dishes, tandoori grills, aromatic spices and freshly baked breads — one of London's most popular cuisines.",
@@ -163,6 +166,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "pakistani-food-london",
     kind: "cuisine",
     name: "Pakistani",
+    localizedName: { bn: "পাকিস্তানি", ar: "باكستاني", fr: "Pakistanais" },
     region: "South Asian",
     shortDescription:
       "Rich curries, slow-cooked stews, grilled kebabs, fragrant rice dishes and fresh naan — bold flavour and comfort across London.",
@@ -203,6 +207,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "lebanese-food-london",
     kind: "cuisine",
     name: "Lebanese",
+    localizedName: { bn: "লেবানিজ", ar: "لبناني", fr: "Libanais" },
     region: "Middle Eastern",
     shortDescription:
       "Fresh herbs, grilled meats, seafood, mezze plates, garlic sauces, tahini flavours and colourful salads.",
@@ -252,6 +257,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "turkish-food-london",
     kind: "cuisine",
     name: "Turkish",
+    localizedName: { bn: "তুর্কি", ar: "تركي", fr: "Turc" },
     region: "Middle Eastern",
     shortDescription:
       "Grilled kebabs, charcoal flavours, fresh salads, warm flatbreads and generous mixed grill platters.",
@@ -296,6 +302,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "thai-food-london",
     kind: "cuisine",
     name: "Thai",
+    localizedName: { bn: "থাই", ar: "تايلاندي", fr: "Thaïlandais" },
     region: "Southeast Asian",
     shortDescription:
       "A balance of sweet, sour, salty and spicy — from street food classics to rich curries and fresh salads.",
@@ -323,6 +330,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "japanese-food-london",
     kind: "cuisine",
     name: "Japanese",
+    localizedName: { bn: "জাপানি", ar: "ياباني", fr: "Japonais" },
     region: "East Asian",
     shortDescription:
       "Sushi, rice dishes, light curries and traditional meals — simplicity, freshness and balance.",
@@ -352,6 +360,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "african-food-london",
     kind: "cuisine",
     name: "African",
+    localizedName: { bn: "আফ্রিকান", ar: "أفريقي", fr: "Africain" },
     region: "African",
     shortDescription:
       "Dishes from West, East, North and South Africa, offering bold flavours, spices and traditional cooking styles.",
@@ -393,6 +402,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "jamaican-food-london",
     kind: "cuisine",
     name: "Jamaican",
+    localizedName: { bn: "জ্যামাইকান", ar: "جامايكي", fr: "Jamaïcain" },
     region: "Caribbean",
     shortDescription:
       "Bold spices, smoky jerk flavours and rich Caribbean dishes, from street food to takeaway and catering.",
@@ -422,6 +432,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "british-food-london",
     kind: "cuisine",
     name: "British",
+    localizedName: { bn: "ব্রিটিশ", ar: "بريطاني", fr: "Britannique" },
     region: "European",
     shortDescription:
       "Classic dishes like fish and chips, Sunday roast and full English breakfast, plus traditional desserts.",
@@ -459,6 +470,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "american-food-london",
     kind: "cuisine",
     name: "American",
+    localizedName: { bn: "আমেরিকান", ar: "أمريكي", fr: "Américain" },
     region: "Americas",
     shortDescription: "Burgers, BBQ, fried chicken and comfort food — classic US-style meals and takeaway.",
     longDescription:
@@ -486,6 +498,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "brazilian-food-london",
     kind: "cuisine",
     name: "Brazilian",
+    localizedName: { bn: "ব্রাজিলিয়ান", ar: "برازيلي", fr: "Brésilien" },
     region: "Americas",
     shortDescription: "BBQ meats, stews and street snacks, with a growing number of restaurants and caterers.",
     longDescription:
@@ -513,6 +526,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "mexican-food-london",
     kind: "cuisine",
     name: "Mexican",
+    localizedName: { bn: "মেক্সিকান", ar: "مكسيكي", fr: "Mexicain" },
     region: "Americas",
     shortDescription: "Bold flavours, spices and street food culture — from tacos to burritos.",
     longDescription:
@@ -540,6 +554,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "biryani-polao-london",
     kind: "dish-guide",
     name: "Biryani & Pulao",
+    localizedName: { bn: "বিরিয়ানি ও পোলাও", ar: "برياني وبولاو", fr: "Biryani et Pulao" },
     region: "South Asian",
     shortDescription:
       "Rich spices, fragrant rice and slow-cooked meats — from Hyderabadi dum biryani to Bangladeshi kacchi biryani and Afghan pulao.",
@@ -595,6 +610,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "ethiopian-eritrean-food-london",
     kind: "cuisine",
     name: "Ethiopian & Eritrean",
+    localizedName: { bn: "ইথিওপিয়ান ও ইরিত্রিয়ান", ar: "إثيوبي وإريتري", fr: "Éthiopien et Érythréen" },
     region: "African",
     shortDescription:
       "Injera flatbread served with richly spiced stews, shared from a single plate in the traditional style.",
@@ -623,6 +639,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "somali-food-london",
     kind: "cuisine",
     name: "Somali",
+    localizedName: { bn: "সোমালি", ar: "صومالي", fr: "Somalien" },
     region: "African",
     shortDescription:
       "Fragrant spiced rice, slow-cooked meats and East African/Middle Eastern-influenced flavours.",
@@ -650,6 +667,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "chinese-food-london",
     kind: "cuisine",
     name: "Chinese",
+    localizedName: { bn: "চাইনিজ", ar: "صيني", fr: "Chinois" },
     region: "East Asian",
     shortDescription:
       "From Cantonese dim sum to Sichuan spice — one of London's most widespread and varied cuisines.",
@@ -687,6 +705,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "vietnamese-food-london",
     kind: "cuisine",
     name: "Vietnamese",
+    localizedName: { bn: "ভিয়েতনামিজ", ar: "فيتنامي", fr: "Vietnamien" },
     region: "Southeast Asian",
     shortDescription:
       "Fresh herbs, light broths and bold dipping sauces — best known for pho and banh mi.",
@@ -713,6 +732,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "korean-food-london",
     kind: "cuisine",
     name: "Korean",
+    localizedName: { bn: "কোরিয়ান", ar: "كوري", fr: "Coréen" },
     region: "East Asian",
     shortDescription:
       "Bold fermented flavours, sizzling barbecue and comforting stews.",
@@ -740,6 +760,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "nepalese-food-london",
     kind: "cuisine",
     name: "Nepalese",
+    localizedName: { bn: "নেপালি", ar: "نيبالي", fr: "Népalais" },
     region: "South Asian",
     shortDescription:
       "Hearty dumplings, lentil dishes and mild, comforting spicing distinct from neighbouring cuisines.",
@@ -765,6 +786,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "sri-lankan-food-london",
     kind: "cuisine",
     name: "Sri Lankan",
+    localizedName: { bn: "শ্রীলঙ্কান", ar: "سريلانكي", fr: "Sri-lankais" },
     region: "South Asian",
     shortDescription:
       "Coconut-rich curries, hoppers and fiery sambols — distinct from South Indian cuisine despite some overlap.",
@@ -790,6 +812,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "persian-food-london",
     kind: "cuisine",
     name: "Persian / Iranian",
+    localizedName: { bn: "পার্সিয়ান/ইরানি", ar: "فارسي/إيراني", fr: "Persan/Iranien" },
     region: "Middle Eastern",
     shortDescription:
       "Fragrant saffron rice, slow-grilled kebabs and herb-forward stews.",
@@ -816,6 +839,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "greek-food-london",
     kind: "cuisine",
     name: "Greek",
+    localizedName: { bn: "গ্রিক", ar: "يوناني", fr: "Grec" },
     region: "European",
     shortDescription:
       "Grilled meats, fresh salads, olive oil and sharing-style mezze plates.",
@@ -843,6 +867,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "italian-food-london",
     kind: "cuisine",
     name: "Italian",
+    localizedName: { bn: "ইতালিয়ান", ar: "إيطالي", fr: "Italien" },
     region: "European",
     shortDescription:
       "Pasta, pizza and regional specialities, from casual trattorias to family-run restaurants.",
@@ -870,6 +895,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "polish-food-london",
     kind: "cuisine",
     name: "Polish",
+    localizedName: { bn: "পোলিশ", ar: "بولندي", fr: "Polonais" },
     region: "European",
     shortDescription:
       "Hearty, comforting dishes — dumplings, cured meats and slow-cooked stews.",
@@ -895,6 +921,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "filipino-food-london",
     kind: "cuisine",
     name: "Filipino",
+    localizedName: { bn: "ফিলিপিনো", ar: "فلبيني", fr: "Philippin" },
     region: "Southeast Asian",
     shortDescription:
       "Sweet, sour and savoury flavours combined in dishes like adobo, sisig and lumpia.",
@@ -920,6 +947,7 @@ export const CUISINES: Record<string, Cuisine> = {
     slug: "chicken-tikka-london",
     kind: "dish-guide",
     name: "Chicken Tikka",
+    localizedName: { bn: "চিকেন টিক্কা", ar: "دجاج تكة", fr: "Poulet Tikka" },
     region: "South Asian",
     shortDescription:
       "Loved across London for its smoky flavour and rich spices, from street food to restaurant dining and catering.",
@@ -936,6 +964,15 @@ export const CUISINES: Record<string, Cuisine> = {
 
 export function getCuisineBySlug(slug: string): Cuisine | undefined {
   return CUISINES[slug];
+}
+
+/** Display name for a cuisine in a given locale — reads
+ *  `Cuisine.localizedName` when a real, human-reviewed translation
+ *  exists for that locale, otherwise falls back to the canonical
+ *  English `name`. The `slug` never changes based on this — see
+ *  docs/CUISINE-TAXONOMY.md. */
+export function getCuisineDisplayName(cuisine: Cuisine, locale: LocaleCode | string): string {
+  return cuisine.localizedName?.[locale as keyof typeof cuisine.localizedName] || cuisine.name;
 }
 
 export function getAllCuisines(): Cuisine[] {

@@ -1,7 +1,9 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { getAllHubs, getFeaturedHubs } from "@/lib/hubs";
 
 export default function HubPreviewSection() {
+  const t = useTranslations("Home");
   const featured = getFeaturedHubs();
   const all = getAllHubs();
   const hubs = (featured.length >= 4 ? featured : all).slice(0, 6);
@@ -9,14 +11,13 @@ export default function HubPreviewSection() {
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-neutral-900">Explore London&apos;s Food Hubs</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{t("exploreFoodHubs")}</h2>
         <Link href="/hubs" className="text-sm font-semibold text-amber-700 hover:underline">
-          All Food Hubs →
+          {t("allFoodHubs")} →
         </Link>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-        A food hub is a London area with a strong concentration of restaurants and food
-        businesses — from Brick Lane to Edgware Road to Plashet Road.
+        {t("exploreFoodHubsSubtitle")}
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">

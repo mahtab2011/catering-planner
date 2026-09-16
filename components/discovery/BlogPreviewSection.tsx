@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
@@ -13,6 +14,7 @@ function tsToMs(value: unknown) {
 }
 
 export default function BlogPreviewSection() {
+  const t = useTranslations("Home");
   const [articles, setArticles] = useState<ArticleDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,15 +49,15 @@ export default function BlogPreviewSection() {
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-neutral-900">From the London Food Hubs Blog</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{t("fromTheBlog")}</h2>
         <Link href="/blog" className="text-sm font-semibold text-amber-700 hover:underline">
-          Visit the Blog →
+          {t("visitBlog")} →
         </Link>
       </div>
 
       {articles.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-white p-6 text-sm text-neutral-500">
-          Our editorial team is preparing the first stories — check back soon.
+          {t("blogEmpty")}
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">

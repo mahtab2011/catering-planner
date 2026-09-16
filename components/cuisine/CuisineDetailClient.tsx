@@ -1,11 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import NextLink from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Cuisine, ArticleDoc, RecommendationDoc, DietaryAttribute } from "@/lib/types";
-import { getAllCuisines, restaurantMatchesCuisineSlug } from "@/lib/cuisines";
+import { getAllCuisines, getCuisineDisplayName, restaurantMatchesCuisineSlug } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
 import { buildDietaryBadgeLabels } from "@/lib/dietary";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
@@ -36,6 +38,13 @@ function safeText(value?: string) {
 }
 
 export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
+  const locale = useLocale();
+  const t = useTranslations("CuisineDetail");
+  const tCommon = useTranslations("Common");
+  const tHome = useTranslations("Home");
+  const tBlog = useTranslations("Blog");
+  const displayName = getCuisineDisplayName(cuisine, locale);
+
   const [restaurants, setRestaurants] = useState<LiveRestaurant[]>([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
   const [articles, setArticles] = useState<ArticleDoc[]>([]);
@@ -115,7 +124,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
   }, [cuisine]);
 
   const relatedHubs = useMemo(() => {
-    const terms = [cuisine.name.toLowerCase(), ...cuisine.matchTerms.map((t) => t.toLowerCase())];
+    const terms = [cuisine.name.toLowerCase(), ...cuisine.matchTerms.map((term) => term.toLowerCase())];
     return getAllHubs().filter((hub) =>
       (hub.cuisineTags || []).some((tag) => terms.includes(tag.toLowerCase()))
     );
@@ -135,7 +144,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
         <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-900">
-              {cuisine.region} Cuisine
+              {t("regionCuisineBadge", { region: cuisine.region })}
             </span>
             {(cuisine.dietaryTags || []).map((tag) => (
               <span
@@ -148,7 +157,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
           </div>
 
           <h1 className="mt-4 text-3xl font-bold text-neutral-900 md:text-4xl">
-            {cuisine.name} Food in London
+            {t("foodInLondon", { cuisine: displayName })}
           </h1>
 
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
@@ -166,20 +175,20 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
               href="/restaurants"
               className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
             >
-              Browse {cuisine.name} Restaurants
+              {t("browseCuisineRestaurants", { cuisine: displayName })}
             </Link>
-            <Link
+            <NextLink
               href="/signup/restaurant"
               className="rounded-xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
-              Own a {cuisine.name} business? List it free
-            </Link>
+              {t("ownBusinessCta", { cuisine: displayName })}
+            </NextLink>
           </div>
         </div>
 
         {recommendations.length > 0 ? (
           <section className="mt-6 rounded-3xl border border-purple-200 bg-purple-50 p-6">
-            <h2 className="text-lg font-bold text-purple-900">London Food Hubs Recommends</h2>
+            <h2 className="text-lg font-bold text-purple-900">{tHome("recommends")}</h2>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
               {recommendations.map((rec) => (
                 <Link
@@ -200,7 +209,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
         {/* Dishes */}
         <section className="mt-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-neutral-900">
-            {cuisine.kind === "dish-guide" ? "About These Dishes" : `Popular ${cuisine.name} Dishes`}
+            {cuisine.kind === "dish-guide" ? t("aboutDishes") : t("popularDishes", { cuisine: displayName })}
           </h2>
 
           {cuisine.featuredDishes && cuisine.featuredDishes.length > 0 ? (
@@ -249,19 +258,19 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
         {/* Restaurants offering this cuisine */}
         <section className="mt-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-neutral-900">
-            {cuisine.name} Restaurants on London Food Hubs
+            {t("restaurantsHeading", { cuisine: displayName })}
           </h2>
 
           {loadingRestaurants ? (
             <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-              Loading restaurants...
+              {tCommon("loading")}
             </div>
           ) : restaurants.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-              No {cuisine.name.toLowerCase()} restaurants are listed yet. Check back soon, or{" "}
-              <Link href="/signup/restaurant" className="font-semibold text-amber-700 underline">
-                be the first to join
-              </Link>
+              {t("noRestaurantsYet", { cuisine: displayName })}{" "}
+              <NextLink href="/signup/restaurant" className="font-semibold text-amber-700 underline">
+                {t("beFirstToJoin")}
+              </NextLink>
               .
             </div>
           ) : (
@@ -270,7 +279,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
                 <RestaurantCard
                   key={r.id}
                   name={safeText(r.name) || "Restaurant"}
-                  cuisine={safeText(r.cuisine) || cuisine.name}
+                  cuisine={safeText(r.cuisine) || displayName}
                   area={safeText(r.area) || safeText(r.hubName) || "London"}
                   tags={[...buildDietaryBadgeLabels(r), ...(r.tags || [])].slice(0, 5)}
                   popularItems={(r.popularItems || []).slice(0, 3)}
@@ -289,7 +298,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
         {relatedHubs.length > 0 ? (
           <section className="mt-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-neutral-900">
-              Where to Find {cuisine.name} Food
+              {t("whereToFind", { cuisine: displayName })}
             </h2>
             <div className="mt-6 flex flex-wrap gap-3">
               {relatedHubs.map((hub) => (
@@ -307,10 +316,10 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
 
         {/* Related blog posts */}
         <section className="mt-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-          <h2 className="text-2xl font-bold text-neutral-900">From the Blog</h2>
+          <h2 className="text-2xl font-bold text-neutral-900">{tHome("fromTheBlog")}</h2>
           {articles.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
-              No {cuisine.name.toLowerCase()} articles published yet.
+              {tBlog("noArticlesYet")}
             </div>
           ) : (
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -334,7 +343,9 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
         {/* Explore other cuisines */}
         {relatedCuisines.length > 0 ? (
           <section className="mt-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-neutral-900">Explore More {cuisine.region} Cuisine</h2>
+            <h2 className="text-2xl font-bold text-neutral-900">
+              {t("exploreMoreRegion", { region: cuisine.region })}
+            </h2>
             <div className="mt-6 flex flex-wrap gap-3">
               {relatedCuisines.map((c) => (
                 <Link
@@ -342,14 +353,14 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
                   href={`/cuisine/${c.slug}`}
                   className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
                 >
-                  {c.name} →
+                  {getCuisineDisplayName(c, locale)} →
                 </Link>
               ))}
               <Link
                 href="/cuisines"
                 className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                All Cuisines →
+                {t("allCuisines")} →
               </Link>
             </div>
           </section>

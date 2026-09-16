@@ -1,13 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { RecommendationDoc } from "@/lib/types";
 import { RECOMMENDATION_TYPE_LABELS } from "@/lib/recommendations";
 
 export default function RecommendsPreviewSection() {
+  const t = useTranslations("Home");
+  const tCommon = useTranslations("Common");
   const [recommendations, setRecommendations] = useState<RecommendationDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,16 +47,15 @@ export default function RecommendsPreviewSection() {
   return (
     <section className="rounded-3xl border border-purple-200 bg-purple-50 p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-neutral-900">London Food Hubs Recommends</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">{t("recommends")}</h2>
         <Link href="/recommendations" className="text-sm font-semibold text-purple-700 hover:underline">
-          See All →
+          {tCommon("seeAll")} →
         </Link>
       </div>
 
       {recommendations.length === 0 ? (
         <p className="mt-4 text-sm text-neutral-600">
-          Our editorial picks — Dish of the Week, Hidden Gems, Family Favourites and more — will
-          appear here as they&apos;re published.
+          {t("recommendsEmpty")}
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

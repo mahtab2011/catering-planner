@@ -154,6 +154,10 @@ node --check tests/firestore-rules/rules.test.js
 
 ## Did the full emulator suite actually run?
 
+**No, as of Task E — this has since changed. See "STATUS UPDATE (Task L)"
+immediately below; the rest of this section is preserved as Task E
+originally wrote it, for an accurate historical record.**
+
 **No.** The Firestore emulator itself could not start — `java` is not
 installed in this environment (`command not found`), confirmed both via a
 direct `java -version` check and via the emulator's own startup failure.
@@ -163,6 +167,30 @@ version-conflict defect fixed above) and every test file passes a syntax
 check, but **zero test cases have ever actually executed against the real
 rules engine**, in this session or any prior one. Nothing in this
 repository claims otherwise.
+
+### STATUS UPDATE (Task L) — the suite has now run, for real
+
+Task L (2026-09-16) installed a local, portable Eclipse Temurin 21.0.12.1+1
+JDK (no admin rights required, authorized specifically for this purpose)
+and executed the exact command below for the first time in this project's
+history, from `tests/firestore-rules`:
+
+```
+npx firebase-tools emulators:exec --only firestore "npm test"
+```
+
+Result: the Firestore Emulator genuinely started (`Firestore Emulator was
+started in standard edition`), and **105/105 tests passed** across all 15
+top-level test suites (every London Food Hubs collection covered by this
+file, plus every SmartServeUK collection: `staff`, `customers`/`events`,
+`sales_signups`, `blackcab_early_access`, `users`, `reviews`, `articles`,
+`recommendations`). No rule defect was found; no rule text needed to
+change. This supersedes the "zero test cases have ever actually executed"
+statement above — that was true when Task E wrote it and is no longer
+true. **This is local emulator verification, not production deployment**
+— `firestore.rules` has still never been deployed to any real Firebase
+project; see `docs/PRODUCTION-READINESS-AUDIT.md`'s "STATUS UPDATE
+(Task L)" for the full detail and the J-01/J-02 status update.
 
 ## Unresolved SmartServeUK compatibility questions
 
@@ -193,23 +221,31 @@ not find anything that resolves them, and did not attempt to guess:
 
 ## Deployment readiness
 
-**Rules are NOT considered ready for a deployment decision.** Static
-inspection and (now-installable, still-unexecuted) unit tests are not the
-same as verified behavior. Specifically:
+**Rules are still NOT considered ready for a deployment decision — but the
+reason has narrowed.** As of Task L, the rules have been genuinely
+emulator-verified (105/105 passed locally); the remaining blockers are the
+undecided SmartServeUK collections below and the separate, explicit
+authorization deployment itself would require:
 
 - The rules file itself looks internally consistent and was re-read in
   full during this audit; no unambiguous defect was found beyond the two
   test-coverage gaps closed above.
-- But **no test in `tests/firestore-rules/` has ever actually run against
-  the real rules engine** — every prior claim of correctness, and this
-  audit's own review, is static analysis only.
+- **(Task L, 2026-09-16)** Every test in `tests/firestore-rules/` has now
+  actually run against the real local rules engine — 105/105 passed, zero
+  rule changes required. This is no longer static analysis only. See the
+  "STATUS UPDATE (Task L)" section above for the full result.
 - 10 collections remain genuinely undecidable and would go from
   "unprotected today" to "fully denied, including to admins" the instant
   these rules deploy — some of those (`orders`, `riders`) back
   currently-working, unauthenticated operational pages. Deploying without
-  resolving those first would break live SmartServeUK functionality.
-- Before any real deployment decision: get Java + the Firestore emulator
-  available somewhere, run the full suite for real, resolve or explicitly
-  accept each of the 10 undecided collections, and only then treat this as
-  a deployment candidate — see `docs/LONDON-FOOD-HUBS-LAUNCH-CHECKLIST.md`
-  for the full ordered sequence.
+  resolving those first would break live SmartServeUK functionality. Task
+  L deliberately did not attempt to resolve these — they are business/
+  application-code policy questions, not rule defects, and resolving them
+  was explicitly out of Task L's scope.
+- Before any real deployment decision: resolve or explicitly accept each
+  of the 10 undecided collections, then obtain separate explicit
+  authorization for `firebase deploy --only firestore:rules` against the
+  correct production project — see
+  `docs/LONDON-FOOD-HUBS-LAUNCH-CHECKLIST.md` for the full ordered
+  sequence. Local emulator verification (now done) was a prerequisite for
+  that decision, not a substitute for it.

@@ -218,10 +218,11 @@ isSignedIn()
 ```
 
 Things this specifically prevents, each with a test in
-`tests/firestore-rules/rules.test.js` (**unexecuted** — see
-`docs/FIRESTORE-SECURITY-AUDIT.md`; Java is unavailable in this
-environment, so these are reviewed-but-unrun, same as every other rules
-test in this repository):
+`tests/firestore-rules/rules.test.js` (**emulator-verified as of Task L** —
+run 2026-09-16 against a local Firestore emulator, 105/105 tests passed
+including every case listed below; see `docs/FIRESTORE-SECURITY-AUDIT.md`
+and the "Task L" status note below for the full run detail — still not
+deployed to any production Firebase project):
 
 - **Setting `ownerUid` in the same write** — `unchanged('ownerUid')` blocks
   it outright, independent of anything else in the write.
@@ -527,18 +528,18 @@ automatically as part of `npm install`/`build`/`start`/any deploy step.
   data — see "Legacy data / migration" above.
 - **(Task K)** Did not deploy the updated `firestore.rules` — still local,
   still unapproved for deployment (unchanged status from Task E).
-- **(Task K)** Did not verify the new/updated rules against a real
-  Firestore emulator — Java remains unavailable in this environment. Every
-  claim in this document about what the new rules "prevent" is a static
-  reading of the rules language plus reviewed-but-unexecuted tests
-  (`tests/firestore-rules/rules.test.js`'s `restaurant_claims` describe
-  block), **not** an observed, emulator-confirmed result. **Do not read
-  "the PII architecture is fixed" as equivalent to "the Firestore rules
-  are verified in an emulator"** — they are two different claims, and only
-  the first one is true right now. See
-  `docs/PRODUCTION-READINESS-AUDIT.md`'s "J-02" and
-  `docs/FIRESTORE-SECURITY-AUDIT.md` for the exact commands to run once
-  Java is available.
+- **(Task K, superseded by Task L)** Task K itself did not verify the
+  new/updated rules against a real Firestore emulator (Java was
+  unavailable at the time). **Task L has since done this**: a local JDK
+  was installed for this purpose only, and the complete suite —
+  including the `restaurant_claims` describe block — ran against a real
+  local Firestore emulator on 2026-09-16, 105/105 passed. Every claim in
+  this document about what the rules "prevent" is now an observed,
+  emulator-confirmed result, not a static reading. **This is still local
+  verification, not production deployment** — `firestore.rules` has not
+  been deployed to any real Firebase project. See
+  `docs/PRODUCTION-READINESS-AUDIT.md`'s "J-01"/"J-02" and
+  `docs/FIRESTORE-SECURITY-AUDIT.md` for the exact command and result.
 - **(Task F)** Did not build identity-document verification, business
   registration checks, or any automated verification of a claimant's
   contact details — an admin reviews the submitted name/email/role/note

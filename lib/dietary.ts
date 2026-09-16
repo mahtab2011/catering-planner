@@ -56,10 +56,39 @@ export function buildDietaryBadgeLabels(business: {
    *  documents written before the rename keep displaying correctly. */
   dietaryCertifications?: DietaryAttribute[];
 }): string[] {
+  return buildDietaryBadgeAttributes(business).map((attr) => DIETARY_ATTRIBUTE_LABELS[attr]);
+}
+
+/** Same dedup logic as buildDietaryBadgeLabels(), but returns the raw
+ *  DietaryAttribute keys rather than pre-translated (always-English)
+ *  label strings — for any locale-aware caller (e.g.
+ *  components/restaurants/RestaurantCard.tsx) that needs to translate
+ *  each attribute itself via useTranslations("Dietary") +
+ *  DIETARY_ATTRIBUTE_TRANSLATION_KEY. Prefer this over
+ *  buildDietaryBadgeLabels() in any component that renders under
+ *  next-intl. */
+export function buildDietaryBadgeAttributes(business: {
+  isHalal?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
+  dietaryCertifications?: DietaryAttribute[];
+}): DietaryAttribute[] {
   const attributes = new Set<DietaryAttribute>([
     ...(business.dietaryAttributes || []),
     ...(business.dietaryCertifications || []),
   ]);
   if (business.isHalal) attributes.add("halal");
-  return [...attributes].map((attr) => DIETARY_ATTRIBUTE_LABELS[attr]);
+  return [...attributes];
 }
+
+/** Maps DietaryAttribute's snake_case values to the "Dietary" message
+ *  namespace's camelCase keys (messages/{en,bn,ar,fr}.json) — the
+ *  single place this mapping is defined; every locale-aware renderer
+ *  of a dietary badge should import this rather than redefining it. */
+export const DIETARY_ATTRIBUTE_TRANSLATION_KEY: Record<DietaryAttribute, string> = {
+  vegetarian: "vegetarian",
+  vegan: "vegan",
+  non_vegetarian: "nonVegetarian",
+  halal: "halal",
+  kosher: "kosher",
+  jain: "jain",
+};

@@ -321,6 +321,104 @@ export type RestaurantDoc = {
    *  trail field, not an authorization source. */
   claimDecidedBy?: string;
 
+  /** Owner-approved translations of THIS restaurant's OWN supplied
+   *  content — see docs/MULTILINGUAL-ARCHITECTURE.md's "Restaurant-
+   *  supplied content" policy and RestaurantTranslationRequestDoc
+   *  below. Populated ONLY once a translation request for that locale
+   *  has actually reached `PUBLISHED` — never auto-generated, never
+   *  machine-translated, never partial-and-shown-as-if-complete.
+   *  Absent for a given locale means exactly what it should: show the
+   *  original (canonical) content unchanged in that locale. This is
+   *  the data architecture only — no pricing/payment is implemented
+   *  anywhere in this codebase, and nothing currently writes to this
+   *  field (no restaurant has ever requested or received a paid
+   *  translation). */
+  contentTranslations?: Partial<Record<LocaleCode, RestaurantContentTranslation>>;
+
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
+
+/** One locale's owner-approved translation of a restaurant's own
+ *  supplied content. Every field is optional — a translation can be
+ *  partial (e.g. the description translated but not an alternative
+ *  name) without that meaning anything is auto-filled for the rest;
+ *  see getLocalizedRestaurantContent() in lib/restaurantTranslations.ts
+ *  for exactly how a partial translation falls back. */
+export type RestaurantContentTranslation = {
+  /** Only set if the restaurant explicitly supplied/approved an
+   *  alternative localized name for this locale — most restaurants
+   *  will never set this, and the canonical `RestaurantDoc.name` is
+   *  shown instead. Never auto-transliterated or auto-translated. */
+  name?: string;
+  shortDescription?: string;
+  longDescription?: string;
+};
+
+/**
+ * Status of a restaurant owner's request to have their own content
+ * translated into one or more locales — see
+ * docs/MULTILINGUAL-ARCHITECTURE.md and
+ * docs/RESTAURANT-TRANSLATION-WORKFLOW section there. This is the
+ * DATA ARCHITECTURE for a future paid-translation product; no
+ * pricing, payment processing, or currency logic is implemented
+ * anywhere in this codebase — `quotedAmount`/`quotedCurrency` are
+ * plain stored values an admin/ops process would fill in by hand,
+ * not computed or charged by anything here.
+ *
+ *   REQUESTED        — the owner asked for a translation. Only status
+ *                       a client (the restaurant's own owner) may ever
+ *                       set directly — see firestore.rules.
+ *   QUOTED            — an admin/ops process has set a price (a plain
+ *                       stored value, never invented/computed here).
+ *   PAYMENT_PENDING   — quote accepted, awaiting payment (no payment
+ *                       processing exists in this codebase — this
+ *                       status exists for a future integration to set).
+ *   IN_TRANSLATION    — payment received, translation work underway.
+ *   OWNER_REVIEW      — a translation exists but is not yet approved
+ *                       by the restaurant — `contentTranslations` on
+ *                       RestaurantDoc must NOT be written yet at this
+ *                       stage.
+ *   PUBLISHED         — the owner approved it; only now may
+ *                       `RestaurantDoc.contentTranslations` for this
+ *                       locale actually be set.
+ *   CANCELLED         — the owner or an admin ended the request before
+ *                       publication (e.g. declined a quote). Terminal,
+ *                       like PUBLISHED — never silently retried.
+ */
+export type RestaurantTranslationRequestStatus =
+  | "REQUESTED"
+  | "QUOTED"
+  | "PAYMENT_PENDING"
+  | "IN_TRANSLATION"
+  | "OWNER_REVIEW"
+  | "PUBLISHED"
+  | "CANCELLED";
+
+export type RestaurantTranslationRequestDoc = {
+  id: string;
+  restaurantId: string;
+  /** Uid of the restaurant's owner who requested this — must equal
+   *  the target restaurant's own `ownerUid` at request time (see
+   *  firestore.rules), so only an actual owner can request a
+   *  translation of their own listing. */
+  requestedByUid: string;
+  targetLocales: LocaleCode[];
+  status: RestaurantTranslationRequestStatus;
+  /** Plain stored values, never computed/charged by this codebase —
+   *  see this type's own doc comment above. */
+  quotedAmount?: number;
+  quotedCurrency?: CurrencyCode;
+  requestedAt?: unknown;
+  quotedAt?: unknown;
+  paymentReceivedAt?: unknown;
+  translationStartedAt?: unknown;
+  ownerReviewRequestedAt?: unknown;
+  publishedAt?: unknown;
+  cancelledAt?: unknown;
+  /** Free-text notes for the admin/ops process handling this request
+   *  — never shown to the public. */
+  notes?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
 };

@@ -260,9 +260,26 @@ service cloud.firestore {
           && resource.data.get('ownerClaimStatus', 'unclaimed') in ['unclaimed', 'claim_rejected']
           && request.resource.data.claimantUid == request.auth.uid
           && request.resource.data.ownerClaimStatus == 'claim_pending'
+          // Contact/evidence fields — see docs/RESTAURANT-CLAIM-WORKFLOW.md's
+          // "Claimant contact information" section (Task F). Name and
+          // business email are the two things an admin actually needs to
+          // reach a real claimant, so they're required; the rest (role,
+          // phone, a free-text note) are optional context, not identity
+          // verification.
+          && request.resource.data.claimantName is string
+          && request.resource.data.claimantName.size() > 0
+          && request.resource.data.claimantContactEmail is string
+          && request.resource.data.claimantContactEmail.size() > 0
+          && (!('claimantRole' in request.resource.data) || request.resource.data.claimantRole is string)
+          && (!('claimantContactPhone' in request.resource.data) || request.resource.data.claimantContactPhone is string)
+          && (!('claimantNote' in request.resource.data) || request.resource.data.claimantNote is string)
           && unchanged('ownerUid')
           && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt'])
+               .hasOnly([
+                 'claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt',
+                 'claimantName', 'claimantRole', 'claimantContactEmail',
+                 'claimantContactPhone', 'claimantNote'
+               ])
         );
 
       allow delete: if isAdmin();

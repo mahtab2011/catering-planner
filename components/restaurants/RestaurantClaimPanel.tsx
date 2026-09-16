@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { deriveClaimViewerState, isClaimFormComplete } from "@/lib/restaurantClaim";
 import type { RestaurantOwnerClaimStatus, RestaurantRequestType } from "@/lib/types";
 
 type Props = {
@@ -19,12 +20,17 @@ type Props = {
  * Claim / suggest-update / request-removal actions for a restaurant
  * detail page — see docs/RESTAURANT-CLAIM-WORKFLOW.md.
  *
- * Claiming writes ONLY `claimantUid` (to the signed-in user) and
- * `ownerClaimStatus` ('claim_pending') on the restaurant document —
+ * Claiming writes ONLY `claimantUid`, `ownerClaimStatus`
+ * ('claim_pending'), and a small set of optional contact/evidence
+ * fields (`claimantName`, `claimantRole`, `claimantContactEmail`,
+ * `claimantContactPhone`, `claimantNote`) on the restaurant document —
  * never `ownerUid`. firestore.rules enforces this independently of
  * this component (see the restaurants/{restaurantId} update rule's
- * claim-submission branch); this UI just gives it a legitimate path
- * to trigger, and never attempts to write ownerUid itself.
+ * claim-submission branch, which lists exactly these fields via
+ * `diff().affectedKeys().hasOnly([...])`); this UI just gives it a
+ * legitimate path to trigger, and never attempts to write ownerUid
+ * itself. Submitting a claim never grants edit access — only an admin
+ * approving it in app/admin/restaurant-claims/page.tsx does that.
  *
  * Correction/removal requests are written to a separate
  * restaurant_correction_requests collection and never touch the
@@ -47,6 +53,11 @@ export default function RestaurantClaimPanel({
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimMessage, setClaimMessage] = useState("");
+  const [claimantName, setClaimantName] = useState("");
+  const [claimantRole, setClaimantRole] = useState("");
+  const [claimantContactEmail, setClaimantContactEmail] = useState("");
+  const [claimantContactPhone, setClaimantContactPhone] = useState("");
+  const [claimantNote, setClaimantNote] = useState("");
   const [openRequestType, setOpenRequestType] = useState<RestaurantRequestType | null>(null);
   const [requestNote, setRequestNote] = useState("");
   const [submittingRequest, setSubmittingRequest] = useState(false);
@@ -56,16 +67,23 @@ export default function RestaurantClaimPanel({
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setCheckingAuth(false);
+      // Business email is often the same as the claimant's login
+      // email — pre-fill it as a convenience, never as a
+      // substitute for the field being editable.
+      if (u?.email) setClaimantContactEmail((prev) => prev || u.email || "");
     });
     return () => unsub();
   }, []);
 
-  const isUnclaimed = !ownerUid;
-  const canSubmitClaim =
-    isUnclaimed && (ownerClaimStatus === undefined || ownerClaimStatus === "unclaimed" || ownerClaimStatus === "claim_rejected");
+  const { isUnclaimed, isOwnerViewer, wasPreviouslyRejected, canSubmitClaim } = deriveClaimViewerState({
+    ownerUid,
+    ownerClaimStatus,
+    viewerUid: user?.uid,
+  });
+  const claimFormIncomplete = !isClaimFormComplete({ claimantName, claimantContactEmail });
 
   async function submitClaim() {
-    if (!user) return;
+    if (!user || claimFormIncomplete) return;
     setClaiming(true);
     setClaimMessage("");
     try {
@@ -73,6 +91,11 @@ export default function RestaurantClaimPanel({
         claimantUid: user.uid,
         ownerClaimStatus: "claim_pending",
         claimSubmittedAt: serverTimestamp(),
+        claimantName: claimantName.trim(),
+        claimantRole: claimantRole.trim(),
+        claimantContactEmail: claimantContactEmail.trim(),
+        claimantContactPhone: claimantContactPhone.trim(),
+        claimantNote: claimantNote.trim(),
       });
       setClaimMessage(t("claimSubmittedMessage"));
     } catch (err) {
@@ -116,7 +139,19 @@ export default function RestaurantClaimPanel({
     <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
       <div className="text-sm font-semibold text-neutral-900">{t("manageListing")}</div>
 
-      {isUnclaimed ? (
+      {isOwnerViewer ? (
+        <div className="mt-3">
+          <p className="text-sm font-medium text-emerald-700">{t("approvedOwnerNotice")}</p>
+          <NextLink
+            href={`/restaurants/${restaurantId}/edit`}
+            className="mt-2 inline-block rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
+          >
+            {t("manageRestaurantProfile")}
+          </NextLink>
+        </div>
+      ) : !isUnclaimed ? (
+        <p className="mt-3 text-sm text-neutral-600">{t("claimedByOwnerNotice")}</p>
+      ) : (
         <div className="mt-3">
           {ownerClaimStatus === "claim_pending" ? (
             <p className="text-sm text-neutral-600">{t("claimUnderReview")}</p>
@@ -125,15 +160,77 @@ export default function RestaurantClaimPanel({
               <p className="text-sm text-neutral-600">
                 {t("isYourBusiness", { name: restaurantName })}
               </p>
+              {wasPreviouslyRejected ? (
+                <p className="mt-2 text-sm text-amber-700">{t("claimPreviouslyRejectedNotice")}</p>
+              ) : null}
               {user ? (
-                <button
-                  type="button"
-                  onClick={submitClaim}
-                  disabled={claiming}
-                  className="mt-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
-                >
-                  {claiming ? t("submitting") : t("claimListing")}
-                </button>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-neutral-700">
+                      {t("claimantNameLabel")}
+                    </label>
+                    <input
+                      value={claimantName}
+                      onChange={(e) => setClaimantName(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-neutral-700">
+                      {t("claimantRoleLabel")}
+                    </label>
+                    <input
+                      value={claimantRole}
+                      onChange={(e) => setClaimantRole(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-neutral-700">
+                      {t("claimantEmailLabel")}
+                    </label>
+                    <input
+                      type="email"
+                      value={claimantContactEmail}
+                      onChange={(e) => setClaimantContactEmail(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-neutral-700">
+                      {t("claimantPhoneLabel")}
+                    </label>
+                    <input
+                      type="tel"
+                      value={claimantContactPhone}
+                      onChange={(e) => setClaimantContactPhone(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-neutral-700">
+                      {t("claimantNoteLabel")}
+                    </label>
+                    <textarea
+                      value={claimantNote}
+                      onChange={(e) => setClaimantNote(e.target.value)}
+                      placeholder={t("claimantNotePlaceholder")}
+                      rows={2}
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={submitClaim}
+                    disabled={claiming || claimFormIncomplete}
+                    className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+                  >
+                    {claiming ? t("submitting") : t("claimListing")}
+                  </button>
+                  {claimFormIncomplete ? (
+                    <p className="text-xs text-neutral-500">{t("claimFormIncompleteMessage")}</p>
+                  ) : null}
+                </div>
               ) : (
                 <NextLink
                   href="/login"
@@ -146,7 +243,7 @@ export default function RestaurantClaimPanel({
             </>
           ) : null}
         </div>
-      ) : null}
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2">
         {user ? (

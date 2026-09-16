@@ -17,7 +17,16 @@ import type { RestaurantCorrectionRequestDoc, RestaurantDoc } from "@/lib/types"
 
 type ClaimRow = Pick<
   RestaurantDoc,
-  "id" | "name" | "ownerClaimStatus" | "claimantUid" | "claimSubmittedAt"
+  | "id"
+  | "name"
+  | "ownerClaimStatus"
+  | "claimantUid"
+  | "claimSubmittedAt"
+  | "claimantName"
+  | "claimantRole"
+  | "claimantContactEmail"
+  | "claimantContactPhone"
+  | "claimantNote"
 >;
 
 /**
@@ -174,7 +183,20 @@ export default function AdminRestaurantClaimsPage() {
                   <Link href={`/restaurants/${claim.id}`} className="font-semibold text-neutral-900 hover:underline">
                     {claim.name}
                   </Link>
-                  <div className="text-xs text-neutral-500">Claimant uid: {claim.claimantUid}</div>
+                  <div className="mt-1 text-sm text-neutral-700">
+                    {claim.claimantName || "(no name given)"}
+                    {claim.claimantRole ? ` — ${claim.claimantRole}` : ""}
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    {claim.claimantContactEmail || "(no email given)"}
+                    {claim.claimantContactPhone ? ` · ${claim.claimantContactPhone}` : ""}
+                  </div>
+                  {claim.claimantNote ? (
+                    <div className="mt-1 max-w-md text-xs text-neutral-600">
+                      &ldquo;{claim.claimantNote}&rdquo;
+                    </div>
+                  ) : null}
+                  <div className="mt-1 text-xs text-neutral-400">Claimant uid: {claim.claimantUid}</div>
                 </div>
                 <div className="flex gap-2">
                   <button

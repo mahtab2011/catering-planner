@@ -315,6 +315,18 @@ export type RestaurantDoc = {
    *  `ownerUid`; no client-writable path can set `ownerUid` from
    *  `claimantUid` directly (see firestore.rules). */
   claimantUid?: string;
+  /** Contact/evidence details supplied with a claim submission — see
+   *  docs/RESTAURANT-CLAIM-WORKFLOW.md. Collected once, at submission
+   *  time, so an admin has something to verify the claimant against
+   *  beyond a bare uid. `claimantName`/`claimantContactEmail` are
+   *  required by firestore.rules at submission; the rest are optional.
+   *  None of this is identity-document verification — see the doc's
+   *  "What this task did not do" section. */
+  claimantName?: string;
+  claimantRole?: string;
+  claimantContactEmail?: string;
+  claimantContactPhone?: string;
+  claimantNote?: string;
   claimSubmittedAt?: unknown;
   claimDecidedAt?: unknown;
   /** Uid of the admin who approved/rejected the claim — an audit

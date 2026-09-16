@@ -5,6 +5,18 @@ admin review queue all exist and are described accurately below. Not
 deployed (see `docs/SECURITY-FOLLOWUP.md` for the general "nothing is
 deployed yet" context that applies to this whole repository).
 
+**Task F (restaurant claiming + owner onboarding audit) extended this
+without replacing it** — the state machine, collections, and core
+security model below all predate Task F and were reused as-is. Task F's
+additions: claimant contact fields at submission time (a name and a
+business email an admin can actually act on, not just a bare uid),
+admin-facing display of that contact info, ownership-state-aware UI
+copy (an approved owner sees a distinct "you manage this listing"
+state; a non-owner viewer of an already-claimed restaurant sees a
+neutral notice instead of empty space; a claimant whose prior claim was
+rejected sees that context before resubmitting), and additional
+security tests. These are marked "(Task F)" below where relevant.
+
 ## The vulnerability this repeats the fix for
 
 An earlier session fixed a real bug: restaurants with an empty `ownerUid`
@@ -45,6 +57,24 @@ Any signed-in user may submit a claim on a restaurant that is currently
 `claim_rejected` (a restaurant with a claim already `claim_pending` cannot
 receive a second, competing claim until the first is resolved).
 
+### Claimant contact information (Task F)
+
+Originally, submitting a claim wrote nothing an admin could actually use
+to reach the claimant beyond a bare Firebase uid. Task F added a small
+contact/evidence form, collected once, at submission time:
+
+| Field | Required? | Purpose |
+|---|---|---|
+| `claimantName` | Yes | Who an admin is actually talking to |
+| `claimantContactEmail` | Yes | How an admin reaches them — pre-filled from the signed-in user's login email as a convenience, but editable (a business email may differ) |
+| `claimantRole` | No | e.g. "Manager", "Owner" — context, not verified |
+| `claimantContactPhone` | No | An alternative contact method |
+| `claimantNote` | No | Free text — anything that helps an admin sanity-check the claim |
+
+This is **not identity-document verification** — see "What this task did
+not do" below. It's the minimum an admin needs to make a real decision
+instead of approving or rejecting a bare uid.
+
 ### What submitting a claim actually writes
 
 `components/restaurants/RestaurantClaimPanel.tsx` writes exactly:
@@ -54,8 +84,23 @@ updateDoc(doc(db, "restaurants", restaurantId), {
   claimantUid: currentUser.uid,
   ownerClaimStatus: "claim_pending",
   claimSubmittedAt: serverTimestamp(),
+  claimantName: "...",
+  claimantRole: "...",
+  claimantContactEmail: "...",
+  claimantContactPhone: "...",
+  claimantNote: "...",
 });
 ```
+
+The state-machine decisions driving what the UI offers (can this viewer
+claim it right now? are they the approved owner? was a prior claim of
+theirs rejected?) live in a small pure module,
+`lib/restaurantClaim.ts`'s `deriveClaimViewerState()` and
+`isClaimFormComplete()` — extracted out of the component specifically so
+they could be unit tested without a browser or Firebase (Task F; see
+`tests/restaurant-claim/run-claim-state-tests.ts`). This module is a
+UI-convenience mirror of the state machine, **not** the security
+boundary — it decides what button to show, not what write will succeed.
 
 ### How `firestore.rules` enforces this independently of the UI
 
@@ -70,22 +115,59 @@ isSignedIn()
 && resource.data.get('ownerClaimStatus', 'unclaimed') in ['unclaimed', 'claim_rejected']
 && request.resource.data.claimantUid == request.auth.uid
 && request.resource.data.ownerClaimStatus == 'claim_pending'
+&& request.resource.data.claimantName is string
+&& request.resource.data.claimantName.size() > 0
+&& request.resource.data.claimantContactEmail is string
+&& request.resource.data.claimantContactEmail.size() > 0
+&& (!('claimantRole' in request.resource.data) || request.resource.data.claimantRole is string)
+&& (!('claimantContactPhone' in request.resource.data) || request.resource.data.claimantContactPhone is string)
+&& (!('claimantNote' in request.resource.data) || request.resource.data.claimantNote is string)
 && unchanged('ownerUid')
 && request.resource.data.diff(resource.data).affectedKeys()
-     .hasOnly(['claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt'])
+     .hasOnly([
+       'claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt',
+       'claimantName', 'claimantRole', 'claimantContactEmail',
+       'claimantContactPhone', 'claimantNote'
+     ])
 ```
 
-Three things this specifically prevents, each with a test in
-`tests/firestore-rules/rules.test.js`:
+Things this specifically prevents, each with a test in
+`tests/firestore-rules/rules.test.js` (**unexecuted** — see
+`docs/FIRESTORE-SECURITY-AUDIT.md`; Java is unavailable in this
+environment, so these are reviewed-but-unrun, same as every other rules
+test in this repository):
 
 - **Setting `ownerUid` in the same write** — `unchanged('ownerUid')` blocks
   it outright, independent of anything else in the write.
+- **Self-approval via a separate write** — a claimant with a pending claim
+  cannot later send a second, standalone write setting `ownerUid`: the
+  owner-update branch requires `ownerUid == auth.uid` (still empty), and
+  the claim-submission branch requires the *starting* status to be
+  `unclaimed`/`claim_rejected` (it's `claim_pending` by then), so neither
+  branch matches (Task F).
+- **A real, approved owner of a *different* restaurant approving someone
+  else's claim** — being a genuine owner elsewhere grants no special
+  capability here; only `isAdmin()` can set `ownerUid` (Task F).
 - **Smuggling an edit alongside the claim** — `diff().affectedKeys().hasOnly([...])`
-  means the write can *only* touch the four claim-related fields; adding
-  `shortDescription` or any other field to the same update fails.
+  means the write can *only* touch the claim-related fields listed above;
+  adding `shortDescription` or any other field to the same update fails.
+  This also covers a pending claimant trying to edit unrelated fields in a
+  *separate* write later — the claim-submission branch's starting-state
+  check blocks that the same way self-approval is blocked (Task F).
 - **Impersonating another user's claim** — `claimantUid` must equal
   `request.auth.uid`; a user cannot submit a claim naming someone else as
   the claimant.
+- **Reassigning `claimantUid` on an already-pending claim** — once status
+  is `claim_pending`, no rule branch permits any further change to
+  `claimantUid` at all (the claim-submission branch's starting-state gate
+  excludes `claim_pending`, and the owner-update branch requires an
+  `ownerUid` that doesn't exist yet) (Task F).
+- **Missing required contact fields** — a claim submission without a
+  non-empty `claimantName` and `claimantContactEmail` fails outright
+  (Task F).
+- **An unauthenticated (anonymous) claim submission** — every branch of
+  the claim-submission rule requires `isSignedIn()` (Task F test added for
+  this specific scenario; the requirement itself predates Task F).
 
 ### How a claim is approved
 
@@ -114,7 +196,35 @@ discouraged by the UI.
 
 "Reject" sets `ownerClaimStatus: "claim_rejected"` (leaving `claimantUid` in
 place as an audit trail — the rule permits a fresh claim afterward since
-`claim_rejected` is in the allowed starting-state list).
+`claim_rejected` is in the allowed starting-state list). Rejection never
+touches `ownerUid` — it stays exactly as it was (empty, for a first-time
+claim), so a rejected claimant has exactly the same (lack of) management
+access as before they claimed anything; the same `ownerUid`-based owner
+gate on the restaurant document's `update` rule is what keeps them out,
+not anything specific to the rejection itself (Task F test:
+`tests/firestore-rules/rules.test.js`'s "lets an admin reject a claim, and
+rejection does not grant ownerUid access").
+
+### Viewer-facing states on the restaurant detail page (Task F)
+
+`RestaurantClaimPanel.tsx` shows one of five states, computed by
+`deriveClaimViewerState()`:
+
+1. **Signed-in viewer IS the approved owner** (`ownerUid == their uid`) —
+   "You manage this listing" plus a link to the restaurant's edit page.
+2. **Restaurant has a different approved owner** — a neutral "This listing
+   is managed by its verified owner" notice. No claim action is offered;
+   this deliberately does not encourage a normal ownership claim against
+   an already-claimed listing (a correction/removal request is still
+   available, same as for any restaurant).
+3. **Unclaimed, no claim pending** — the claim form (name, business email
+   required; role, phone, note optional).
+4. **Unclaimed, a claim is already pending** (from anyone, including the
+   current viewer) — "under review" message, no form.
+5. **Unclaimed, the most recent claim was rejected** — the claim form is
+   shown again (a fresh claim is allowed), preceded by a note that the
+   previous attempt wasn't approved, so the claimant knows to add more
+   detail rather than resubmitting the same information.
 
 ## Correction & removal requests
 
@@ -165,6 +275,30 @@ hand, on the restaurant's own edit page. This is deliberate: a public
 submission — even from a good-faith reporter — should never directly cause
 a factual change to a listing without a human in the loop making that
 specific edit and being accountable for it.
+
+## Three separate concepts, easy to conflate (Task F)
+
+This repository has three distinct "someone wants to change something
+about a restaurant listing" flows. They are separate on purpose and must
+stay separate:
+
+| | Ownership claim | Correction/removal request | Content translation request |
+|---|---|---|---|
+| **What it changes** | Who controls the listing (`ownerUid`) | Nothing automatically — a human admin makes the edit by hand afterward | Nothing until `PUBLISHED` — even then, only `RestaurantDoc.contentTranslations`, never the original |
+| **Where it lives** | Inline on `restaurants/{id}` (`ownerClaimStatus`, `claimantUid`, ...) | Separate collection, `restaurant_correction_requests` | Separate collection, `restaurant_translation_requests` |
+| **Who can submit** | Any signed-in user, for a currently-unclaimed listing | Any signed-in user, about any listing | Only the restaurant's own approved owner (`ownerUid` cross-checked via `get()`) |
+| **Outcome states** | `unclaimed → claim_pending → claimed` / `claim_rejected` | `pending → accepted` / `rejected` | `REQUESTED → QUOTED → PAYMENT_PENDING → IN_TRANSLATION → OWNER_REVIEW → PUBLISHED` / `CANCELLED` |
+| **Documented in** | This file | This file | `docs/MULTILINGUAL-ARCHITECTURE.md` |
+
+A claim decides *who* manages a listing. A correction/removal request
+flags that *something about the listing's facts* is wrong. A translation
+request is *only available to an already-approved owner* and concerns
+*how their own content is presented in other languages* — see
+`docs/MULTILINGUAL-ARCHITECTURE.md`'s translation policy for why
+restaurant-supplied content is never auto-translated. None of the three
+can be used to accomplish what another one is for — e.g. there is no way
+to use a correction request to grant ownership, and no way to use a
+translation request to change a restaurant's factual details.
 
 ## Owner upgrade path (architecture only — no pricing invented)
 
@@ -218,3 +352,28 @@ silently leave undocumented.
   is decided) — the UI shows a message only while the tab is open.
 - Did not add rate-limiting on claim/request submission beyond what the
   rules structurally prevent (one pending claim per restaurant at a time).
+- **(Task F)** Did not build identity-document verification, business
+  registration checks, or any automated verification of a claimant's
+  contact details — an admin reviews the submitted name/email/role/note
+  and uses their own judgement, exactly as before Task F, just now with
+  more to go on than a bare uid.
+- **(Task F)** Did not build ownership transfer or revocation — there is
+  no UI or rule allowing an admin to move an already-`claimed` restaurant
+  to a different owner, or to reset a claimed restaurant back to
+  unclaimed. The existing `isAdmin()` branch is technically capable of
+  it (an admin can write any field), but no dedicated workflow, audit
+  trail, or UI button exists for it, and none was requested. If this is
+  ever needed, it deserves its own explicit design (audit logging,
+  probably a confirmation step, notice to the outgoing owner) rather than
+  an ad hoc admin Firestore write.
+- **(Task F)** Did not verify the claim-related Firestore rules or their
+  tests against the real emulator — Java remains unavailable in this
+  environment; every claim in this document about what the rules
+  "prevent" is a static reading of the rules language plus a
+  reviewed-but-unexecuted test, not an observed result. See
+  `docs/FIRESTORE-SECURITY-AUDIT.md`.
+- **(Task F)** Did not change the claim state machine's shape (still
+  `unclaimed → claim_pending → claimed`/`claim_rejected`) — only extended
+  what data travels with a claim submission and how the UI presents each
+  state. No new collection was introduced for claims; the existing
+  inline-on-`restaurants` model was reused throughout.

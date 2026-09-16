@@ -15,6 +15,14 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // Lets tests/restaurant-claim/run-claim-state-tests.ts import its
+    // module with an explicit ".ts" specifier, which is what Node's
+    // native TypeScript execution requires to resolve it directly
+    // (`node tests/restaurant-claim/run-claim-state-tests.ts`) without
+    // a build step. Safe with noEmit: true — this only affects how
+    // tsc statically resolves import specifiers, not what Next.js's
+    // own bundler does.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

@@ -314,6 +314,7 @@
   },
 
   "ListingNotice": {
+    "positioningStatement": "London Food Hubs est une plateforme indépendante de découverte culinaire qui aide les résidents et les visiteurs à découvrir la culture gastronomique de Londres.",
     "originRestaurantSubmitted": "soumis par ce commerce",
     "originOwnerClaimed": "soumis par ce commerce",
     "originOpenData": "compilé à partir d'un jeu de données publiques ouvert",
@@ -324,7 +325,8 @@
     "mainSentence": "Cette fiche a été {origin}{source}.",
     "claimedSuffix": "Ce commerce gère sa propre fiche.",
     "unclaimedSuffix": "Ce commerce n'a pas encore revendiqué ni vérifié cette fiche.",
-    "disclaimerBody": "London Food Hubs n'est ni affilié à ce commerce, ni approuvé par lui, ni un organisme de certification pour celui-ci, et cette fiche n'implique aucune affiliation gouvernementale, municipale ou touristique officielle. Les avis clients ci-dessous reflètent l'opinion individuelle de chaque auteur, et non celle de London Food Hubs."
+    "disclaimerBody": "London Food Hubs n'est ni affilié à ce commerce, ni approuvé par lui, ni un organisme de certification pour celui-ci, et cette fiche n'implique aucune affiliation gouvernementale, municipale ou touristique officielle. Les avis clients ci-dessous reflètent l'opinion individuelle de chaque auteur, et non celle de London Food Hubs.",
+    "actionsNote": "Le propriétaire du commerce peut revendiquer, corriger, mettre à jour ou demander le retrait de cette fiche à tout moment."
   },
 
   "Footer": {

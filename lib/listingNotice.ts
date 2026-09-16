@@ -1,4 +1,14 @@
 /**
+ * RETIRED — not imported anywhere. Superseded by next-intl's
+ * "ListingNotice" message namespace (messages/{en,bn,ar,fr}.json) and
+ * components/restaurants/PublicListingNotice.tsx, which composes the
+ * live notice via useTranslations() rather than this file's
+ * English-only functions. Left in place (not deleted) per this
+ * repository's usual rollback-safety convention, and because its
+ * ground-rules comment below still documents the real requirements
+ * the translated copy must also satisfy. Do not add new imports of
+ * this file — edit the message catalogs instead.
+ *
  * Neutral, configurable public-listing notice shown on a restaurant's
  * detail page — see docs/RESTAURANT-DATA-PROVENANCE.md and
  * docs/RESTAURANT-CLAIM-WORKFLOW.md.

@@ -36,8 +36,12 @@ export default function PublicListingNotice({ sourceType, sourceName, ownerClaim
   const claimSuffix = ownerClaimStatus === "claimed" ? t("claimedSuffix") : t("unclaimedSuffix");
 
   return (
-    <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs leading-relaxed text-neutral-500">
-      {t("mainSentence", { origin, source })} {claimSuffix} {t("disclaimerBody")}
-    </p>
+    <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs leading-relaxed text-neutral-500">
+      <p>{t("positioningStatement")}</p>
+      <p className="mt-2">
+        {t("mainSentence", { origin, source })} {claimSuffix} {t("disclaimerBody")}
+      </p>
+      <p className="mt-2">{t("actionsNote")}</p>
+    </div>
   );
 }

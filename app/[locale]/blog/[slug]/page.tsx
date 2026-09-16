@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import type { ArticleDoc } from "@/lib/types";
 import { getLocalizedArticleContent } from "@/lib/articles";
 import { buildLocaleAlternates } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import BlogArticleClient from "@/components/blog/BlogArticleClient";
 
 type Params = { params: Promise<{ slug: string; locale: string }> };
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: {
       title: article.seoTitle || content.title,
       description: article.seoDescription || content.excerpt,
-      url: `https://londonfoodhubs.com/${locale}/blog/${article.slug}`,
+      url: `${SITE_URL}/${locale}/blog/${article.slug}`,
       siteName: "London Food Hubs",
       type: "article",
     },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { buildLocaleAlternates } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import SiteHeader from "@/components/discovery/SiteHeader";
 import SiteFooter from "@/components/discovery/SiteFooter";
 import HomeHero from "@/components/discovery/HomeHero";
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: "London Food Hubs",
       description: t("heroSubtitle"),
-      url: "https://londonfoodhubs.com",
+      url: SITE_URL,
       siteName: "London Food Hubs",
       type: "website",
     },

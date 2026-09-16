@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
 import { buildLocaleAlternates } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import CuisineDetailClient from "@/components/cuisine/CuisineDetailClient";
 
 type Params = { params: Promise<{ slug: string; locale: string }> };
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: {
       title: cuisine.seoTitle,
       description: cuisine.seoDescription,
-      url: `https://londonfoodhubs.com/${locale}/cuisine/${cuisine.slug}`,
+      url: `${SITE_URL}/${locale}/cuisine/${cuisine.slug}`,
       siteName: "London Food Hubs",
       type: "website",
     },

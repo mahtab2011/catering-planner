@@ -4,11 +4,15 @@ import { db } from "@/lib/firebase";
 import { getAllCuisines } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
 import { ACTIVE_LOCALES, DEFAULT_LOCALE } from "@/lib/locales";
+import { SITE_URL } from "@/lib/site";
 
-// The live consumer domain today. Swap this one constant when
-// londonfoodhubs.com becomes canonical — nothing else in this file
-// needs to change.
-const BASE_URL = "https://smartserveuk.com";
+// London Food Hubs' own production origin (see lib/site.ts) — used
+// for every locale-prefixed consumer route below. SmartServeUK's own
+// operational routes (e.g. /suppliers, listed separately below) stay
+// on their own legitimate domain, not this one — the two are
+// different brands sharing this codebase, not the same site.
+const BASE_URL = SITE_URL;
+const SMARTSERVEUK_BASE_URL = "https://smartserveuk.com";
 
 async function getPublishedArticleSlugs(): Promise<string[]> {
   try {
@@ -53,7 +57,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // /suppliers is a SmartServeUK operational route outside app/[locale]
   // — not locale-prefixed, listed once as-is.
-  const operationalRoutes: MetadataRoute.Sitemap = [{ url: `${BASE_URL}/suppliers`, lastModified: now }];
+  const operationalRoutes: MetadataRoute.Sitemap = [
+    { url: `${SMARTSERVEUK_BASE_URL}/suppliers`, lastModified: now },
+  ];
 
   const cuisineRoutes = getAllCuisines().flatMap((cuisine) => localizedEntries(`/cuisine/${cuisine.slug}`, now));
   const hubRoutes = getAllHubs().flatMap((hub) => localizedEntries(`/hubs/${hub.slug}`, now));

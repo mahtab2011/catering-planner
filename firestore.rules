@@ -44,6 +44,10 @@ rules_version = '2';
 //     claim/correction/removal foundation — see
 //     docs/RESTAURANT-CLAIM-WORKFLOW.md. Not one of the original 28;
 //     this is a new collection this task introduces.
+//   - restaurant_import_candidates: added for the restaurant
+//     import-pipeline staging/review foundation — see
+//     docs/RESTAURANT-IMPORT-PIPELINE.md. Entirely admin-only, no
+//     client create path at all. Not one of the original 28.
 //   - staff, customers, events, sales_signups, blackcab_early_access,
 //     blackcab_bookings, blackcab_journey_ratings, blackcab_concerns,
 //     blackcab_signups, catering_house_signups, customer_signups,
@@ -289,6 +293,29 @@ service cloud.firestore {
         && unchanged('requestType');
 
       allow delete: if isAdmin();
+    }
+
+    // ---------- restaurant_import_candidates ----------
+    // Staging/review queue for the restaurant import pipeline — see
+    // docs/RESTAURANT-IMPORT-PIPELINE.md. Entirely internal: no
+    // client, including a signed-in non-admin user, may read, create,
+    // update, or delete anything here. Candidates are created ONLY by
+    // functions/scripts/stageImportCandidates.js via the Admin SDK
+    // (which bypasses these rules entirely, the same trust model as
+    // functions/scripts/bootstrapFirstAdmin.js) — never by a client
+    // Firestore write, not even an admin's. That keeps "what's in the
+    // staging queue" fully auditable to whoever ran the staging
+    // script, with no path for a candidate to appear any other way.
+    // Admins review and change status (PENDING_REVIEW -> APPROVED /
+    // REJECTED / DUPLICATE / NEEDS_RESEARCH) through the app; only
+    // functions/scripts/applyApprovedImportBatch.js (again, Admin
+    // SDK) ever promotes an APPROVED candidate into a real
+    // restaurants/{id} document, and only for an explicit,
+    // human-produced approved-batch file — never automatically.
+
+    match /restaurant_import_candidates/{candidateId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if false;
     }
 
     // ---------- restaurant_signups ----------

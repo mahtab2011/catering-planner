@@ -29,6 +29,13 @@
  * double-claiming, admin claim approval, and the
  * restaurant_correction_requests moderation-queue collection
  * (create/read/moderate authorization).
+ *
+ * Also covers the restaurant import-pipeline staging queue
+ * (restaurant_import_candidates): denial of any client create
+ * (including an admin — only the Admin SDK stage script may create
+ * candidates), denial of non-admin/anonymous read, admin read, denial
+ * of non-admin status update, admin status update (review decision),
+ * denial of non-admin delete, and admin delete.
  */
 
 import { readFileSync } from "node:fs";
@@ -636,6 +643,75 @@ describe("restaurant_correction_requests", () => {
         moderatedAt: serverTimestamp(),
       })
     );
+  });
+});
+
+describe("restaurant_import_candidates (admin-only staging queue)", () => {
+  async function seedCandidate(overrides = {}) {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_import_candidates", "cand1"), {
+        batchId: "batch-2026-01",
+        status: "PENDING_REVIEW",
+        name: "Fixture Candidate",
+        citySlug: "london",
+        ...overrides,
+      });
+    });
+  }
+
+  it("denies any client create, including an admin — only the Admin SDK stage script may create candidates", async () => {
+    await assertFails(
+      setDoc(doc(asAdmin(), "restaurant_import_candidates", "cand1"), {
+        batchId: "batch-2026-01",
+        status: "PENDING_REVIEW",
+        name: "Fixture Candidate",
+      })
+    );
+  });
+
+  it("denies a signed-in non-admin user reading a candidate", async () => {
+    await seedCandidate();
+    await assertFails(getDoc(doc(asUser("random-user"), "restaurant_import_candidates", "cand1")));
+  });
+
+  it("denies an anonymous user reading a candidate", async () => {
+    await seedCandidate();
+    await assertFails(getDoc(doc(asAnon(), "restaurant_import_candidates", "cand1")));
+  });
+
+  it("lets an admin read a candidate", async () => {
+    await seedCandidate();
+    await assertSucceeds(getDoc(doc(asAdmin(), "restaurant_import_candidates", "cand1")));
+  });
+
+  it("denies a signed-in non-admin user updating a candidate's status", async () => {
+    await seedCandidate();
+    await assertFails(
+      updateDoc(doc(asUser("random-user"), "restaurant_import_candidates", "cand1"), {
+        status: "APPROVED",
+      })
+    );
+  });
+
+  it("lets an admin update a candidate's status (review decision)", async () => {
+    await seedCandidate();
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurant_import_candidates", "cand1"), {
+        status: "APPROVED",
+        reviewedByUid: "admin-1",
+        reviewedAt: serverTimestamp(),
+      })
+    );
+  });
+
+  it("denies a non-admin deleting a candidate", async () => {
+    await seedCandidate();
+    await assertFails(deleteDoc(doc(asUser("random-user"), "restaurant_import_candidates", "cand1")));
+  });
+
+  it("lets an admin delete a candidate", async () => {
+    await seedCandidate();
+    await assertSucceeds(deleteDoc(doc(asAdmin(), "restaurant_import_candidates", "cand1")));
   });
 });
 

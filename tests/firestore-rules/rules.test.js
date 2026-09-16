@@ -42,6 +42,18 @@
  * claim*, and the restaurant_correction_requests moderation-queue
  * collection (create/read/moderate authorization).
  *
+ * Also covers the owner workspace (Task G, items marked †): an owner
+ * updating their inline menu alongside other permitted profile fields
+ * in one write†, denial of a *different, real* restaurant owner
+ * editing this restaurant's menu or profile†, denial of an owner
+ * changing ownerClaimStatus on their own already-claimed restaurant
+ * during a normal profile edit†, denial of an owner rewriting
+ * claimantUid/claim-decision/provenance-trust fields on their own
+ * restaurant† (closes a real gap: these were previously NOT pinned by
+ * `unchanged()` on the owner-update branch, unlike the claim-submission
+ * branch's field allowlist), and confirmation that `lastVerifiedAt`
+ * remains intentionally owner-writable†.
+ *
  * Also covers the restaurant import-pipeline staging queue
  * (restaurant_import_candidates): denial of any client create
  * (including an admin — only the Admin SDK stage script may create
@@ -697,6 +709,82 @@ describe("restaurants", () => {
     await assertFails(
       updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
         claimantUid: "someone-else",
+      })
+    );
+  });
+
+  // ---- Owner workspace (Task G) ----
+
+  it("lets an approved owner update their menu alongside other permitted fields, in one narrow write", async () => {
+    await seedRestaurant();
+    await assertSucceeds(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), {
+        shortDescription: "Updated description",
+        menuCategories: [
+          { category: "Starters", items: [{ name: "Samosa", price: "£3.50", note: "" }] },
+        ],
+      })
+    );
+  });
+
+  it("denies a real owner of a different restaurant from editing this one's menu or profile", async () => {
+    // owner-2 genuinely owns r2 — confirms the denial isn't just
+    // "unauthenticated" or "no restaurant at all," but that owning a
+    // *different* restaurant grants no capability on this one.
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurants", "r2"), {
+        name: "Owner 2's Restaurant",
+        ownerUid: "owner-2",
+        citySlug: "london",
+        status: "active",
+      });
+    });
+    await seedRestaurant();
+    await assertFails(
+      updateDoc(doc(asUser("owner-2"), "restaurants", "r1"), {
+        menuCategories: [{ category: "Hijacked", items: [] }],
+      })
+    );
+  });
+
+  it("denies an owner from changing ownerClaimStatus on their own restaurant in a normal profile edit", async () => {
+    await seedRestaurant({ ownerClaimStatus: "claimed" });
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), {
+        shortDescription: "Updated description",
+        ownerClaimStatus: "claim_pending",
+      })
+    );
+  });
+
+  it("denies an owner from rewriting claimantUid, claim decision fields, or provenance/trust fields on their own restaurant", async () => {
+    await seedRestaurant({
+      ownerClaimStatus: "claimed",
+      claimantUid: "owner-1",
+      claimDecidedBy: "admin-1",
+      sourceType: "restaurant_submitted",
+      dataConfidence: "unverified",
+    });
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { claimantUid: "someone-else" })
+    );
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { claimDecidedBy: "owner-1" })
+    );
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { sourceType: "editorial_research" })
+    );
+    await assertFails(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), { dataConfidence: "verified" })
+    );
+  });
+
+  it("still lets an owner update lastVerifiedAt when saving their own profile (intentionally not pinned)", async () => {
+    await seedRestaurant();
+    await assertSucceeds(
+      updateDoc(doc(asUser("owner-1"), "restaurants", "r1"), {
+        shortDescription: "Reconfirmed accurate",
+        lastVerifiedAt: serverTimestamp(),
       })
     );
   });

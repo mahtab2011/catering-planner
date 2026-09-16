@@ -10,6 +10,7 @@ import { auth, db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
 import { DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_HELP, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
 import { getCuisinesByRegion } from "@/lib/cuisines";
+import { deriveManagementAccess } from "@/lib/restaurantOwnership";
 import type { DietaryAttribute } from "@/lib/types";
 
 type SubscriptionPlan = "free" | "premium";
@@ -331,27 +332,27 @@ export default function EditRestaurantPage() {
   useEffect(() => {
     if (!authReady || loading || checkingAdmin) return;
 
-    // Only the restaurant's actual owner (ownerUid matches the signed-in
-    // user) or an admin may edit it. A restaurant with no ownerUid set
-    // ("unclaimed" — see docs/SECURITY-FOLLOWUP.md) is admin-only until
-    // it's properly linked to an owner; it is deliberately NOT editable
-    // by just whoever happens to open this page first anymore.
-    const isOwner = Boolean(restaurantOwnerUid) && restaurantOwnerUid === ownerUid;
+    // Authoritative ownership check — see lib/restaurantOwnership.ts
+    // and docs/RESTAURANT-OWNER-WORKSPACE.md. ownerClaimStatus/
+    // claimantUid are deliberately NOT inputs here: they're claim
+    // workflow state, not authorization (see
+    // docs/RESTAURANT-CLAIM-WORKFLOW.md) — only ownerUid matching the
+    // signed-in user (or admin) ever grants management access. This
+    // is a UI convenience mirror; firestore.rules is the real guard.
+    const { canManage, reason } = deriveManagementAccess({
+      isAdmin,
+      restaurantOwnerUid,
+      viewerUid: ownerUid,
+      status,
+    });
 
-    if (isAdmin) {
-      setCanEdit(true);
-    } else if (isOwner && status === "blocked") {
-      setCanEdit(false);
+    setCanEdit(canManage);
+    if (reason === "owner_but_blocked") {
       setMsg("This listing has been blocked by an admin. Contact support to resolve this.");
-    } else if (isOwner) {
-      setCanEdit(true);
-    } else {
-      setCanEdit(false);
-      setMsg(
-        restaurantOwnerUid
-          ? "You do not have permission to edit this restaurant."
-          : "This listing is not yet linked to an owner account. Please contact support to claim it."
-      );
+    } else if (reason === "not_owner") {
+      setMsg("You do not have permission to edit this restaurant.");
+    } else if (reason === "unclaimed") {
+      setMsg("This listing is not yet linked to an owner account. Please contact support to claim it.");
     }
   }, [authReady, loading, checkingAdmin, isAdmin, restaurantOwnerUid, ownerUid, status]);
 

@@ -235,6 +235,34 @@ service cloud.firestore {
           && unchanged('reviewCount')
           && unchanged('isFeatured')
           && unchanged('isApproved')
+          // Claim-audit and provenance/trust fields — Task G. An
+          // approved owner's normal profile-edit write was previously
+          // able to also smuggle changes to these in the SAME write,
+          // since only the six fields above were pinned here (unlike
+          // the claim-submission branch below, which has always
+          // restricted itself to an explicit field allowlist). Nothing
+          // anywhere documents these as owner-editable — see
+          // docs/RESTAURANT-CLAIM-WORKFLOW.md and
+          // docs/RESTAURANT-DATA-PROVENANCE.md — so this closes a real
+          // gap rather than encoding a new policy.
+          // `lastVerifiedAt` is deliberately NOT pinned — the owner
+          // confirming/saving their own profile intentionally counts
+          // as re-verifying it (see docs/RESTAURANT-DATA-PROVENANCE.md).
+          && unchanged('ownerClaimStatus')
+          && unchanged('claimantUid')
+          && unchanged('claimSubmittedAt')
+          && unchanged('claimDecidedAt')
+          && unchanged('claimDecidedBy')
+          && unchanged('claimantName')
+          && unchanged('claimantRole')
+          && unchanged('claimantContactEmail')
+          && unchanged('claimantContactPhone')
+          && unchanged('claimantNote')
+          && unchanged('sourceType')
+          && unchanged('sourceName')
+          && unchanged('sourceUrl')
+          && unchanged('sourceRetrievedAt')
+          && unchanged('dataConfidence')
           && resource.data.status != 'blocked'
           && request.resource.data.status != 'blocked'
         )

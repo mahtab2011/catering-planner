@@ -347,8 +347,118 @@ export type RestaurantDoc = {
    *  translation). */
   contentTranslations?: Partial<Record<LocaleCode, RestaurantContentTranslation>>;
 
+  /* ---- Live owner-workspace fields — Task F/G ----
+   * These are read and written by app/restaurants/[id]/edit/page.tsx
+   * and app/[locale]/restaurants/[id]/page.tsx today, but predate this
+   * type and were never declared here — both pages use their own
+   * local, ad hoc RestaurantDoc-shaped type instead of importing this
+   * one. Declared here additively (Task G) so this type accurately
+   * reflects what the live document actually contains and so new code
+   * (tests, the field/capability matrix) has one canonical source
+   * instead of a third copy — see docs/RESTAURANT-OWNER-WORKSPACE.md.
+   * Nothing about the edit/public pages' own local types was changed;
+   * this is documentation-by-typing, not a behavior change. Several of
+   * these overlap in meaning with an earlier-declared field under a
+   * different name (e.g. `isHalal` here vs `halal` above, `coverImage`
+   * here vs `imageUrl` above) — both are kept, matching this file's
+   * existing pattern for `dietaryAttributes`/`dietaryCertifications`,
+   * rather than silently renaming/merging live data on a guess.
+   */
+  /** Status a restaurant listing has — REQUIRED reading for
+   *  firestore.rules (`resource.data.status in ['active','pending']`
+   *  gates public read; `status != 'blocked'` gates owner edits) even
+   *  though it was never declared on this type before Task G. */
+  status?: RestaurantStatus;
+  ownerName?: string;
+  /** Legacy single-hub-by-id/name fields, distinct from the
+   *  structured `hubIds: string[]` above — the owner workspace only
+   *  ever manages these, never `hubIds`. Whether that's an intentional
+   *  admin-only/curatorial decision or a gap was not determined this
+   *  task — see docs/RESTAURANT-OWNER-WORKSPACE.md's "known
+   *  limitations." */
+  hubId?: string;
+  hubName?: string;
+  area?: string;
+  locationId?: string;
+  /** Legacy single-line address, distinct from `addressLine1`/
+   *  `addressLine2` above — the owner workspace only manages this. */
+  fullAddress?: string;
+  /** Owner-entered free text, never translated — see
+   *  docs/MULTILINGUAL-ARCHITECTURE.md's restaurant-supplied-content
+   *  policy. Distinct from the platform-controlled `cuisineSlugs`/
+   *  `dietaryAttributes` vocabularies. */
+  tags?: string[];
+  priceRange?: string;
+  /** Owner-supplied content, distinct from the shorter `description`
+   *  field above — the live edit/public pages use these, not
+   *  `description`. Never auto-translated; see
+   *  `contentTranslations` above for the only sanctioned translation
+   *  path. */
+  shortDescription?: string;
+  longDescription?: string;
+  popularItems?: string[];
+  /** Legacy media field names, distinct from `imageUrl`/`logoUrl`
+   *  above — the live edit/public pages use these. See
+   *  docs/RESTAURANT-OWNER-WORKSPACE.md's media section: there is no
+   *  Firebase Storage upload anywhere in this codebase; these are
+   *  plain owner-entered URLs. */
+  coverImage?: string;
+  videoUrl?: string;
+  websiteUrl?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  /** The restaurant workspace's actual live opening-hours
+   *  representation — free text, not the structured
+   *  `openingHours: Record<string,string>` declared above, which is
+   *  unused dead scaffolding (never read or written anywhere in this
+   *  codebase, confirmed by repo-wide search — Task G). */
+  openingHoursText?: string;
+  /** Legacy per-flag service booleans, distinct from the structured
+   *  `serviceTypes: ServiceType[]` above — the owner workspace only
+   *  manages these booleans, never `serviceTypes`. */
+  dineIn?: boolean;
+  takeaway?: boolean;
+  delivery?: boolean;
+  collectionEnabled?: boolean;
+  /** Distinct from `halal` above (same meaning, different field name
+   *  — both live in the data, kept rather than merged). */
+  isHalal?: boolean;
+  isHmcApproved?: boolean;
+  isPremium?: boolean;
+  subscriptionPlan?: "free" | "premium";
+  offersEnabled?: boolean;
+  loyaltyEnabled?: boolean;
+  adsEnabled?: boolean;
+  /** The live, actually-used inline menu — see `MenuCategory` below.
+   *  `RestaurantMenuCategoryDoc`/`RestaurantMenuItemDoc` elsewhere in
+   *  this file model a normalized, separate-collection menu that is
+   *  entirely unused dead scaffolding (no collection, no rule, no UI
+   *  references it anywhere — confirmed by repo-wide search, Task G).
+   *  This inline array is the real thing. */
+  menuCategories?: MenuCategory[];
+
   createdAt?: unknown;
   updatedAt?: unknown;
+};
+
+/** A restaurant listing's status — see the `status` field's own
+ *  comment on `RestaurantDoc` for why this is documented here despite
+ *  being load-bearing for firestore.rules. */
+export type RestaurantStatus = "draft" | "active" | "pending" | "blocked";
+
+/** One item on a restaurant's inline menu — owner-supplied name/price/
+ *  note, never auto-translated. See `RestaurantDoc.menuCategories`. */
+export type MenuItem = {
+  name: string;
+  price: string;
+  note?: string;
+};
+
+/** One category on a restaurant's inline menu. */
+export type MenuCategory = {
+  category: string;
+  items: MenuItem[];
 };
 
 /** One locale's owner-approved translation of a restaurant's own

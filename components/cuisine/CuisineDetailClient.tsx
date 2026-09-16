@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Cuisine, ArticleDoc, RecommendationDoc, DietaryAttribute } from "@/lib/types";
-import { getAllCuisines, restaurantMatchesCuisine } from "@/lib/cuisines";
+import { getAllCuisines, restaurantMatchesCuisineSlug } from "@/lib/cuisines";
 import { getAllHubs } from "@/lib/hubs";
 import { buildDietaryBadgeLabels } from "@/lib/dietary";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
@@ -16,6 +16,7 @@ type LiveRestaurant = {
   id: string;
   name: string;
   cuisine?: string;
+  cuisineSlugs?: string[];
   hubName?: string;
   area?: string;
   shortDescription?: string;
@@ -23,6 +24,7 @@ type LiveRestaurant = {
   tags?: string[];
   popularItems?: string[];
   isHalal?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
   status?: string;
   rating?: number;
@@ -54,7 +56,7 @@ export default function CuisineDetailClient({ cuisine }: { cuisine: Cuisine }) {
           ...(docSnap.data() as Omit<LiveRestaurant, "id">),
         }));
         if (!cancelled) {
-          setRestaurants(rows.filter((r) => restaurantMatchesCuisine(r.cuisine, cuisine)));
+          setRestaurants(rows.filter((r) => restaurantMatchesCuisineSlug(r, cuisine)));
         }
       } catch (error) {
         console.error("Failed to load restaurants for cuisine page:", error);

@@ -6,6 +6,7 @@ import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { buildDietaryBadgeLabels } from "@/lib/dietary";
+import { getCuisineBySlug } from "@/lib/cuisines";
 import type { DietaryAttribute } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/discovery/SiteHeader";
@@ -28,6 +29,7 @@ type LiveRestaurant = {
   fullAddress?: string;
 
   cuisine?: string;
+  cuisineSlugs?: string[];
   tags?: string[];
   priceRange?: string;
 
@@ -156,6 +158,26 @@ function uniqueStrings(values: (string | undefined)[]) {
   return Array.from(new Set(values.map((v) => safeText(v)).filter(Boolean)));
 }
 
+/** Individual cuisine names for a restaurant, for filtering — prefers
+ *  the structured `cuisineSlugs` (resolved to canonical names via
+ *  lib/cuisines.ts), and falls back to splitting the legacy free-text
+ *  `cuisine` field on "/" for restaurants that haven't been tagged
+ *  with the canonical taxonomy yet (or a multi-cuisine restaurant
+ *  whose free-text field reads e.g. "Bangladeshi / Indian" — a plain
+ *  equality check against that whole string would never match either
+ *  cuisine individually). */
+function restaurantCuisineNames(restaurant: { cuisineSlugs?: string[]; cuisine?: string }): string[] {
+  if (restaurant.cuisineSlugs && restaurant.cuisineSlugs.length > 0) {
+    return restaurant.cuisineSlugs
+      .map((slug) => getCuisineBySlug(slug)?.name)
+      .filter((name): name is string => Boolean(name));
+  }
+  return safeText(restaurant.cuisine)
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 function orderHubs(hubs: string[]) {
   return [
     ...hubOrder.filter((hub) => hubs.includes(hub)),
@@ -231,7 +253,7 @@ function RestaurantsPageContent() {
   }, [restaurants]);
 
   const allCuisines = useMemo(() => {
-    const found = uniqueStrings(restaurants.map((r) => r.cuisine));
+    const found = uniqueStrings(restaurants.flatMap((r) => restaurantCuisineNames(r)));
     return ["All", ...orderCuisines(found)];
   }, [restaurants]);
 
@@ -258,8 +280,7 @@ function RestaurantsPageContent() {
         selectedHub === "All" || safeText(restaurant.hubName) === selectedHub;
 
       const matchesCuisine =
-        selectedCuisine === "All" ||
-        safeText(restaurant.cuisine) === selectedCuisine;
+        selectedCuisine === "All" || restaurantCuisineNames(restaurant).includes(selectedCuisine);
 
       const matchesStatus =
         selectedStatus === "All" ||

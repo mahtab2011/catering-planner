@@ -9,6 +9,7 @@ import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAdminGate } from "@/hooks/useAdminGate";
 import { DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_HELP, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
+import { getCuisinesByRegion } from "@/lib/cuisines";
 import type { DietaryAttribute } from "@/lib/types";
 
 type SubscriptionPlan = "free" | "premium";
@@ -40,6 +41,8 @@ type RestaurantDoc = {
   fullAddress?: string;
 
   cuisine?: string;
+  cuisineSlugs?: string[];
+  primaryCuisineSlug?: string;
   tags?: string[];
   priceRange?: string;
 
@@ -64,6 +67,7 @@ type RestaurantDoc = {
 
   isHalal?: boolean;
   isHmcApproved?: boolean;
+  dietaryAttributes?: DietaryAttribute[];
   dietaryCertifications?: DietaryAttribute[];
 
   isPremium?: boolean;
@@ -161,6 +165,20 @@ export default function EditRestaurantPage() {
   const [fullAddress, setFullAddress] = useState("");
 
   const [cuisine, setCuisine] = useState("");
+  const [cuisineSlugs, setCuisineSlugs] = useState<string[]>([]);
+
+  function toggleCuisineSlug(slug: string) {
+    setCuisineSlugs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  }
+
+  const cuisineGroups = useMemo(() => getCuisinesByRegion(), []);
+  const allCuisines = useMemo(() => cuisineGroups.flatMap((g) => g.cuisines), [cuisineGroups]);
+
+  useEffect(() => {
+    const names = allCuisines.filter((c) => cuisineSlugs.includes(c.slug)).map((c) => c.name);
+    if (names.length > 0) setCuisine(names.join(" / "));
+  }, [cuisineSlugs, allCuisines]);
+
   const [tagsText, setTagsText] = useState("");
   const [priceRange, setPriceRange] = useState("£");
 
@@ -185,10 +203,10 @@ export default function EditRestaurantPage() {
 
   const [isHalal, setIsHalal] = useState(false);
   const [isHmcApproved, setIsHmcApproved] = useState(false);
-  const [dietaryCertifications, setDietaryCertifications] = useState<DietaryAttribute[]>([]);
+  const [dietaryAttributes, setDietaryAttributes] = useState<DietaryAttribute[]>([]);
 
-  function toggleDietaryCertification(attr: DietaryAttribute) {
-    setDietaryCertifications((prev) =>
+  function toggleDietaryAttribute(attr: DietaryAttribute) {
+    setDietaryAttributes((prev) =>
       prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]
     );
   }
@@ -252,6 +270,7 @@ export default function EditRestaurantPage() {
         setFullAddress(data.fullAddress || "");
 
         setCuisine(data.cuisine || "");
+        setCuisineSlugs(Array.isArray(data.cuisineSlugs) ? data.cuisineSlugs : []);
         setTagsText(Array.isArray(data.tags) ? data.tags.join(", ") : "");
         setPriceRange(data.priceRange || "£");
 
@@ -278,8 +297,12 @@ export default function EditRestaurantPage() {
 
         setIsHalal(!!data.isHalal);
         setIsHmcApproved(!!data.isHmcApproved);
-        setDietaryCertifications(
-          Array.isArray(data.dietaryCertifications) ? data.dietaryCertifications : []
+        setDietaryAttributes(
+          Array.isArray(data.dietaryAttributes)
+            ? data.dietaryAttributes
+            : Array.isArray(data.dietaryCertifications)
+              ? data.dietaryCertifications
+              : []
         );
 
         setIsPremium(!!data.isPremium);
@@ -467,6 +490,8 @@ export default function EditRestaurantPage() {
         fullAddress: fullAddress.trim(),
 
         cuisine: cuisine.trim(),
+        cuisineSlugs,
+        primaryCuisineSlug: cuisineSlugs[0] || "",
         tags,
         priceRange,
 
@@ -491,7 +516,11 @@ export default function EditRestaurantPage() {
 
         isHalal,
         isHmcApproved,
-        dietaryCertifications,
+        dietaryAttributes,
+
+        // The owner confirming/saving their own profile counts as
+        // re-verifying it — see docs/RESTAURANT-DATA-PROVENANCE.md.
+        lastVerifiedAt: serverTimestamp(),
 
         isPremium,
         subscriptionPlan,
@@ -941,30 +970,46 @@ export default function EditRestaurantPage() {
             Cuisine & Positioning
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-xs font-semibold text-neutral-700">
-                Cuisine
-              </label>
-              <select
-                value={cuisine}
-                onChange={(e) => setCuisine(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:border-black"
-              >
-                <option value="">Select cuisine</option>
-                <option value="Bangladeshi">Bangladeshi</option>
-                <option value="Indian">Indian</option>
-                <option value="Pakistani">Pakistani</option>
-                <option value="Turkish">Turkish</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Japanese">Japanese</option>
-                <option value="Italian">Italian</option>
-                <option value="Global Street Food">Global Street Food</option>
-                <option value="Middle Eastern">Middle Eastern</option>
-                <option value="Mixed / Fusion">Mixed / Fusion</option>
-              </select>
+          <div className="mt-4">
+            <label className="text-xs font-semibold text-neutral-700">
+              Cuisine — select every cuisine this business genuinely serves
+            </label>
+            <p className="mt-1 text-xs text-neutral-500">
+              Distinct cuisines like Bangladeshi and Indian are kept separate on purpose — select
+              both if both genuinely apply.
+            </p>
+            <div className="mt-3 space-y-4">
+              {cuisineGroups.map((group) => (
+                <div key={group.region}>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                    {group.region}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                    {group.cuisines.map((c) => (
+                      <label
+                        key={c.slug}
+                        className="flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={cuisineSlugs.includes(c.slug)}
+                          onChange={() => toggleCuisineSlug(c.slug)}
+                        />
+                        <span className="text-neutral-800">{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
+            {cuisine && cuisineSlugs.length === 0 ? (
+              <p className="mt-2 text-xs text-neutral-500">
+                Current text value: "{cuisine}" — not yet tagged with the structured list above.
+              </p>
+            ) : null}
+          </div>
 
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="text-xs font-semibold text-neutral-700">
                 Price range
@@ -1233,7 +1278,7 @@ export default function EditRestaurantPage() {
 
             <div className="mt-4">
               <label className="text-xs font-semibold text-neutral-700">
-                Dietary certifications (self-declared — only tick what genuinely applies)
+                Dietary attributes (self-declared — only tick what genuinely applies)
               </label>
               <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {DIETARY_ATTRIBUTES.map((attr) => (
@@ -1243,8 +1288,8 @@ export default function EditRestaurantPage() {
                   >
                     <input
                       type="checkbox"
-                      checked={dietaryCertifications.includes(attr)}
-                      onChange={() => toggleDietaryCertification(attr)}
+                      checked={dietaryAttributes.includes(attr)}
+                      onChange={() => toggleDietaryAttribute(attr)}
                       className="mt-0.5"
                     />
                     <span>

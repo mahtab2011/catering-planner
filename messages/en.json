@@ -287,6 +287,26 @@
     "quickActions": "Quick actions"
   },
 
+  "ClaimActions": {
+    "manageListing": "Manage this listing",
+    "isYourBusiness": "Is {name} your business?",
+    "claimListing": "Claim this listing",
+    "submitting": "Submitting...",
+    "logInToClaim": "Log in to claim this listing",
+    "claimSubmittedMessage": "Your claim has been submitted for review. An admin will verify and approve it — this usually takes a few days.",
+    "claimErrorMessage": "Something went wrong submitting your claim. Please try again.",
+    "claimUnderReview": "A claim on this listing is currently under review by our team.",
+    "suggestUpdate": "Suggest an update",
+    "requestRemoval": "Request removal",
+    "logInToSuggest": "Log in to suggest an update or report an issue",
+    "correctionPlaceholder": "What's incorrect, and what should it say instead?",
+    "removalPlaceholder": "Why should this listing be removed? (e.g. permanently closed, duplicate listing)",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "requestSubmittedMessage": "Thank you — our team will review this shortly.",
+    "requestErrorMessage": "Something went wrong submitting your request. Please try again."
+  },
+
   "Footer": {
     "discover": "Discover",
     "editorial": "Editorial",

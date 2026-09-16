@@ -7,8 +7,7 @@ import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { buildDietaryBadgeLabels, DIETARY_ATTRIBUTES, DIETARY_ATTRIBUTE_LABELS } from "@/lib/dietary";
-import { CUISINE_REGION_ORDER, getCuisineBySlug, restaurantMatchesCuisineSlug } from "@/lib/cuisines";
-import { getAllCuisines } from "@/lib/cuisines";
+import { CUISINE_REGION_ORDER, getAllCuisines, getCuisineBySlug, getCuisineDisplayName } from "@/lib/cuisines";
 import type { Cuisine, DietaryAttribute } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/discovery/SiteHeader";
@@ -213,6 +212,17 @@ function RestaurantsPageContent() {
 
   const allCuisineDefs = useMemo(() => getAllCuisines(), []);
 
+  /** Canonical English cuisine name -> localized display name, for
+   *  the filter dropdown's labels. The dropdown's underlying value
+   *  stays the canonical name (matching what restaurantCuisineNames()
+   *  produces), so filtering itself doesn't depend on UI language —
+   *  only the label a user sees does. */
+  const cuisineDisplayNameByCanonicalName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of allCuisineDefs) map.set(c.name, getCuisineDisplayName(c, locale));
+    return map;
+  }, [allCuisineDefs, locale]);
+
   useEffect(() => {
     async function loadRestaurants() {
       try {
@@ -384,7 +394,9 @@ function RestaurantsPageContent() {
                 className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none focus:border-amber-500"
               >
                 {allCuisineNames.map((cuisine) => (
-                  <option key={cuisine} value={cuisine}>{cuisine === "All" ? t("all") : cuisine}</option>
+                  <option key={cuisine} value={cuisine}>
+                    {cuisine === "All" ? t("all") : cuisineDisplayNameByCanonicalName.get(cuisine) || cuisine}
+                  </option>
                 ))}
               </select>
             </div>

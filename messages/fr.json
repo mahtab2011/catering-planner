@@ -287,6 +287,26 @@
     "quickActions": "Actions rapides"
   },
 
+  "ClaimActions": {
+    "manageListing": "Gérer cette fiche",
+    "isYourBusiness": "{name} est-il votre commerce ?",
+    "claimListing": "Revendiquer cette fiche",
+    "submitting": "Envoi en cours...",
+    "logInToClaim": "Connectez-vous pour revendiquer cette fiche",
+    "claimSubmittedMessage": "Votre demande a été soumise pour examen. Un administrateur la vérifiera et l'approuvera — cela prend généralement quelques jours.",
+    "claimErrorMessage": "Une erreur s'est produite lors de l'envoi de votre demande. Veuillez réessayer.",
+    "claimUnderReview": "Une revendication sur cette fiche est actuellement examinée par notre équipe.",
+    "suggestUpdate": "Suggérer une mise à jour",
+    "requestRemoval": "Demander le retrait",
+    "logInToSuggest": "Connectez-vous pour suggérer une mise à jour ou signaler un problème",
+    "correctionPlaceholder": "Qu'est-ce qui est incorrect, et que devrait-il indiquer à la place ?",
+    "removalPlaceholder": "Pourquoi cette fiche devrait-elle être retirée ? (ex. fermé définitivement, fiche en double)",
+    "submit": "Envoyer",
+    "cancel": "Annuler",
+    "requestSubmittedMessage": "Merci — notre équipe examinera cela sous peu.",
+    "requestErrorMessage": "Une erreur s'est produite lors de l'envoi de votre demande. Veuillez réessayer."
+  },
+
   "Footer": {
     "discover": "Découvrir",
     "editorial": "Éditorial",

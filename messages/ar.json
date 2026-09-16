@@ -287,6 +287,26 @@
     "quickActions": "إجراءات سريعة"
   },
 
+  "ClaimActions": {
+    "manageListing": "إدارة هذا الإعلان",
+    "isYourBusiness": "هل {name} هو مشروعك؟",
+    "claimListing": "المطالبة بهذا الإعلان",
+    "submitting": "جارٍ الإرسال...",
+    "logInToClaim": "سجّل الدخول للمطالبة بهذا الإعلان",
+    "claimSubmittedMessage": "تم إرسال مطالبتك للمراجعة. سيتحقق أحد المشرفين ويوافق عليها — يستغرق ذلك عادةً بضعة أيام.",
+    "claimErrorMessage": "حدث خطأ أثناء إرسال مطالبتك. يرجى المحاولة مرة أخرى.",
+    "claimUnderReview": "هناك مطالبة بهذا الإعلان قيد المراجعة حاليًا من فريقنا.",
+    "suggestUpdate": "اقترح تحديثًا",
+    "requestRemoval": "طلب الإزالة",
+    "logInToSuggest": "سجّل الدخول لاقتراح تحديث أو الإبلاغ عن مشكلة",
+    "correctionPlaceholder": "ما الخطأ، وما الذي يجب أن يظهر بدلاً منه؟",
+    "removalPlaceholder": "لماذا يجب إزالة هذا الإعلان؟ (مثل: مغلق نهائيًا، إعلان مكرر)",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "requestSubmittedMessage": "شكرًا لك — سيراجع فريقنا هذا قريبًا.",
+    "requestErrorMessage": "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى."
+  },
+
   "Footer": {
     "discover": "استكشف",
     "editorial": "تحريري",

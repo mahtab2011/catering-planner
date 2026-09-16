@@ -154,7 +154,7 @@ export default function AdminRestaurantClaimsPage() {
         <p className="mt-1 text-sm text-neutral-600">
           Review pending ownership claims and public correction/removal requests. Accepting a
           correction request does not edit the listing automatically — make the change yourself
-          on the restaurant's edit page afterwards.
+          on the restaurant&apos;s edit page afterwards.
         </p>
       </div>
 

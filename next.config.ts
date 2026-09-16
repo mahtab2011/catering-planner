@@ -30,16 +30,19 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"],
   async redirects() {
     return [
+      // Point straight at the locale-prefixed English page rather than
+      // the intermediate /cuisine/{slug} redirect stub, now that
+      // app/[locale]/cuisine/[slug] is live — one hop instead of two.
       ...LEGACY_CUISINE_SLUGS.map((slug) => ({
         source: `/${slug}`,
-        destination: `/cuisine/${slug}`,
+        destination: `/en/cuisine/${slug}`,
         permanent: false,
       })),
       // "edgware-road-arabian-food-hub" was a duplicate stub page for the
       // same physical place as the richer, data-driven /hubs/edgware-road.
       {
         source: "/hubs/edgware-road-arabian-food-hub",
-        destination: "/hubs/edgware-road",
+        destination: "/en/hubs/edgware-road",
         permanent: false,
       },
     ];

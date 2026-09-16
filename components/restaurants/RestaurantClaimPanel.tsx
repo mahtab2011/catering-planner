@@ -1,6 +1,8 @@
 "use client";
 
+import NextLink from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -28,6 +30,11 @@ type Props = {
  * restaurant_correction_requests collection and never touch the
  * restaurant document directly — an admin reviews them and makes any
  * actual edit by hand.
+ *
+ * /login is a SmartServeUK operational route outside the app/[locale]
+ * subtree, so it's linked with plain next/link — never the
+ * locale-aware Link from @/i18n/navigation used elsewhere on the
+ * restaurant detail page.
  */
 export default function RestaurantClaimPanel({
   restaurantId,
@@ -35,6 +42,7 @@ export default function RestaurantClaimPanel({
   ownerUid,
   ownerClaimStatus,
 }: Props) {
+  const t = useTranslations("ClaimActions");
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -66,12 +74,10 @@ export default function RestaurantClaimPanel({
         ownerClaimStatus: "claim_pending",
         claimSubmittedAt: serverTimestamp(),
       });
-      setClaimMessage(
-        "Your claim has been submitted for review. An admin will verify and approve it — this usually takes a few days."
-      );
+      setClaimMessage(t("claimSubmittedMessage"));
     } catch (err) {
       console.error("Failed to submit claim:", err);
-      setClaimMessage("Something went wrong submitting your claim. Please try again.");
+      setClaimMessage(t("claimErrorMessage"));
     } finally {
       setClaiming(false);
     }
@@ -93,12 +99,12 @@ export default function RestaurantClaimPanel({
         status: "pending",
         createdAt: serverTimestamp(),
       });
-      setRequestMessage("Thank you — our team will review this shortly.");
+      setRequestMessage(t("requestSubmittedMessage"));
       setRequestNote("");
       setOpenRequestType(null);
     } catch (err) {
       console.error("Failed to submit request:", err);
-      setRequestMessage("Something went wrong submitting your request. Please try again.");
+      setRequestMessage(t("requestErrorMessage"));
     } finally {
       setSubmittingRequest(false);
     }
@@ -108,18 +114,16 @@ export default function RestaurantClaimPanel({
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
-      <div className="text-sm font-semibold text-neutral-900">Manage this listing</div>
+      <div className="text-sm font-semibold text-neutral-900">{t("manageListing")}</div>
 
       {isUnclaimed ? (
         <div className="mt-3">
           {ownerClaimStatus === "claim_pending" ? (
-            <p className="text-sm text-neutral-600">
-              A claim on this listing is currently under review by our team.
-            </p>
+            <p className="text-sm text-neutral-600">{t("claimUnderReview")}</p>
           ) : canSubmitClaim ? (
             <>
               <p className="text-sm text-neutral-600">
-                Is {restaurantName} your business?
+                {t("isYourBusiness", { name: restaurantName })}
               </p>
               {user ? (
                 <button
@@ -128,15 +132,15 @@ export default function RestaurantClaimPanel({
                   disabled={claiming}
                   className="mt-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
                 >
-                  {claiming ? "Submitting..." : "Claim this listing"}
+                  {claiming ? t("submitting") : t("claimListing")}
                 </button>
               ) : (
-                <a
+                <NextLink
                   href="/login"
                   className="mt-2 inline-block rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
                 >
-                  Log in to claim this listing
-                </a>
+                  {t("logInToClaim")}
+                </NextLink>
               )}
               {claimMessage ? <p className="mt-2 text-sm text-neutral-700">{claimMessage}</p> : null}
             </>
@@ -152,38 +156,36 @@ export default function RestaurantClaimPanel({
               onClick={() => setOpenRequestType("correction")}
               className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
-              Suggest an update
+              {t("suggestUpdate")}
             </button>
             <button
               type="button"
               onClick={() => setOpenRequestType("removal")}
               className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
-              Request removal
+              {t("requestRemoval")}
             </button>
           </>
         ) : (
-          <a
+          <NextLink
             href="/login"
             className="text-sm font-semibold text-amber-700 hover:underline"
           >
-            Log in to suggest an update or report an issue
-          </a>
+            {t("logInToSuggest")}
+          </NextLink>
         )}
       </div>
 
       {openRequestType ? (
         <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-4">
           <div className="text-sm font-semibold text-neutral-900">
-            {openRequestType === "correction" ? "Suggest an update" : "Request removal"}
+            {openRequestType === "correction" ? t("suggestUpdate") : t("requestRemoval")}
           </div>
           <textarea
             value={requestNote}
             onChange={(e) => setRequestNote(e.target.value)}
             placeholder={
-              openRequestType === "correction"
-                ? "What's incorrect, and what should it say instead?"
-                : "Why should this listing be removed? (e.g. permanently closed, duplicate listing)"
+              openRequestType === "correction" ? t("correctionPlaceholder") : t("removalPlaceholder")
             }
             rows={3}
             className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-black"
@@ -195,7 +197,7 @@ export default function RestaurantClaimPanel({
               disabled={submittingRequest || !requestNote.trim()}
               className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
             >
-              {submittingRequest ? "Submitting..." : "Submit"}
+              {submittingRequest ? t("submitting") : t("submit")}
             </button>
             <button
               type="button"
@@ -205,7 +207,7 @@ export default function RestaurantClaimPanel({
               }}
               className="rounded-lg px-3 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-100"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </div>

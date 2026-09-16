@@ -57,10 +57,15 @@ three have no external page to point to by definition.
 - **`app/restaurants/[id]/edit/page.tsx`**: every save stamps
   `lastVerifiedAt: serverTimestamp()` — the owner confirming/saving their
   own profile counts as re-verifying it.
-- **Nothing else writes these fields yet.** No import has actually been run
-  against real data (see `RESTAURANT-IMPORT-PIPELINE.md` — it is dry-run
-  only), so no restaurant in this codebase currently has `sourceType` values
-  other than `restaurant_submitted`.
+- **`functions/scripts/applyApprovedImportBatch.js`** (not yet run against
+  any real data — see `docs/RESTAURANT-IMPORT-PIPELINE.md`) stamps all of
+  these from the staging candidate's own values, carried through unchanged
+  from whatever `functions/scripts/stageImportCandidates.js` staged.
+  `dataConfidence` always starts `"unverified"` for an imported restaurant
+  — importing a record is never itself a verification.
+- **No restaurant in this codebase currently has `sourceType` values other
+  than `restaurant_submitted`** — no import has actually been run against
+  real data.
 
 ## Ownership claim fields
 
@@ -76,6 +81,39 @@ document and read by the same public notice:
 Full workflow, including the security model for how `claimantUid` can (and
 specifically cannot) become `ownerUid`, is in
 `docs/RESTAURANT-CLAIM-WORKFLOW.md`.
+
+## Dietary declaration basis (import pipeline only, today)
+
+`lib/import/types.ts`'s `DietaryDeclarationBasis` (`restaurant_declared` /
+`source_reported` / `platform_verified`) tracks *how confident* an import
+candidate's dietary claim is, separately from whether the attribute is
+present at all. See `docs/RESTAURANT-IMPORT-PIPELINE.md`'s "Dietary claims"
+section for the full rule — in short: `validateDietaryClaims()` requires an
+explicit basis for every claimed attribute, and specifically refuses
+`"platform_verified"` at import time, since an import pipeline reading a
+local file has no way to have actually verified anything itself.
+
+**This concept does not exist yet on the live `RestaurantDoc` shape** — a
+self-signup or owner-edited restaurant's `dietaryAttributes` has no
+per-attribute basis tracking today, only the flat array. Extending
+`RestaurantDoc` itself to carry a declaration basis per attribute (so a
+customer could eventually see "self-declared" vs. "verified by London Food
+Hubs" next to a Halal badge, for instance) would be a reasonable future
+step, deliberately not built in this task since it wasn't asked for beyond
+the import pipeline's own internal validation.
+
+## Data freshness and re-verification
+
+`sourceRetrievedAt` and `lastVerifiedAt` together let a future process
+identify restaurants whose information hasn't been confirmed in a while.
+This task documents, but does not implement, the intended direction: after
+an appropriate (currently undecided) period, a listing may be marked
+`NEEDS_REVERIFICATION` — a prompt for an admin or the owning business to
+confirm the listing is still accurate, never an automatic deletion or
+hiding of the listing for being old. No field, status, or scheduled job for
+this exists in the codebase today; this section exists so the intent is
+recorded rather than lost, for whoever eventually designs the actual
+threshold and automation.
 
 ## Media provenance (separate from data provenance)
 

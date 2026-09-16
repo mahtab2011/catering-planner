@@ -231,6 +231,18 @@ export default function AdminPage() {
         </Link>
 
         <Link
+          href="/admin/restaurant-import-candidates"
+          className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
+        >
+          <div className="font-semibold text-neutral-900">
+            Import Candidates
+          </div>
+          <div className="text-sm text-neutral-500">
+            Review staged restaurant import candidates
+          </div>
+        </Link>
+
+        <Link
           href="/orders/search"
           className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow"
         >

@@ -40,6 +40,10 @@ rules_version = '2';
 //
 //   - reviews, articles, recommendations, restaurants,
 //     restaurant_signups, users: fully covered (original scope).
+//   - restaurant_correction_requests: added for the London Launch
+//     claim/correction/removal foundation — see
+//     docs/RESTAURANT-CLAIM-WORKFLOW.md. Not one of the original 28;
+//     this is a new collection this task introduces.
 //   - staff, customers, events, sales_signups, blackcab_early_access,
 //     blackcab_bookings, blackcab_journey_ratings, blackcab_concerns,
 //     blackcab_signups, catering_house_signups, customer_signups,
@@ -224,7 +228,65 @@ service cloud.firestore {
           && unchanged('isApproved')
           && resource.data.status != 'blocked'
           && request.resource.data.status != 'blocked'
+        )
+        || (
+          // Ownership CLAIM SUBMISSION — see
+          // docs/RESTAURANT-CLAIM-WORKFLOW.md. Any signed-in user may
+          // claim a currently-unclaimed restaurant (e.g. an
+          // admin-imported record with no owner yet) by writing ONLY
+          // `claimantUid` (to themselves) and `ownerClaimStatus` (to
+          // 'claim_pending'), plus `claimSubmittedAt`/`updatedAt`.
+          // This can NEVER set `ownerUid` — that stays unchanged here,
+          // exactly like the owner-update branch above. Only an admin
+          // (the isAdmin() branch, unrestricted) may later promote a
+          // claim to actual ownership by setting ownerUid — no
+          // client-writable path exists from claimantUid to ownerUid.
+          // This intentionally repeats the fix for the earlier
+          // claim-on-edit vulnerability: submitting a claim is NEVER
+          // itself an edit right, and can't be smuggled into one by
+          // also changing other fields — the diff below is restricted
+          // to exactly the claim fields.
+          isSignedIn()
+          && resource.data.get('ownerUid', '') == ''
+          && resource.data.get('ownerClaimStatus', 'unclaimed') in ['unclaimed', 'claim_rejected']
+          && request.resource.data.claimantUid == request.auth.uid
+          && request.resource.data.ownerClaimStatus == 'claim_pending'
+          && unchanged('ownerUid')
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['claimantUid', 'ownerClaimStatus', 'claimSubmittedAt', 'updatedAt'])
         );
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- restaurant_correction_requests ----------
+    // Moderation-queue requests from a member of the public asking for
+    // a restaurant's details to be corrected, or the listing removed.
+    // Never applied automatically — an admin reviews and, if accepted,
+    // makes the actual edit to the restaurant document themselves (via
+    // the isAdmin() branch on /restaurants/{restaurantId} above). See
+    // docs/RESTAURANT-CLAIM-WORKFLOW.md.
+
+    match /restaurant_correction_requests/{requestId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.submittedByUid == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.restaurantId is string
+        && request.resource.data.restaurantId.size() > 0
+        && request.resource.data.requestType in ['correction', 'removal']
+        && request.resource.data.status == 'pending'
+        && !('moderatedBy' in request.resource.data)
+        && !('moderatedAt' in request.resource.data)
+        && !('moderationNote' in request.resource.data);
+
+      // Only an admin may moderate — no requester-driven or anonymous
+      // direct edits to a submitted request's outcome.
+      allow update: if isAdmin()
+        && unchanged('restaurantId')
+        && unchanged('submittedByUid')
+        && unchanged('requestType');
 
       allow delete: if isAdmin();
     }

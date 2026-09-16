@@ -21,6 +21,14 @@
  * recommendation management — plus citySlug immutability and the
  * users.role self-promotion guard, since those exist in the same
  * rules file and share the same risk profile.
+ *
+ * Also covers the London Launch claim/correction foundation: claim
+ * submission on an unclaimed restaurant, denial of any claim
+ * submission that also touches ownerUid or another profile field,
+ * denial of impersonating another user's claim, denial of
+ * double-claiming, admin claim approval, and the
+ * restaurant_correction_requests moderation-queue collection
+ * (create/read/moderate authorization).
  */
 
 import { readFileSync } from "node:fs";
@@ -441,6 +449,192 @@ describe("restaurants", () => {
     await seedRestaurant();
     await assertSucceeds(
       updateDoc(doc(asAdmin(), "restaurants", "r1"), { status: "blocked" })
+    );
+  });
+
+  // ---- Ownership claim submission (docs/RESTAURANT-CLAIM-WORKFLOW.md) ----
+
+  it("lets a signed-in user submit a claim on an unclaimed restaurant", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    await assertSucceeds(
+      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+        claimantUid: "claimant-1",
+        ownerClaimStatus: "claim_pending",
+        claimSubmittedAt: serverTimestamp(),
+      })
+    );
+  });
+
+  it("denies a claim submission that also sets ownerUid", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+        ownerUid: "claimant-1",
+        claimantUid: "claimant-1",
+        ownerClaimStatus: "claim_pending",
+      })
+    );
+  });
+
+  it("denies a claim submission that also edits unrelated profile fields", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+        claimantUid: "claimant-1",
+        ownerClaimStatus: "claim_pending",
+        shortDescription: "Smuggled edit",
+      })
+    );
+  });
+
+  it("denies impersonating someone else's claim", async () => {
+    await seedRestaurant({ ownerUid: "", ownerClaimStatus: "unclaimed" });
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+        claimantUid: "someone-else",
+        ownerClaimStatus: "claim_pending",
+      })
+    );
+  });
+
+  it("denies claiming a restaurant that already has an owner", async () => {
+    await seedRestaurant();
+    await assertFails(
+      updateDoc(doc(asUser("claimant-1"), "restaurants", "r1"), {
+        claimantUid: "claimant-1",
+        ownerClaimStatus: "claim_pending",
+      })
+    );
+  });
+
+  it("denies claiming a restaurant that already has a pending claim", async () => {
+    await seedRestaurant({
+      ownerUid: "",
+      ownerClaimStatus: "claim_pending",
+      claimantUid: "first-claimant",
+    });
+    await assertFails(
+      updateDoc(doc(asUser("second-claimant"), "restaurants", "r1"), {
+        claimantUid: "second-claimant",
+        ownerClaimStatus: "claim_pending",
+      })
+    );
+  });
+
+  it("lets an admin approve a claim by setting ownerUid", async () => {
+    await seedRestaurant({
+      ownerUid: "",
+      ownerClaimStatus: "claim_pending",
+      claimantUid: "claimant-1",
+    });
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurants", "r1"), {
+        ownerUid: "claimant-1",
+        ownerClaimStatus: "claimed",
+        claimDecidedAt: serverTimestamp(),
+        claimDecidedBy: "admin-1",
+      })
+    );
+  });
+});
+
+describe("restaurant_correction_requests", () => {
+  it("lets a signed-in user submit a correction request", async () => {
+    await assertSucceeds(
+      addDoc(collection(asUser("reporter-1"), "restaurant_correction_requests"), {
+        restaurantId: "r1",
+        requestType: "correction",
+        submittedByUid: "reporter-1",
+        fieldDescription: "Phone number",
+        suggestedValueNote: "020 7946 0000",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies impersonating another user's submission", async () => {
+    await assertFails(
+      addDoc(collection(asUser("reporter-1"), "restaurant_correction_requests"), {
+        restaurantId: "r1",
+        requestType: "removal",
+        submittedByUid: "someone-else",
+        reasonNote: "Permanently closed",
+        status: "pending",
+      })
+    );
+  });
+
+  it("denies a submission that pre-sets moderation fields", async () => {
+    await assertFails(
+      addDoc(collection(asUser("reporter-1"), "restaurant_correction_requests"), {
+        restaurantId: "r1",
+        requestType: "removal",
+        submittedByUid: "reporter-1",
+        status: "pending",
+        moderatedBy: "reporter-1",
+      })
+    );
+  });
+
+  it("denies an anonymous (unauthenticated) submission", async () => {
+    await assertFails(
+      addDoc(collection(asAnon(), "restaurant_correction_requests"), {
+        restaurantId: "r1",
+        requestType: "correction",
+        submittedByUid: "nobody",
+        status: "pending",
+      })
+    );
+  });
+
+  it("lets the submitter read their own request but not another user's", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_correction_requests", "req1"), {
+        restaurantId: "r1",
+        requestType: "correction",
+        submittedByUid: "reporter-1",
+        status: "pending",
+      });
+    });
+    await assertSucceeds(
+      getDoc(doc(asUser("reporter-1"), "restaurant_correction_requests", "req1"))
+    );
+    await assertFails(
+      getDoc(doc(asUser("someone-else"), "restaurant_correction_requests", "req1"))
+    );
+  });
+
+  it("denies a non-admin moderating a request", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_correction_requests", "req1"), {
+        restaurantId: "r1",
+        requestType: "correction",
+        submittedByUid: "reporter-1",
+        status: "pending",
+      });
+    });
+    await assertFails(
+      updateDoc(doc(asUser("reporter-1"), "restaurant_correction_requests", "req1"), {
+        status: "accepted",
+      })
+    );
+  });
+
+  it("lets an admin moderate a request", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "restaurant_correction_requests", "req1"), {
+        restaurantId: "r1",
+        requestType: "correction",
+        submittedByUid: "reporter-1",
+        status: "pending",
+      });
+    });
+    await assertSucceeds(
+      updateDoc(doc(asAdmin(), "restaurant_correction_requests", "req1"), {
+        status: "accepted",
+        moderatedBy: "admin-1",
+        moderatedAt: serverTimestamp(),
+      })
     );
   });
 });

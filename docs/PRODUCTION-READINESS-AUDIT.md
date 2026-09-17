@@ -119,6 +119,36 @@ codebase). Full detail: `docs/LEGAL-READINESS.md`.
   against the old placeholder text, stale cookie claims, or
   order/payment/delivery wording ever silently reappearing.
 
+## STATUS UPDATE (Task N) — J-05/J-06/J-07 dependency exposure cut from 10 to 1
+
+Task N re-verified the dependency-security findings against the current
+tree (they had drifted somewhat from Task J's original snapshot, though
+the total counts matched exactly) and applied the minimum safe changes
+possible without a major upgrade or `npm audit fix --force`. Full detail:
+`docs/DEPENDENCY-SECURITY.md`.
+
+- **`npm audit --omit=dev`: 10 → 1 vulnerability** (2 moderate/5 high/3
+  critical → 0 moderate/**1 high**/0 critical). **`npm audit` (all
+  dependencies): 19 → 1.**
+- **J-06 (`websocket-driver`/`protobufjs`) is now FIXED** — resolved via
+  plain `npm audit fix` (no `--force`), which only applied compatible
+  patch/minor bumps within existing semver ranges (verified via dry-run
+  first). No Firebase version change was needed.
+- **J-07 (`sharp`) is now FIXED** — resolved as a side effect of an
+  explicit, deliberate `next` version bump (`16.1.6` → `16.3.5`, same
+  major version, not a major upgrade), made by hand in `package.json`
+  rather than via `--force`, specifically because `next`'s own critical
+  advisory cluster (including a Windows RCE advisory) is a **direct**
+  dependency and the most concretely reachable finding in this entire
+  audit. `react`/`react-dom`/`firebase` were **not** touched.
+- **J-05 (`xlsx`) remains — no change made, by design.** Re-confirmed:
+  export-only usage across all 5 call sites (including the BlackCab
+  leads export, left untouched), zero calls to `xlsx`'s parsing API
+  anywhere in the codebase. Both advisories are in that unreachable
+  parsing path. No upstream fix exists. This is the one remaining
+  production vulnerability, retained with documented, reasoned risk
+  acceptance — not suppressed or hidden.
+
 ## The one finding that matters most: claimant PII is publicly retrievable
 
 **Before anything else in this document: a restaurant's claimant contact
@@ -203,9 +233,9 @@ run against the (currently unavailable) emulator before deployment.
 | J-02 | Firestore rules deployment | `firestore.rules` (105 test cases as of Task K) has now executed against a real local rules engine for the first time (Task L) — **105/105 passed, zero rule changes needed.** Still never deployed to any production Firebase project. | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended — this risk is now substantially reduced (local-verified) but deployment itself remains unauthorized and unperformed | ~~Install Java and run the full suite~~ done (Task L) — remaining: authorize and perform an actual `firebase deploy --only firestore:rules` against the correct production project | Local verification done (Task L); production deployment out of every task's scope so far | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
 | J-03 | Legal/compliance content | **(Task M)** `/privacy-policy`, `/terms`, and `/cookie-policy` now have substantive, audit-based content reflecting actual data practices — no longer placeholders. **Still blocked**: the operator legal name, registered address, and privacy/legal contact emails are unknown and marked with explicit `[... TO CONFIRM BEFORE LAUNCH]` placeholders on all three pages. | **P0** (kept — real content written, but essential identity facts still missing; see "Status update (Task M)" above) | Publishing a privacy policy or terms with no real operator identity or contact route is still not launch-ready, even though the substantive content is now accurate | ~~Write real privacy policy/terms/cookie-policy content~~ done (Task M) — remaining: confirm operator legal name, registered address, and privacy/legal contact emails, then fill in the bracketed placeholders | Content: done. Identity facts: no — requires business/legal input this task could not invent | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (8/8 passing) |
 | J-04 | Firebase Auth | `londonfoodhubs.com` (and `www.londonfoodhubs.com`) are not yet on Firebase Auth's "Authorized domains" allowlist (external Firebase console setting, confirmed not repo-managed) | **P0** for auth-dependent features on the new domain | Sign-in/sign-up/claim/owner-workspace will fail on the new domain until this is added — Firebase Auth rejects unauthorized origins regardless of correct client config | Add the domain in Firebase console once DNS is live | No — external Firebase console action | Manual sign-in test on the live domain post-deploy |
-| J-05 | Dependencies | `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 | Current usage is export-only (`json_to_sheet`/`writeFile`, confirmed by code search — never parses untrusted uploaded files), which meaningfully reduces real exploitability, but the vulnerable code ships regardless | Accept documented risk, or evaluate replacing `xlsx` for export-only use, as a deliberate decision | Not without a dependency change (out of scope here) | N/A — risk-acceptance decision |
-| J-06 | Dependencies | `websocket-driver` (critical) and `protobufjs` (critical/moderate) vulnerabilities — both transitive via the `firebase` package (Realtime Database's websocket client, Firestore's gRPC proto loader); fixes available via plain `npm audit fix` | P1 | This app never uses Realtime Database, so `websocket-driver`'s vulnerable code path is very likely unreachable in practice; still worth clearing since a fix exists with no breaking change | Run `npm audit fix` (non-`--force`) in a dedicated, tested change — not done in this audit per "no dependency changes" scope | Yes, narrowly | `npm run build` + full regression after |
-| J-07 | Dependencies | `sharp` (high) — transitive via `next` itself; fix requires `--force` and bumps Next past the pinned `16.1.6` | P2 | This app never uses `next/image` (confirmed, zero usage repo-wide), so `sharp`'s vulnerable image-processing path is not invoked by anything this app does | Defer; revisit if/when `next/image` is ever adopted, or as part of a deliberate, tested Next.js upgrade | No — version bump, needs its own testing pass | Full regression after any Next.js upgrade |
+| J-05 | Dependencies | **(Task N — unchanged, by design)** `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 (kept — real risk, but reachability is narrow; see below) | Re-confirmed export-only usage across all 5 call sites (`json_to_sheet`/`writeFile`/`write`, never `XLSX.read`/`readFile`, confirmed by code search) — the vulnerable parsing path is never invoked, but the vulnerable code still ships | Accept documented risk (decision made in Task N) — revisit only if a maintained drop-in replacement is found, as its own bounded task | Not without a dependency change (out of scope) | `docs/DEPENDENCY-SECURITY.md` |
+| J-06 | Dependencies | **(Task N) FIXED.** `websocket-driver` and `protobufjs`/`@protobufjs/utf8`/`@grpc/grpc-js` — all resolved via plain `npm audit fix` (no `--force`), verified via dry-run first | ~~P1~~ Resolved | Was: Realtime-Database/Firestore-transport code most users would never trigger; still worth clearing since a compatible fix existed | ~~Run `npm audit fix`~~ done (Task N) | Done | `docs/DEPENDENCY-SECURITY.md` — `npm audit` no longer lists either package |
+| J-07 | Dependencies | **(Task N) FIXED.** `sharp` and `postcss` (next's nested copy) — resolved via an explicit, deliberate `next` version bump `16.1.6` → `16.3.5` (same major version, not a major upgrade), made by hand in `package.json`, not via `--force` | ~~P2~~ Resolved | Was: `next/image` (and therefore `sharp`) genuinely unused; the `next` bump itself was justified by `next`'s own direct-dependency critical advisories, not by `sharp` specifically | ~~Defer~~ done (Task N), bundled with the `next` critical-advisory fix | Done — full regression run after (tsc, build, 70/70 app tests, 105/105 emulator tests) | `docs/DEPENDENCY-SECURITY.md` |
 | J-08 | Multi-domain architecture | This one Next.js deployment intentionally serves `smartserveuk.com`, `londonfoodhubs.com`, and `cikentikka.com` (host-header routing in `proxy.ts`/`app/robots.ts`'s own comments confirm this is deliberate) — not previously stated this plainly in one place | P1 (documentation clarity, not a defect) | Whoever configures Hostinger/DNS needs to know this is one app process behind multiple domains, or they may assume separate deployments are needed | Document explicitly (done — see "Domain / SEO" below); confirm Hostinger's setup can route multiple domains to the same Node process | No — infrastructure decision | Manual DNS/host config review at deploy time |
 | J-09 | Branding consistency | Password-reset emails link to `smartserveuk.com/login` even for restaurant owners who primarily interact via `londonfoodhubs.com` | P2 | Functionally works (the shared deployment serves `/login` on any of its domains identically) but is a minor brand-inconsistency, not a broken flow | Consider a domain-aware reset link if/when Food Hubs gets its own dedicated auth branding | Yes, small — but the "should Food Hubs have its own login branding" question is a product decision, not obvious | Manual email content review |
 | J-10 | Translation publication | No admin UI exists to write an approved translation into `restaurants/{id}.contentTranslations` — only the request/status workflow exists (Task I) | P1 | Marking a translation request `PUBLISHED` does not, and by design should not, make translated content appear — but there is genuinely no way to make it appear at all short of a manual Firestore console edit | Build a scoped translation-publish admin UI in a future task, or accept manual console editing as the interim process | Not tiny — a real editor UI, out of Phase 25's bar | Manual verification once built |
@@ -241,7 +271,7 @@ Concrete actions required before launch, roughly in dependency order:
 5. Confirm the actual Hostinger product/plan supports a persistent Node.js process (this repo cannot verify Hostinger account configuration — see `docs/HOSTINGER-DEPLOYMENT.md`'s own "Prerequisites").
 6. Have the 6 `NEXT_PUBLIC_FIREBASE_*` values (and optionally `NEXT_PUBLIC_SITE_URL`) ready to configure as Hostinger environment variables — see "Environment variables" below for the exact list (names only).
 7. Resolve the 10 SmartServeUK collection policy questions (**J-13**) if any operational SmartServeUK feature affected by them needs to keep working immediately at launch — check `docs/FIRESTORE-COLLECTION-INVENTORY.md`.
-8. Decide the `xlsx`/dependency risk posture (**J-05**–**J-07**) — at minimum, a documented decision, not silence.
+8. ~~Decide the `xlsx`/dependency risk posture (**J-05**–**J-07**)~~ done (Task N) — J-06/J-07 fixed, J-05 (`xlsx`) is a documented, reasoned risk-acceptance decision, not silence.
 
 ## C. Deployment-day checklist (do NOT execute — for whoever performs the actual deploy, with authorization)
 
@@ -257,7 +287,7 @@ Concrete actions required before launch, roughly in dependency order:
 
 ## D. Post-launch checklist (P1/P2)
 
-- Resolve J-05/J-06/J-07 dependency vulnerabilities per the decisions made pre-launch.
+- ~~Resolve J-05/J-06/J-07 dependency vulnerabilities~~ done (Task N) — J-06/J-07 fixed; J-05 (`xlsx`) is an accepted, documented risk with no upstream fix.
 - Build the translation-publication admin UI (J-10) once the request workflow sees real use.
 - Consider Firebase Storage-based media upload (J-11) as a deliberate future task.
 - Resolve the hub data-model ambiguity (J-12) when convenient.
@@ -465,7 +495,7 @@ Practical static review, not a formal WCAG audit:
 
 ### Dependency / package health (Phase 23)
 
-See the launch-gate matrix (J-05–J-07) for the three vulnerable dependency chains found (`xlsx` direct, `websocket-driver`/`protobufjs` transitive via `firebase`, `sharp` transitive via `next`). `npm audit --omit=dev`: **10 vulnerabilities (2 moderate, 5 high, 3 critical)**. Full `npm audit` (including devDependencies): **19 vulnerabilities (1 low, 4 moderate, 11 high, 3 critical)** — the devDependency-only additions are in `postcss` (build-tooling, never shipped to the browser). **No dependency was changed, upgraded, or removed as part of this audit**, per its explicit scope (report, don't fix).
+See the launch-gate matrix (J-05–J-07) for the three vulnerable dependency chains originally found (`xlsx` direct, `websocket-driver`/`protobufjs` transitive via `firebase`, `sharp` transitive via `next`). Original baseline at the time of this audit: `npm audit --omit=dev`: **10 vulnerabilities (2 moderate, 5 high, 3 critical)**; full `npm audit`: **19 vulnerabilities (1 low, 4 moderate, 11 high, 3 critical)**. **(Task N)** These have since been remediated as far as safely possible without a major upgrade or `npm audit fix --force`: `npm audit --omit=dev` is now **1 vulnerability (1 high — `xlsx`, no upstream fix, documented risk-acceptance)**; full `npm audit` is now also **1**. See `docs/DEPENDENCY-SECURITY.md` for the complete before/after matrix and reachability analysis.
 
 ### Test coverage / validation (Phase 24)
 

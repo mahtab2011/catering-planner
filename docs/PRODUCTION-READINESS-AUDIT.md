@@ -149,6 +149,38 @@ possible without a major upgrade or `npm audit fix --force`. Full detail:
   production vulnerability, retained with documented, reasoned risk
   acceptance — not suppressed or hidden.
 
+## STATUS UPDATE (Task O) — J-03's remaining operator-identity gap is now resolved
+
+Task M left five business-identity placeholders on `/privacy-policy`,
+`/terms`, and `/cookie-policy` (operator name, business/contact address,
+privacy contact email, legal contact email, effective date), explicitly
+refusing to invent them. The owner has since supplied the real values, and
+Task O (2026-09-17) replaced every one. Full detail:
+`docs/LEGAL-READINESS.md`'s "STATUS UPDATE (Task O)".
+
+- **Confirmed operator**: `MBN Continental (UK) Ltd`, business/contact
+  address `85 Halley Road, London E7 8DS, United Kingdom` — described
+  explicitly as a business/contact address, **not** claimed as a
+  Companies House registered office, since nothing in this repository
+  independently verifies that status.
+- **Confirmed contact**: `mahtab@mbncon.com` (used for both privacy and
+  legal enquiries, intentionally — a single shared address, not two
+  separate ones), named contact `Md. Mahtab Hossain Siddiqui`, and a
+  phone/WhatsApp route (`07454586658`) added where naturally appropriate
+  (the existing contact sections), not mechanically repeated everywhere.
+- **Confirmed effective date**: `22 September 2026`, applied consistently
+  across all three pages.
+- **No Companies House number, VAT number, ICO registration number, or
+  any other corporate/legal fact was invented** — only what the owner
+  explicitly supplied was used.
+- **J-03 is now further downgraded**: the placeholder-content portion of
+  this finding is resolved. What remains is exactly what remained before
+  Task M ever started for any *other* legal document: an optional future
+  solicitor review before relying on this content for real regulatory
+  purposes, which neither Task M nor Task O claims to be.
+- This is **not** a claim of launch, deployment, or production readiness
+  beyond the legal-content surface specifically.
+
 ## The one finding that matters most: claimant PII is publicly retrievable
 
 **Before anything else in this document: a restaurant's claimant contact
@@ -231,7 +263,7 @@ run against the (currently unavailable) emulator before deployment.
 |---|---|---|---|---|---|---|---|
 | J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection. **Architecture fixed (Task K), now emulator-verified (Task L)** — data moved to a private `restaurant_claims` collection; rules updated; 105/105 emulator tests pass including 21 dedicated `restaurant_claims` cases. **Not yet deployed to production.** | **P0** (kept — deployment, not verification, is now the only remaining gap; see "Status update (Task L)" above) | Real personal data exposed to the public internet indefinitely; see full writeup above | ~~Redesign claim-data storage~~ done (Task K) — ~~emulator-verified tests~~ done (Task L) — remaining: production deployment (separately authorized) | Done — architecture fixed and local-emulator-verified | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
 | J-02 | Firestore rules deployment | `firestore.rules` (105 test cases as of Task K) has now executed against a real local rules engine for the first time (Task L) — **105/105 passed, zero rule changes needed.** Still never deployed to any production Firebase project. | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended — this risk is now substantially reduced (local-verified) but deployment itself remains unauthorized and unperformed | ~~Install Java and run the full suite~~ done (Task L) — remaining: authorize and perform an actual `firebase deploy --only firestore:rules` against the correct production project | Local verification done (Task L); production deployment out of every task's scope so far | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
-| J-03 | Legal/compliance content | **(Task M)** `/privacy-policy`, `/terms`, and `/cookie-policy` now have substantive, audit-based content reflecting actual data practices — no longer placeholders. **Still blocked**: the operator legal name, registered address, and privacy/legal contact emails are unknown and marked with explicit `[... TO CONFIRM BEFORE LAUNCH]` placeholders on all three pages. | **P0** (kept — real content written, but essential identity facts still missing; see "Status update (Task M)" above) | Publishing a privacy policy or terms with no real operator identity or contact route is still not launch-ready, even though the substantive content is now accurate | ~~Write real privacy policy/terms/cookie-policy content~~ done (Task M) — remaining: confirm operator legal name, registered address, and privacy/legal contact emails, then fill in the bracketed placeholders | Content: done. Identity facts: no — requires business/legal input this task could not invent | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (8/8 passing) |
+| J-03 | Legal/compliance content | **(Task M/O) RESOLVED (content).** `/privacy-policy`, `/terms`, and `/cookie-policy` have substantive, audit-based content reflecting actual data practices, and all five operator-identity placeholders are now filled with owner-confirmed values: `MBN Continental (UK) Ltd`, business/contact address `85 Halley Road, London E7 8DS, United Kingdom`, `mahtab@mbncon.com`, effective date `22 September 2026`. | ~~P0~~ Resolved (content-completeness); optional future solicitor review remains a business decision, not a blocker this repo can resolve | Publishing a privacy policy or terms with no real operator identity or contact route was the launch blocker — that gap is now closed | ~~Write real content~~ done (Task M) — ~~confirm operator identity/contact facts~~ done (Task O) | Done — both content and identity facts | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (9/9 passing) |
 | J-04 | Firebase Auth | `londonfoodhubs.com` (and `www.londonfoodhubs.com`) are not yet on Firebase Auth's "Authorized domains" allowlist (external Firebase console setting, confirmed not repo-managed) | **P0** for auth-dependent features on the new domain | Sign-in/sign-up/claim/owner-workspace will fail on the new domain until this is added — Firebase Auth rejects unauthorized origins regardless of correct client config | Add the domain in Firebase console once DNS is live | No — external Firebase console action | Manual sign-in test on the live domain post-deploy |
 | J-05 | Dependencies | **(Task N — unchanged, by design)** `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 (kept — real risk, but reachability is narrow; see below) | Re-confirmed export-only usage across all 5 call sites (`json_to_sheet`/`writeFile`/`write`, never `XLSX.read`/`readFile`, confirmed by code search) — the vulnerable parsing path is never invoked, but the vulnerable code still ships | Accept documented risk (decision made in Task N) — revisit only if a maintained drop-in replacement is found, as its own bounded task | Not without a dependency change (out of scope) | `docs/DEPENDENCY-SECURITY.md` |
 | J-06 | Dependencies | **(Task N) FIXED.** `websocket-driver` and `protobufjs`/`@protobufjs/utf8`/`@grpc/grpc-js` — all resolved via plain `npm audit fix` (no `--force`), verified via dry-run first | ~~P1~~ Resolved | Was: Realtime-Database/Firestore-transport code most users would never trigger; still worth clearing since a compatible fix existed | ~~Run `npm audit fix`~~ done (Task N) | Done | `docs/DEPENDENCY-SECURITY.md` — `npm audit` no longer lists either package |
@@ -255,7 +287,7 @@ run against the (currently unavailable) emulator before deployment.
 
 1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit. **Architecture fixed as of Task K and emulator-verified as of Task L** (see "Status update (Task L)" above) — remains listed as a blocker only pending actual production deployment of the verified rules, same as J-02.
 2. **J-02** — Firestore rules have now run against a real local rules engine for the first time (Task L, 105/105 passed), but have never been deployed to any production Firebase project. Deploying is the only remaining step, and requires separate explicit authorization.
-3. **J-03** — Privacy policy, terms, and cookie policy now have real, substantive content (Task M), but the operator's legal name, registered address, and contact emails are still unknown and marked with visible placeholders that must be confirmed before launch.
+3. ~~**J-03** — Privacy policy, terms, and cookie policy now have real, substantive content (Task M), but the operator's legal name, registered address, and contact emails are still unknown and marked with visible placeholders that must be confirmed before launch.~~ **Resolved (Task O)** — owner-confirmed operator identity and contact details are now in place on all three pages.
 4. **J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth, so sign-in-dependent features (claim, review, owner workspace, admin) will not work on the live domain until this external step is done.
 
 None of these are things this audit could or should have fixed itself — J-01/J-02 need a scoped engineering task with rules-engine verification, J-03 needs real legal content, J-04 is an external Firebase console action requiring a live domain to point at.
@@ -266,7 +298,7 @@ Concrete actions required before launch, roughly in dependency order:
 
 1. ~~Resolve **J-01** (claimant PII) — design and implement a fix, with tests.~~ Done (Task K).
 2. ~~Get Java (or any machine with it) and run the full Firestore rules suite (**J-02**) — fix any failures, including verifying J-01's fix actually works as intended.~~ Done (Task L) — 105/105 passed locally. Remaining: authorize and perform the actual production `firebase deploy --only firestore:rules`.
-3. ~~Write and publish real privacy policy and terms content~~ done (Task M). Remaining (**J-03**): confirm the operator's legal name, registered business address, and privacy/legal contact emails, and fill in the bracketed placeholders on `/privacy-policy`, `/terms`, and `/cookie-policy` — a business/legal decision, not an engineering one.
+3. ~~Write and publish real privacy policy and terms content~~ done (Task M). ~~Confirm the operator's legal name, registered business address, and privacy/legal contact emails~~ done (Task O) — **J-03 content-completeness is resolved.**
 4. Decide whether a cookie-consent banner is needed (see "Cookies / tracking" below — currently no tracking exists, so the honest answer today is "not technically required by what's implemented," but this should be revisited the moment any analytics is added).
 5. Confirm the actual Hostinger product/plan supports a persistent Node.js process (this repo cannot verify Hostinger account configuration — see `docs/HOSTINGER-DEPLOYMENT.md`'s own "Prerequisites").
 6. Have the 6 `NEXT_PUBLIC_FIREBASE_*` values (and optionally `NEXT_PUBLIC_SITE_URL`) ready to configure as Hostinger environment variables — see "Environment variables" below for the exact list (names only).
@@ -424,7 +456,7 @@ This is a technical audit, not legal advice. What the application actually colle
 - **Translation requests**: requesting owner's uid, target locales, admin notes.
 - **Admin workflow data**: moderator uid, timestamps, review notes (not publicly exposed — these collections have no public read rule at all, unlike `restaurants`).
 
-**Customer-facing documents (Task M update)**: `/privacy-policy`, `/terms`, and `/cookie-policy` now have real, substantive content reflecting actual data practices (see "Status update (Task M)" above and `docs/LEGAL-READINESS.md`) — this is no longer an open gap in itself. What remains open under J-03 is narrower: the operator's legal name, registered address, and privacy/legal contact emails are still unknown, so there is still no confirmed, real address for a "how to request your data be deleted" contact — the new Privacy Policy points at a placeholder email pending that confirmation, and correction/removal requests remain the only actually-working self-service mechanism today.
+**Customer-facing documents (Task M/O update)**: `/privacy-policy`, `/terms`, and `/cookie-policy` now have real, substantive content reflecting actual data practices (see "Status update (Task M)"/"Status update (Task O)" above and `docs/LEGAL-READINESS.md`), and the operator's legal name, business/contact address, and privacy/legal contact email are now confirmed and in place (Task O) — there is now a real, monitored contact route (`mahtab@mbncon.com`) for a "how to request your data be deleted" enquiry, in addition to the correction/removal self-service mechanism.
 
 ### Cookies / tracking (Phase 11)
 

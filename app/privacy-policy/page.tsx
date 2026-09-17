@@ -1,9 +1,11 @@
 import Link from "next/link";
 
-const EFFECTIVE_DATE = "[EFFECTIVE DATE TO CONFIRM BEFORE LAUNCH]";
-const OPERATOR_NAME = "[OPERATOR LEGAL NAME TO CONFIRM BEFORE LAUNCH]";
-const OPERATOR_ADDRESS = "[REGISTERED BUSINESS ADDRESS TO CONFIRM BEFORE LAUNCH]";
-const PRIVACY_CONTACT_EMAIL = "[PRIVACY CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]";
+const EFFECTIVE_DATE = "22 September 2026";
+const OPERATOR_NAME = "MBN Continental (UK) Ltd";
+const OPERATOR_ADDRESS = "85 Halley Road, London E7 8DS, United Kingdom";
+const NAMED_CONTACT = "Md. Mahtab Hossain Siddiqui";
+const PRIVACY_CONTACT_EMAIL = "mahtab@mbncon.com";
+const CONTACT_PHONE = "07454586658";
 
 function Section({
   title,
@@ -46,11 +48,12 @@ export default function PrivacyPolicyPage() {
 
       <Section title="Who operates this service">
         <p>
-          This website is operated by {OPERATOR_NAME}, {OPERATOR_ADDRESS}.
-          &ldquo;SmartServeUK&rdquo; and &ldquo;London Food Hubs&rdquo; are
-          brand names used on this website by the same operator. In this
-          policy, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;the
-          Service&rdquo; refer to that operator and this website.
+          This website is operated by {OPERATOR_NAME}. Our business/contact
+          address is {OPERATOR_ADDRESS}. The named contact for this Service
+          is {NAMED_CONTACT}. &ldquo;SmartServeUK&rdquo; and &ldquo;London
+          Food Hubs&rdquo; are brand names used on this website by the same
+          operator. In this policy, &ldquo;we&rdquo;, &ldquo;us&rdquo; and
+          &ldquo;the Service&rdquo; refer to that operator and this website.
         </p>
       </Section>
 
@@ -284,7 +287,10 @@ export default function PrivacyPolicyPage() {
             For anything else — including requesting a copy of your
             information, asking us to delete your account information, or
             any other privacy question — please contact us at{" "}
-            {PRIVACY_CONTACT_EMAIL}.
+            <a className="underline" href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>
+              {PRIVACY_CONTACT_EMAIL}
+            </a>
+            , or by phone or WhatsApp on {CONTACT_PHONE}.
           </li>
         </ul>
         <p>

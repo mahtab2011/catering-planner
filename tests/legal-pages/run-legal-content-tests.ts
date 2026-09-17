@@ -1,6 +1,6 @@
 /**
  * Static regression guards for the legal-content readiness work done in
- * Task M — see docs/LEGAL-READINESS.md and
+ * Task M and finalized in Task O — see docs/LEGAL-READINESS.md and
  * docs/PRODUCTION-READINESS-AUDIT.md's "J-03". These are source-inspection
  * checks, not behavioral tests: they read the actual shipped source of the
  * legal pages and the site footer and assert a handful of specific
@@ -8,6 +8,11 @@
  *
  *   - the old placeholder legal text ("will be updated here") never comes
  *     back;
+ *   - none of Task M's bracketed "TO CONFIRM BEFORE LAUNCH" placeholders
+ *     ever reappear now that Task O has replaced them with confirmed
+ *     operator details;
+ *   - the confirmed operator name, contact email, and effective date
+ *     (Task O) are actually present where expected;
  *   - the footer's legal links still point at real pages that exist;
  *   - the Cookie Policy never re-claims analytics/performance cookies or a
  *     cookie-consent banner that don't exist;
@@ -74,25 +79,69 @@ test("the old placeholder Privacy/Terms text has not been reintroduced", () => {
   );
 });
 
-test("essential missing business-identity facts are marked with explicit bracketed placeholders, never invented", () => {
+test("no Task M 'TO CONFIRM BEFORE LAUNCH' placeholder remains on any legal page (Task O)", () => {
   for (const source of [privacySource, termsSource, cookieSource]) {
-    // Any bracketed placeholder token must say it needs confirming —
-    // this guards against someone "resolving" a placeholder by just
-    // deleting the brackets around a guess.
-    const bracketed = source.match(/\[[A-Z0-9 /]+\]/g) ?? [];
-    for (const token of bracketed) {
-      assert.ok(
-        /TO CONFIRM BEFORE LAUNCH/.test(token),
-        `Expected bracketed placeholder ${token} to say "TO CONFIRM BEFORE LAUNCH"`
-      );
-    }
+    assert.ok(
+      !/TO CONFIRM BEFORE LAUNCH/i.test(source),
+      "Expected every Task M placeholder to have been replaced with a confirmed value"
+    );
+    assert.ok(
+      !/\[OPERATOR|\[REGISTERED|\[PRIVACY|\[LEGAL|\[EFFECTIVE/i.test(source),
+      "Expected no leftover Task M bracketed placeholder token"
+    );
   }
   // And the reverse: no invented-looking company registration/VAT/ICO
-  // detail has snuck in anywhere on these pages.
+  // detail, and no unsupported "registered office" claim, has snuck in.
   for (const source of [privacySource, termsSource, cookieSource]) {
     assert.ok(
       !/Company (No|Number)\.?\s*\d|Companies House|ICO registration|VAT (No|Number)\.?\s*\d/i.test(source),
       "Expected no invented company registration/VAT/ICO detail on legal pages"
+    );
+    assert.ok(
+      !/registered office/i.test(source),
+      "Expected no unsupported 'registered office' claim — only a business/contact address was confirmed"
+    );
+  }
+});
+
+test("the confirmed operator identity, contact details, and effective date (Task O) are present where expected", () => {
+  const normalizedPrivacy = normalize(privacySource);
+  const normalizedTerms = normalize(termsSource);
+  const normalizedCookie = normalize(cookieSource);
+
+  assert.ok(
+    normalizedPrivacy.includes("MBN Continental (UK) Ltd"),
+    "Expected the confirmed operator name on the Privacy Policy"
+  );
+  assert.ok(
+    normalizedTerms.includes("MBN Continental (UK) Ltd"),
+    "Expected the confirmed operator name on the Terms page"
+  );
+  assert.ok(
+    normalizedPrivacy.includes("85 Halley Road, London E7 8DS, United Kingdom"),
+    "Expected the confirmed business/contact address on the Privacy Policy"
+  );
+  assert.ok(
+    normalizedTerms.includes("85 Halley Road, London E7 8DS, United Kingdom"),
+    "Expected the confirmed business/contact address on the Terms page"
+  );
+  for (const normalized of [normalizedPrivacy, normalizedTerms]) {
+    assert.ok(
+      normalized.includes("Md. Mahtab Hossain Siddiqui"),
+      "Expected the confirmed named contact to appear"
+    );
+  }
+  for (const normalized of [normalizedPrivacy, normalizedTerms, normalizedCookie]) {
+    assert.ok(
+      normalized.includes("mahtab@mbncon.com"),
+      "Expected the confirmed contact email to appear"
+    );
+    // These pages render their date via `{EFFECTIVE_DATE}` interpolation
+    // rather than a literal string, so the source-level check is on the
+    // constant's own assignment rather than rendered JSX text.
+    assert.ok(
+      normalized.includes('EFFECTIVE_DATE = "22 September 2026"'),
+      "Expected the confirmed effective date to be assigned to EFFECTIVE_DATE"
     );
   }
 });

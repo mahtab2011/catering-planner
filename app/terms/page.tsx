@@ -1,6 +1,9 @@
-const EFFECTIVE_DATE = "[EFFECTIVE DATE TO CONFIRM BEFORE LAUNCH]";
-const OPERATOR_NAME = "[OPERATOR LEGAL NAME TO CONFIRM BEFORE LAUNCH]";
-const LEGAL_CONTACT_EMAIL = "[LEGAL CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]";
+const EFFECTIVE_DATE = "22 September 2026";
+const OPERATOR_NAME = "MBN Continental (UK) Ltd";
+const OPERATOR_ADDRESS = "85 Halley Road, London E7 8DS, United Kingdom";
+const NAMED_CONTACT = "Md. Mahtab Hossain Siddiqui";
+const LEGAL_CONTACT_EMAIL = "mahtab@mbncon.com";
+const CONTACT_PHONE = "07454586658";
 
 function Section({
   title,
@@ -27,7 +30,8 @@ export default function TermsPage() {
 
       <p className="mt-6 text-neutral-700">
         These Terms and Conditions (&ldquo;Terms&rdquo;) govern your use of
-        this website, operated by {OPERATOR_NAME} under the brand names
+        this website, operated by {OPERATOR_NAME} (business/contact
+        address: {OPERATOR_ADDRESS}) under the brand names
         &ldquo;SmartServeUK&rdquo; and &ldquo;London Food Hubs&rdquo;
         (together, &ldquo;the Service&rdquo;, &ldquo;we&rdquo;,
         &ldquo;us&rdquo;). By using the Service, you agree to these Terms.
@@ -235,7 +239,11 @@ export default function TermsPage() {
 
       <Section title="17. Contact">
         <p>
-          Questions about these Terms can be sent to {LEGAL_CONTACT_EMAIL}.
+          Questions about these Terms can be sent to {NAMED_CONTACT} at{" "}
+          <a className="underline" href={`mailto:${LEGAL_CONTACT_EMAIL}`}>
+            {LEGAL_CONTACT_EMAIL}
+          </a>
+          , or by phone or WhatsApp on {CONTACT_PHONE}.
         </p>
       </Section>
     </div>

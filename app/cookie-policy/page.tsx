@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-const EFFECTIVE_DATE = "[EFFECTIVE DATE TO CONFIRM BEFORE LAUNCH]";
-const PRIVACY_CONTACT_EMAIL = "[PRIVACY CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]";
+const EFFECTIVE_DATE = "22 September 2026";
+const PRIVACY_CONTACT_EMAIL = "mahtab@mbncon.com";
 
 export default function CookiePolicyPage() {
   return (
@@ -57,7 +57,11 @@ export default function CookiePolicyPage() {
       <h2 className="text-xl font-semibold mt-6 mb-2">Contact</h2>
       <p>
         If you have any questions about this Cookie Policy, please contact
-        us at {PRIVACY_CONTACT_EMAIL}. See also our{" "}
+        us at{" "}
+        <a className="underline" href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>
+          {PRIVACY_CONTACT_EMAIL}
+        </a>
+        . See also our{" "}
         <Link className="underline" href="/privacy-policy">
           Privacy Policy
         </Link>

@@ -1,4 +1,4 @@
-# Legal / Privacy / Terms Readiness — Task M
+# Legal / Privacy / Terms Readiness — Task M / Task O
 
 Written for: whoever decides when London Food Hubs' legal-information
 surfaces are ready to launch on `londonfoodhubs.com`. This is a
@@ -8,13 +8,49 @@ the pages it describes should be read as a solicitor-reviewed legal
 opinion — none of it has been reviewed by a solicitor.
 
 **Read this alongside** `docs/PRODUCTION-READINESS-AUDIT.md` (the overall
-launch-gate audit — see its "STATUS UPDATE (Task M)" section for how this
-task changes J-03's status), `docs/RESTAURANT-CLAIM-WORKFLOW.md` (claimant
-PII architecture), and `docs/FIRESTORE-SECURITY-AUDIT.md` /
-`docs/PRODUCTION-READINESS-AUDIT.md`'s J-01/J-02 (the underlying data
-protections this policy describes).
+launch-gate audit — see its "STATUS UPDATE (Task M)" and "STATUS UPDATE
+(Task O)" sections for how these tasks change J-03's status),
+`docs/RESTAURANT-CLAIM-WORKFLOW.md` (claimant PII architecture), and
+`docs/FIRESTORE-SECURITY-AUDIT.md` / `docs/PRODUCTION-READINESS-AUDIT.md`'s
+J-01/J-02 (the underlying data protections this policy describes).
 
-## What this task did
+## STATUS UPDATE (Task O) — operator placeholders resolved
+
+Task M deliberately left five business-identity facts as visible
+`[... TO CONFIRM BEFORE LAUNCH]` placeholders rather than invent them. The
+owner has since supplied them, and Task O (2026-09-17) has replaced every
+one with the confirmed value below, on all three legal pages:
+
+| Fact | Confirmed value |
+|---|---|
+| Operator / company | `MBN Continental (UK) Ltd` |
+| Named contact | `Md. Mahtab Hossain Siddiqui` |
+| Business/contact address | `85 Halley Road, London E7 8DS, United Kingdom` |
+| Privacy contact email | `mahtab@mbncon.com` |
+| Legal contact email | `mahtab@mbncon.com` (same address — intentional, not an error) |
+| Effective date | `22 September 2026` |
+
+Also added, where naturally appropriate (not mechanically inserted
+everywhere): the named contact in each page's operator-identity statement,
+and a phone/WhatsApp contact route (`07454586658`) alongside the email in
+the Privacy Policy's and Terms' own contact sections.
+
+**Important wording note**: the owner supplied `85 Halley Road, London
+E7 8DS, United Kingdom` as a **business/contact address**, not as an
+independently verified Companies House registered office. Both pages
+describe it explicitly as "our business/contact address" — neither page
+claims or implies it is the statutory registered office, since nothing in
+this repository independently establishes that. No Companies House
+registration number, VAT number, ICO registration number, or other
+corporate/legal fact was invented — only what was explicitly supplied
+above was used.
+
+**J-03 is now further downgraded** — see "STATUS UPDATE (Task O)" in
+`docs/PRODUCTION-READINESS-AUDIT.md`. This does **not** mean the
+application is launched, deployed, or that the legal content has been
+solicitor-reviewed.
+
+## What Task M did
 
 Replaced the placeholder `/privacy-policy` and `/terms` pages (previously
 one sentence each: "SmartServeUK privacy/terms ... will be updated here.")
@@ -170,51 +206,57 @@ A repository-wide search confirmed:
 - No invented company registration number, VAT number, ICO registration
   number, or Companies House reference anywhere.
 
-**Every remaining essential placeholder, listed in full — these are P0
-and require your confirmation before launch:**
+**(Task M, historical) At the time Task M shipped, every one of these
+placeholders was still outstanding — this table is kept for the historical
+record. All five were resolved by Task O; see "STATUS UPDATE (Task O)"
+above for the confirmed values actually in use now.**
 
-| Placeholder | Appears on | What's needed |
+| Placeholder (Task M) | Appeared on | Resolved by Task O |
 |---|---|---|
-| `[OPERATOR LEGAL NAME TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy`, `/terms` | The real legal entity operating this service |
-| `[REGISTERED BUSINESS ADDRESS TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy` | The real registered/business address |
-| `[PRIVACY CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy`, `/cookie-policy` | A real, monitored inbox for privacy requests |
-| `[LEGAL CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]` | `/terms` | A real, monitored inbox for terms/legal queries |
-| `[EFFECTIVE DATE TO CONFIRM BEFORE LAUNCH]` | all three pages | The actual date these terms take effect (should be set at, not before, real launch) |
+| `[OPERATOR LEGAL NAME TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy`, `/terms` | `MBN Continental (UK) Ltd` |
+| `[REGISTERED BUSINESS ADDRESS TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy` | `85 Halley Road, London E7 8DS, United Kingdom` (described as business/contact address, not registered office) |
+| `[PRIVACY CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]` | `/privacy-policy`, `/cookie-policy` | `mahtab@mbncon.com` |
+| `[LEGAL CONTACT EMAIL TO CONFIRM BEFORE LAUNCH]` | `/terms` | `mahtab@mbncon.com` (same address, intentional) |
+| `[EFFECTIVE DATE TO CONFIRM BEFORE LAUNCH]` | all three pages | `22 September 2026` |
 
-These are not cosmetic — they are the business/legal facts this task was
-explicitly instructed never to invent. **J-03 remains P0 until these are
-filled in with confirmed real values.**
+## Tests added/changed
 
-## Tests added
-
-`tests/legal-pages/run-legal-content-tests.ts` (new, 8/8 passing,
-dependency-free — no Firestore, no emulator). Guards:
+`tests/legal-pages/run-legal-content-tests.ts` (originally added in Task
+M, updated in Task O — 9/9 passing, dependency-free — no Firestore, no
+emulator). Guards:
 
 1. Old placeholder Privacy/Terms text never reintroduced.
-2. Essential missing business-identity facts stay explicit
-   `[... TO CONFIRM BEFORE LAUNCH]` placeholders, never silently replaced
-   with an invented-looking value.
-3. The footer's legal links still resolve to real page files.
-4. The Cookie Policy never re-claims analytics/performance cookies or a
+2. **(Task O)** No Task M `TO CONFIRM BEFORE LAUNCH` / `[OPERATOR`/
+   `[REGISTERED`/`[PRIVACY`/`[LEGAL`/`[EFFECTIVE` placeholder token
+   remains on any legal page, and no unsupported "registered office"
+   claim has been introduced.
+3. **(Task O)** The confirmed operator name, business/contact address,
+   named contact, contact email, and effective date are all actually
+   present where expected.
+4. The footer's legal links still resolve to real page files.
+5. The Cookie Policy never re-claims analytics/performance cookies or a
    cookie-consent banner that don't exist, and still accurately describes
    Firebase Auth's local-storage usage.
-5. The Terms page never describes checkout/payment/delivery/commission
+6. The Terms page never describes checkout/payment/delivery/commission
    features that aren't implemented, and keeps its explicit disclaimer.
-6. The Privacy Policy keeps describing claimant information as private.
-7. The Privacy Policy keeps stating no analytics/advertising tracking is
+7. The Privacy Policy keeps describing claimant information as private.
+8. The Privacy Policy keeps stating no analytics/advertising tracking is
    used.
-8. The Privacy Policy keeps its honest English-only disclosure.
+9. The Privacy Policy keeps its honest English-only disclosure.
 
 ## Remaining launch blockers (legal surface)
 
-1. **Confirm the 5 placeholders above** with real, verified values — a
-   business/legal decision, not an engineering one. This document and the
-   pages themselves make every remaining gap visible rather than hiding
-   it behind confident-sounding placeholder prose.
+1. ~~Confirm the 5 placeholders above with real, verified values~~ **done
+   (Task O)** — all five are now filled in with the confirmed operator
+   details.
 2. Consider (separately, not part of this task) having the final,
    fact-complete text reviewed by a solicitor before relying on it for
-   real regulatory purposes — nothing produced by this task should be
-   described as solicitor-reviewed.
-3. J-01/J-02 (Firestore rules) and J-04 (Firebase Authorized Domains)
+   real regulatory purposes — nothing produced by Task M or Task O should
+   be described as solicitor-reviewed.
+3. If the business ever wants dedicated `privacy@`/`legal@` addresses
+   distinct from the current shared `mahtab@mbncon.com`, or wants the
+   address formally confirmed as a Companies House registered office,
+   that is a future, separate content update — not invented here.
+4. J-01/J-02 (Firestore rules) and J-04 (Firebase Authorized Domains)
    remain open per `docs/PRODUCTION-READINESS-AUDIT.md` — unaffected by
    this task.

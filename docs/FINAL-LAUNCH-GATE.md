@@ -12,6 +12,14 @@ controlled production deployment, and if so, in what exact order?**
 working tree clean, 59 commits ahead of `origin/main`, linear history (no
 merges), remote unchanged (`github.com/mahtab2011/catering-planner`).
 
+**STATUS UPDATE (Task S, 2026-09-17): Firestore rules have since been
+deployed to production** (`catering-planner-7f5d7`) — see Section 8's P0
+table and Section 11 for the executed plan and exact command. This
+document's remaining content is preserved as Task Q wrote it; sections 8,
+9, and 11 carry explicit Task S amendments rather than being rewritten
+wholesale. **London Food Hubs is still not publicly launched** — the
+application itself is not yet running on Hostinger.
+
 ---
 
 ## 1. Executive summary
@@ -233,13 +241,14 @@ have built — no unexplained file category, no binary blob, no
 
 | # | Item | Evidence | Risk if skipped | Recommended action |
 |---|---|---|---|---|
-| P0-1 | **Deploy Firestore rules to production** | Locally verified 105/105 (Section 3), never deployed (`docs/PRODUCTION-READINESS-AUDIT.md` J-01/J-02) | Production Firestore currently runs whatever rules (if any) were last actually deployed — likely stale/older or default-open rules, not the claimant-PII-protecting ones verified in this repo | Follow Section 11 (Firestore Deployment Plan) exactly, with explicit human authorization at the deploy step |
+| ~~P0-1~~ | ~~Deploy Firestore rules to production~~ | **DONE — Task S, 2026-09-17.** `npx firebase-tools deploy --only firestore:rules --project catering-planner-7f5d7` → "Deploy complete!" | N/A — resolved | N/A |
 | P0-2 | **Provision Hostinger hosting + point DNS** | Nothing configured yet (`docs/HOSTINGER-DEPLOYMENT.md`'s own "nothing executed" status line) | App cannot be reached at `londonfoodhubs.com` at all until this exists | Follow Section 12 (Hostinger Deployment Plan) |
 | P0-3 | **Configure the 6 production Firebase environment variables in the actual Hostinger environment** | Documented as names-only in `.env.example`; production values exist only in this developer's local `.env.local` today | App will crash or misconfigure at startup without these | Transfer values (not committed to git) into Hostinger's environment configuration as part of the deployment sequence |
 | P0-4 | **Post-deploy Authorized Domain re-confirmation** | Owner visually confirmed pre-deployment; not independently re-verified by this task | Low probability of drift, but sign-in silently fails if the setting were ever reverted | One-minute manual check on launch day (Section 10) — not a new configuration task, a verification step |
 
 No code or content defect qualifies as P0 — everything above is a
-deployment *action*, not a fix.
+deployment *action*, not a fix. **P0-1 is now complete; P0-2 through
+P0-4 remain.**
 
 ### P1 — SHOULD COMPLETE SOON (not blocking first launch)
 
@@ -264,7 +273,8 @@ deployment *action*, not a fix.
 
 ## 9. GO / NO-GO decision
 
-**GO ONLY AFTER NAMED P0 ITEMS.**
+**GO ONLY AFTER NAMED P0 ITEMS** *(status as of this document's original
+writing; see the Task S update below for what has since changed)*.
 
 - **Local code readiness: GO.** All automated checks pass; no defect
   found.
@@ -278,6 +288,16 @@ deployment *action*, not a fix.
   concrete, unstarted infrastructure actions. Nothing about the
   *codebase* blocks them; they simply have not been done yet, and this
   task is not authorized to do them.
+
+**Update (Task S, 2026-09-17): P0-1 is now done.** Firestore rules are
+live in production (`catering-planner-7f5d7`). **This does not change
+the overall decision** — it was never the codebase blocking launch, and
+P0-2 (Hostinger + DNS) and P0-3 (environment variables in that hosting
+environment) are still entirely unstarted. London Food Hubs is **not
+publicly launched**: the application itself is not running anywhere
+reachable at `londonfoodhubs.com` yet. Firestore now correctly protecting
+data is a real, independent, and irreversible-in-a-good-way step forward,
+not a proxy for "launched."
 
 ---
 
@@ -421,7 +441,46 @@ rollback method.
 
 ---
 
-## 11. Firestore deployment plan (prepared, NOT executed)
+## 11. Firestore deployment plan (EXECUTED — Task S, 2026-09-17)
+
+**STATUS UPDATE: this plan has been executed.** Task S deployed exactly
+this rules file to production on 2026-09-17. What follows is the
+original plan, preserved as written, plus what actually happened.
+
+**Actually done (Task S):**
+- Pre-deployment: `firestore.rules` re-verified at 105/105 immediately
+  before deploying (third independent genuine emulator run, after Tasks
+  L and Q — same file, same result every time); confirmed zero
+  uncommitted changes via `git diff -- firestore.rules`.
+- Authentication: `firebase login` completed interactively by the
+  account holder; verified via `firebase-tools login:list` → logged in
+  as `mahtab1504@googlemail.com`.
+- Project access positively verified via `firebase projects:list` (not
+  assumed from documentation) — `catering-planner-7f5d7` appeared in the
+  account's accessible project list before deploying.
+- **Rollback baseline limitation, documented honestly**: the Firebase
+  CLI has no command to retrieve/download the previously-deployed rules
+  content (confirmed via `firebase firestore --help` — no
+  `firestore:rules:get` or equivalent exists). This session did **not**
+  save a pre-deployment copy of the prior production rules, because no
+  supported tool could produce one. The rollback path is Firebase
+  Console's own built-in Rules History (Firestore Database → Rules →
+  History), which versions every deployment independently of this
+  limitation — a real, human-executable rollback path exists even though
+  a local backup file does not.
+- **Exact command run**: `npx firebase-tools deploy --only firestore:rules
+  --project catering-planner-7f5d7`.
+- **Result**: `Deploy complete!` — "rules file firestore.rules compiled
+  successfully", "released rules firestore.rules to cloud.firestore". No
+  index/hosting/functions/storage action appeared in the output.
+- Post-deployment behavioral smoke tests (public read, claimant privacy,
+  admin authorization, owner edit — listed below) were **deliberately
+  not performed in Task S**, per its own explicit instruction not to
+  create or modify production records merely to test rules. They remain
+  scheduled for after the actual Hostinger application deployment, per
+  the original plan below.
+
+**Original plan (for reference):**
 
 **Before deployment:**
 - Git checkpoint: confirm `firestore.rules` at HEAD is the exact file
@@ -441,12 +500,12 @@ rollback method.
   `firestore.rules.before-launch` *before* deploying, so a rollback has
   something concrete to redeploy.
 
-**Deployment (exact command, NOT executed in this task):**
+**Deployment (exact command — executed by Task S on 2026-09-17):**
 ```
-firebase deploy --only firestore:rules --project catering-planner-7f5d7
+npx firebase-tools deploy --only firestore:rules --project catering-planner-7f5d7
 ```
-(Requires `firebase login` first, interactively, by whoever has
-authorization — this task deliberately did not do this.)
+(Required `firebase login` first, interactively, completed by the account
+holder before Task S resumed.)
 
 **After deployment — smoke tests:**
 - **Public read smoke test**: fetch a known `active`/`pending` restaurant

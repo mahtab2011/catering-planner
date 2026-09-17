@@ -256,6 +256,49 @@ Read that document for the complete evidence and plan. Summary:
 - **Nothing was deployed, pushed, or changed in production Firebase,
   Hostinger, or DNS by this task.**
 
+## STATUS UPDATE (Task S) — Firestore security rules DEPLOYED to production
+
+**2026-09-17, 17:10 GMT.** Task S deployed `firestore.rules` (686 lines,
+blob hash `2baed7e89a3d76e8d099e5b71f6f7f3a8e6dcb7a`, from commit
+`9684f209d71aae4666dd4a323ac00ca593003ee0`, already pushed to
+`origin/main` by Task R) to production Firebase project
+`catering-planner-7f5d7`. **This is the first production Firebase change
+made by any task in this project's history.**
+
+- **Pre-deployment gate**: full 105/105 real Firestore emulator re-run
+  immediately before deployment (same result as Tasks L and Q), zero
+  uncommitted changes to `firestore.rules` confirmed via `git diff`.
+- **Authentication**: authenticated as `mahtab1504@googlemail.com`
+  (`firebase-tools` 15.30.1); project access positively verified via
+  `firebase projects:list` before deploying — `catering-planner-7f5d7`
+  appeared in the account's accessible project list.
+- **Exact command**: `npx firebase-tools deploy --only firestore:rules
+  --project catering-planner-7f5d7` — the narrow rules-only target, not
+  the broader `firestore` target (which would also touch indexes) and
+  never `firebase deploy` unscoped.
+- **Result**: `Deploy complete!` — "rules file firestore.rules compiled
+  successfully" (Firebase's own server-side rules compiler, independent
+  confirmation beyond the local emulator) and "released rules
+  firestore.rules to cloud.firestore." No index, hosting, functions, or
+  storage action appeared anywhere in the deploy output.
+- **Rollback baseline**: the Firebase CLI has **no command to retrieve
+  the previously-deployed rules content** (confirmed via `firebase
+  firestore --help`) — this is a genuine tooling limitation, not
+  something this task worked around or guessed at. The rollback path is
+  Firebase Console's own built-in Rules History (Firestore Database →
+  Rules → History), which independently versions every ruleset
+  deployment regardless of this limitation.
+- **J-01 and J-02 are now further updated below**: from "LOCAL RULES
+  VERIFIED — NOT YET DEPLOYED" to **actually deployed to production**.
+  **This does not mean London Food Hubs is publicly launched** — the
+  Next.js application itself is still not running on Hostinger, and DNS
+  for `londonfoodhubs.com` has not been pointed anywhere. Firestore rules
+  now protecting production data is one specific, narrow, completed step
+  toward that, not the whole launch.
+- Full detail, including the exact deployment log and every safety gate
+  checked before deploying: this task's own final report (see
+  conversation history) and `docs/FINAL-LAUNCH-GATE.md`.
+
 ## The one finding that matters most: claimant PII is publicly retrievable
 
 **Before anything else in this document: a restaurant's claimant contact
@@ -336,8 +379,8 @@ run against the (currently unavailable) emulator before deployment.
 
 | ID | Area | Finding | Severity | Why it matters | Required action | Can fix locally? | Verification required |
 |---|---|---|---|---|---|---|---|
-| J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection. **Architecture fixed (Task K), now emulator-verified (Task L)** — data moved to a private `restaurant_claims` collection; rules updated; 105/105 emulator tests pass including 21 dedicated `restaurant_claims` cases. **Not yet deployed to production.** | **P0** (kept — deployment, not verification, is now the only remaining gap; see "Status update (Task L)" above) | Real personal data exposed to the public internet indefinitely; see full writeup above | ~~Redesign claim-data storage~~ done (Task K) — ~~emulator-verified tests~~ done (Task L) — remaining: production deployment (separately authorized) | Done — architecture fixed and local-emulator-verified | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
-| J-02 | Firestore rules deployment | `firestore.rules` (105 test cases as of Task K) has now executed against a real local rules engine for the first time (Task L) — **105/105 passed, zero rule changes needed.** Still never deployed to any production Firebase project. | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended — this risk is now substantially reduced (local-verified) but deployment itself remains unauthorized and unperformed | ~~Install Java and run the full suite~~ done (Task L) — remaining: authorize and perform an actual `firebase deploy --only firestore:rules` against the correct production project | Local verification done (Task L); production deployment out of every task's scope so far | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
+| J-01 | Data privacy / Firestore | **(Task S) DEPLOYED TO PRODUCTION.** Claimant PII architecture fixed (Task K), emulator-verified (Task L/Q, 105/105 including 21 `restaurant_claims` cases), and the exact tested `firestore.rules` deployed to production project `catering-planner-7f5d7` on 2026-09-17. Production Firestore now actually enforces the private `restaurant_claims` boundary. | ~~P0~~ Resolved for rules; application still not live on Hostinger, so real public traffic isn't hitting this yet | Real personal data was exposed to the public internet indefinitely under the old architecture; that architecture is no longer live | ~~Redesign~~ done (K) — ~~emulator-verify~~ done (L/Q) — ~~deploy~~ done (S) | Done — architecture fixed, emulator-verified, and now production-deployed | `npx firebase-tools deploy --only firestore:rules --project catering-planner-7f5d7` — **run 2026-09-17, "Deploy complete!", DEPLOYED TO PRODUCTION** |
+| J-02 | Firestore rules deployment | **(Task S) DEPLOYED.** `firestore.rules` (105 test cases) executed against a real local rules engine three times (Tasks L, Q, S — 105/105 every time, zero rule changes ever needed) and deployed to production project `catering-planner-7f5d7` via `--only firestore:rules`. | ~~P0~~ Resolved | Deploying unverified security rules would have risked silently blocking or allowing something unintended — mitigated by three independent 105/105 emulator runs plus Firebase's own server-side rules compiler accepting the file at deploy time | ~~Install Java~~ done (L) — ~~run suite~~ done (L/Q/S) — ~~deploy~~ done (S) | Done | `npx firebase-tools deploy --only firestore:rules --project catering-planner-7f5d7` — **run 2026-09-17, DEPLOYED TO PRODUCTION** |
 | J-03 | Legal/compliance content | **(Task M/O) RESOLVED (content).** `/privacy-policy`, `/terms`, and `/cookie-policy` have substantive, audit-based content reflecting actual data practices, and all five operator-identity placeholders are now filled with owner-confirmed values: `MBN Continental (UK) Ltd`, business/contact address `85 Halley Road, London E7 8DS, United Kingdom`, `mahtab@mbncon.com`, effective date `22 September 2026`. | ~~P0~~ Resolved (content-completeness); optional future solicitor review remains a business decision, not a blocker this repo can resolve | Publishing a privacy policy or terms with no real operator identity or contact route was the launch blocker — that gap is now closed | ~~Write real content~~ done (Task M) — ~~confirm operator identity/contact facts~~ done (Task O) | Done — both content and identity facts | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (9/9 passing) |
 | J-04 | Firebase Auth | **(Task P/Q) RESOLVED — owner-confirmed.** Project positively identified (`catering-planner-7f5d7`); `www.londonfoodhubs.com` determined unnecessary (redirect-only policy). Owner visually confirmed via Firebase Console screenshot (post-Task-P) that `londonfoodhubs.com` already appears on the Authorized Domains list alongside existing SmartServeUK domains. Not independently re-verified by CLI (no CLI support exists for this setting). | ~~P0~~ Resolved (owner-confirmed); recommend one manual re-confirmation at actual deploy time (see `docs/FINAL-LAUNCH-GATE.md`) | Sign-in/sign-up/claim/owner-workspace would fail on the domain without this — now addressed | ~~Add `londonfoodhubs.com`~~ done (confirmed present) | Owner-confirmed via console screenshot | Manual sign-in test on the live domain post-deploy (`docs/FINAL-LAUNCH-GATE.md` smoke-test matrix) |
 | J-05 | Dependencies | **(Task N — unchanged, by design)** `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 (kept — real risk, but reachability is narrow; see below) | Re-confirmed export-only usage across all 5 call sites (`json_to_sheet`/`writeFile`/`write`, never `XLSX.read`/`readFile`, confirmed by code search) — the vulnerable parsing path is never invoked, but the vulnerable code still ships | Accept documented risk (decision made in Task N) — revisit only if a maintained drop-in replacement is found, as its own bounded task | Not without a dependency change (out of scope) | `docs/DEPENDENCY-SECURITY.md` |
@@ -360,8 +403,8 @@ run against the (currently unavailable) emulator before deployment.
 
 ## A. Launch blockers (P0)
 
-1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit. **Architecture fixed as of Task K and emulator-verified as of Task L** (see "Status update (Task L)" above) — remains listed as a blocker only pending actual production deployment of the verified rules, same as J-02.
-2. **J-02** — Firestore rules have now run against a real local rules engine for the first time (Task L, 105/105 passed), but have never been deployed to any production Firebase project. Deploying is the only remaining step, and requires separate explicit authorization.
+1. ~~**J-01** — Claimant PII publicly retrievable via direct Firestore reads.~~ **Resolved and deployed (Task S, 2026-09-17)** — see "Status update (Task S)" above.
+2. ~~**J-02** — Firestore rules have never been deployed to production.~~ **Resolved and deployed (Task S, 2026-09-17)**.
 3. ~~**J-03** — Privacy policy, terms, and cookie policy now have real, substantive content (Task M), but the operator's legal name, registered address, and contact emails are still unknown and marked with visible placeholders that must be confirmed before launch.~~ **Resolved (Task O)** — owner-confirmed operator identity and contact details are now in place on all three pages.
 4. ~~**J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth~~ **Resolved (owner-confirmed post-Task-P)** — the owner visually confirmed via Firebase Console that `londonfoodhubs.com` already appears on the Authorized Domains list; recommend one manual re-confirmation at actual deploy time (see `docs/FINAL-LAUNCH-GATE.md`).
 
@@ -389,7 +432,7 @@ Concrete actions required before launch, roughly in dependency order:
 5. Add exactly `londonfoodhubs.com` (not `www` — see Task P's www-policy decision) to Firebase Auth's Authorized Domains list for project `catering-planner-7f5d7`, in the Firebase console — see `docs/HOSTINGER-DEPLOYMENT.md` for the exact steps and URL.
 6. Configure a `www` → apex 301 redirect at the DNS/CDN layer (canonical is the non-`www` form — see `lib/site.ts`).
 7. Run the health/smoke checks already listed in `docs/HOSTINGER-DEPLOYMENT.md`'s "Health / smoke checks" section.
-8. **Only after J-01 and J-02 are independently resolved and verified**: deploy `firestore.rules` (`firebase deploy --only firestore:rules`, with the correct `--project` explicitly specified — no `.firebaserc` exists, so this cannot be run by accident against the wrong project).
+8. ~~Only after J-01 and J-02 are independently resolved and verified: deploy `firestore.rules`~~ **done (Task S, 2026-09-17)** — `firebase deploy --only firestore:rules --project catering-planner-7f5d7` completed successfully.
 9. Tag the deployed commit in git for fast rollback reference (`docs/ROLLBACK-PLAN.md` section 4 describes the procedure).
 
 ## D. Post-launch checklist (P1/P2)

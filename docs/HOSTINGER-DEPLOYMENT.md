@@ -165,16 +165,46 @@ no DNS exists yet to redirect from.
 
 ## Firebase authorized domains (do before production auth testing)
 
-**Not done in this task — documented only.** Firebase Authentication
-maintains its own "Authorized domains" allowlist (Firebase console →
-Authentication → Settings → Authorized domains) separate from anything in
-this repository or in Hostinger. Once `londonfoodhubs.com` is actually
-serving traffic, it — and `www.londonfoodhubs.com` if that's ever meant to
-work standalone rather than just redirect — needs to be added to that list
-before sign-in/sign-up flows will work on that domain (Firebase Auth
-rejects auth operations from origins not on this list, regardless of
-correct `NEXT_PUBLIC_FIREBASE_*` config). This task explicitly did not
-touch live Firebase configuration of any kind.
+**STATUS UPDATE (Task P):** the production Firebase project has now been
+positively identified as `catering-planner-7f5d7` (from
+`NEXT_PUBLIC_FIREBASE_PROJECT_ID`/`NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` in
+this machine's `.env.local`, corroborated by `lib/site.ts`'s
+`PRODUCTION_SITE_URL` and the fact that `lib/firebase.ts` is the single,
+only Firebase initialization point in this entire codebase — every
+sign-in, signup, restaurant-claim, and owner-workspace flow uses this same
+project). Per the "www policy" section above, **only the apex
+`londonfoodhubs.com` is intended to serve the application** —
+`www.londonfoodhubs.com` is meant to be a pure 301 redirect to the apex,
+never an independently-served origin, so it does not need to be a Firebase
+Authorized Domain unless that policy changes.
+
+**The actual authorized-domains change was NOT made in Task P** — blocked
+before Phase 4/6, not skipped: the local Firebase CLI (`firebase-tools`)
+has no authenticated account (`firebase login:list` → "No authorized
+accounts") and, independent of login state, **`firebase-tools` has no
+command at all for managing Authorized Domains** (confirmed via
+`firebase auth --help` — only `auth:export`/`auth:import` for user data
+exist). This setting is only configurable through the Firebase Console UI
+or the underlying Identity Platform Admin API with its own separate
+credentials — neither of which this task is set up to use safely without
+interactive user action, per its own explicit instructions not to log in
+with anyone else's credentials or reach for an undocumented/private API
+workaround.
+
+**Exact steps for whoever has console access to this project:**
+
+1. Go to
+   `https://console.firebase.google.com/project/catering-planner-7f5d7/authentication/settings`
+   (Authentication → Settings → Authorized domains).
+2. Confirm the existing authorized domains list (should already include
+   `localhost` and `catering-planner-7f5d7.firebaseapp.com`/
+   `.web.app` by Firebase default, plus whatever SmartServeUK domain(s)
+   were added previously — do not remove any of these).
+3. Click "Add domain", enter exactly `londonfoodhubs.com`, and save.
+4. Do **not** add `www.londonfoodhubs.com` unless the www-redirect policy
+   above is deliberately changed to serve `www` standalone.
+5. Re-open the same settings page afterward and confirm the full domain
+   list still contains everything it did before, plus `londonfoodhubs.com`.
 
 ## Firebase Functions
 

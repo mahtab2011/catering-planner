@@ -219,6 +219,42 @@ Authorized Domains allowlist. Full detail:
   project is identified, the www question is answered, and the one
   remaining step is a two-minute manual Firebase Console action, not an
   open investigation.
+- **Post-Task-P update**: the owner subsequently opened the Firebase
+  Console directly and visually confirmed `londonfoodhubs.com` **already
+  appears** on the Authorized Domains list, alongside the existing
+  SmartServeUK domains. J-04 is treated as resolved on that basis — see
+  `docs/FINAL-LAUNCH-GATE.md` (Task Q) for the full re-verification
+  record. This was not independently re-confirmed by CLI in any task,
+  since `firebase-tools` has no command for this setting at all
+  (established above).
+
+## STATUS UPDATE (Task Q) — final launch-gate audit complete, no deployment performed
+
+Task Q (2026-09-17) performed a full readiness inspection — not a
+deployment — and produced `docs/FINAL-LAUNCH-GATE.md`, the authoritative
+final document for the go/no-go decision, deployment sequence, Firestore
+and Hostinger deployment plans, smoke-test matrix, and rollback strategy.
+Read that document for the complete evidence and plan. Summary:
+
+- Re-verified in this session: TypeScript clean, build clean (136
+  routes, no `next/font` failure), **71/71** application tests, **105/105**
+  real Firestore emulator tests, dependency audit unchanged at **1**
+  vulnerability (`xlsx`, documented risk), message parity **308/308**
+  across en/bn/ar/fr, 59 commits ahead of `origin/main` inspected with no
+  anomalies found.
+- Investigated (per an added mid-task requirement) how existing
+  SmartServeUK Food Hub photographs are stored and referenced: local
+  git-tracked static files under `public/hubs/`, referenced via
+  root-relative paths in `lib/hubs.ts`, already reused as-is by the new
+  London Food Hubs `app/[locale]/hubs` routes, and safely served to all
+  three domains by the existing single-deployment architecture with no
+  migration required. Full detail in `docs/FINAL-LAUNCH-GATE.md` section 4.
+- **Decision: GO ONLY AFTER NAMED P0 ITEMS** — the remaining P0s are
+  deployment actions (deploy Firestore rules, provision Hostinger/DNS,
+  configure production environment variables, post-deploy Authorized
+  Domain re-confirmation), not code or content defects.
+- **Nothing was deployed, pushed, or changed in production Firebase,
+  Hostinger, or DNS by this task.**
 
 ## The one finding that matters most: claimant PII is publicly retrievable
 
@@ -303,7 +339,7 @@ run against the (currently unavailable) emulator before deployment.
 | J-01 | Data privacy / Firestore | Claimant PII (name/email/phone/note) permanently retrievable on any publicly-readable restaurant document, including after claim rejection. **Architecture fixed (Task K), now emulator-verified (Task L)** — data moved to a private `restaurant_claims` collection; rules updated; 105/105 emulator tests pass including 21 dedicated `restaurant_claims` cases. **Not yet deployed to production.** | **P0** (kept — deployment, not verification, is now the only remaining gap; see "Status update (Task L)" above) | Real personal data exposed to the public internet indefinitely; see full writeup above | ~~Redesign claim-data storage~~ done (Task K) — ~~emulator-verified tests~~ done (Task L) — remaining: production deployment (separately authorized) | Done — architecture fixed and local-emulator-verified | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
 | J-02 | Firestore rules deployment | `firestore.rules` (105 test cases as of Task K) has now executed against a real local rules engine for the first time (Task L) — **105/105 passed, zero rule changes needed.** Still never deployed to any production Firebase project. | **P0** for *deploying rules* specifically (not for reading this repo) — see "Firestore launch gate" below for the application-vs-rules-deployment distinction | Deploying unverified security rules to production risks either silently blocking legitimate operations or silently allowing something unintended — this risk is now substantially reduced (local-verified) but deployment itself remains unauthorized and unperformed | ~~Install Java and run the full suite~~ done (Task L) — remaining: authorize and perform an actual `firebase deploy --only firestore:rules` against the correct production project | Local verification done (Task L); production deployment out of every task's scope so far | `cd tests/firestore-rules && npm install && npx firebase-tools emulators:exec --only firestore "npm test"` — **run 2026-09-16, 105/105 passed, LOCAL RULES VERIFIED, NOT DEPLOYED** |
 | J-03 | Legal/compliance content | **(Task M/O) RESOLVED (content).** `/privacy-policy`, `/terms`, and `/cookie-policy` have substantive, audit-based content reflecting actual data practices, and all five operator-identity placeholders are now filled with owner-confirmed values: `MBN Continental (UK) Ltd`, business/contact address `85 Halley Road, London E7 8DS, United Kingdom`, `mahtab@mbncon.com`, effective date `22 September 2026`. | ~~P0~~ Resolved (content-completeness); optional future solicitor review remains a business decision, not a blocker this repo can resolve | Publishing a privacy policy or terms with no real operator identity or contact route was the launch blocker — that gap is now closed | ~~Write real content~~ done (Task M) — ~~confirm operator identity/contact facts~~ done (Task O) | Done — both content and identity facts | `docs/LEGAL-READINESS.md` + `tests/legal-pages/run-legal-content-tests.ts` (9/9 passing) |
-| J-04 | Firebase Auth | **(Task P)** `londonfoodhubs.com` is still not on Firebase Auth's "Authorized domains" allowlist. Project now positively identified (`catering-planner-7f5d7`); `www.londonfoodhubs.com` determined unnecessary (redirect-only policy, never independently served). Change blocked on interactive Firebase Console access — `firebase-tools` has no CLI command for this setting at all. | **P0** (kept — narrowed to one manual console action; see "Status update (Task P)" above) | Sign-in/sign-up/claim/owner-workspace will fail on the new domain until this is added — Firebase Auth rejects unauthorized origins regardless of correct client config | Add exactly `londonfoodhubs.com` (not `www`) via the Firebase Console steps in `docs/HOSTINGER-DEPLOYMENT.md` | No — Console-only action, no CLI support exists | Re-open Authorized Domains in Firebase Console after adding and confirm the full list, then manual sign-in test on the live domain post-deploy |
+| J-04 | Firebase Auth | **(Task P/Q) RESOLVED — owner-confirmed.** Project positively identified (`catering-planner-7f5d7`); `www.londonfoodhubs.com` determined unnecessary (redirect-only policy). Owner visually confirmed via Firebase Console screenshot (post-Task-P) that `londonfoodhubs.com` already appears on the Authorized Domains list alongside existing SmartServeUK domains. Not independently re-verified by CLI (no CLI support exists for this setting). | ~~P0~~ Resolved (owner-confirmed); recommend one manual re-confirmation at actual deploy time (see `docs/FINAL-LAUNCH-GATE.md`) | Sign-in/sign-up/claim/owner-workspace would fail on the domain without this — now addressed | ~~Add `londonfoodhubs.com`~~ done (confirmed present) | Owner-confirmed via console screenshot | Manual sign-in test on the live domain post-deploy (`docs/FINAL-LAUNCH-GATE.md` smoke-test matrix) |
 | J-05 | Dependencies | **(Task N — unchanged, by design)** `xlsx` (direct dependency): prototype pollution + ReDoS, **no upstream fix available** | P1 (kept — real risk, but reachability is narrow; see below) | Re-confirmed export-only usage across all 5 call sites (`json_to_sheet`/`writeFile`/`write`, never `XLSX.read`/`readFile`, confirmed by code search) — the vulnerable parsing path is never invoked, but the vulnerable code still ships | Accept documented risk (decision made in Task N) — revisit only if a maintained drop-in replacement is found, as its own bounded task | Not without a dependency change (out of scope) | `docs/DEPENDENCY-SECURITY.md` |
 | J-06 | Dependencies | **(Task N) FIXED.** `websocket-driver` and `protobufjs`/`@protobufjs/utf8`/`@grpc/grpc-js` — all resolved via plain `npm audit fix` (no `--force`), verified via dry-run first | ~~P1~~ Resolved | Was: Realtime-Database/Firestore-transport code most users would never trigger; still worth clearing since a compatible fix existed | ~~Run `npm audit fix`~~ done (Task N) | Done | `docs/DEPENDENCY-SECURITY.md` — `npm audit` no longer lists either package |
 | J-07 | Dependencies | **(Task N) FIXED.** `sharp` and `postcss` (next's nested copy) — resolved via an explicit, deliberate `next` version bump `16.1.6` → `16.3.5` (same major version, not a major upgrade), made by hand in `package.json`, not via `--force` | ~~P2~~ Resolved | Was: `next/image` (and therefore `sharp`) genuinely unused; the `next` bump itself was justified by `next`'s own direct-dependency critical advisories, not by `sharp` specifically | ~~Defer~~ done (Task N), bundled with the `next` critical-advisory fix | Done — full regression run after (tsc, build, 70/70 app tests, 105/105 emulator tests) | `docs/DEPENDENCY-SECURITY.md` |
@@ -327,7 +363,7 @@ run against the (currently unavailable) emulator before deployment.
 1. **J-01** — Claimant PII publicly retrievable via direct Firestore reads. The single most important finding in this audit. **Architecture fixed as of Task K and emulator-verified as of Task L** (see "Status update (Task L)" above) — remains listed as a blocker only pending actual production deployment of the verified rules, same as J-02.
 2. **J-02** — Firestore rules have now run against a real local rules engine for the first time (Task L, 105/105 passed), but have never been deployed to any production Firebase project. Deploying is the only remaining step, and requires separate explicit authorization.
 3. ~~**J-03** — Privacy policy, terms, and cookie policy now have real, substantive content (Task M), but the operator's legal name, registered address, and contact emails are still unknown and marked with visible placeholders that must be confirmed before launch.~~ **Resolved (Task O)** — owner-confirmed operator identity and contact details are now in place on all three pages.
-4. **J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth, so sign-in-dependent features (claim, review, owner workspace, admin) will not work on the live domain until this external step is done. **(Task P)** The project is now identified (`catering-planner-7f5d7`) and the exact console steps are documented in `docs/HOSTINGER-DEPLOYMENT.md` — this is now a single manual console action away from resolved, not an open investigation.
+4. ~~**J-04** — `londonfoodhubs.com` is not yet authorized in Firebase Auth~~ **Resolved (owner-confirmed post-Task-P)** — the owner visually confirmed via Firebase Console that `londonfoodhubs.com` already appears on the Authorized Domains list; recommend one manual re-confirmation at actual deploy time (see `docs/FINAL-LAUNCH-GATE.md`).
 
 None of these are things this audit could or should have fixed itself — J-01/J-02 need a scoped engineering task with rules-engine verification, J-03 needs real legal content, J-04 is an external Firebase console action requiring a live domain to point at.
 
